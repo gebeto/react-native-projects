@@ -1,0 +1,545 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Массивы: методы" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В этой главе мы рассмотрим встроенные методы массивов JavaScript.</p>
+<cut>
+<h2><a class="main__anchor" href="#метод-split" name="метод-split">Метод split</a></h2><p>Ситуация из реальной жизни. Мы пишем сервис отсылки сообщений и посетитель вводит имена тех, кому его отправить: <code>Маша, Петя, Марина, Василий...</code>. Но нам-то гораздо удобнее работать с массивом имен, чем с одной строкой.</p>
+<p>К счастью, есть метод <code>split(s)</code>, который позволяет превратить строку в массив, разбив ее по разделителю <code>s</code>. В примере ниже таким разделителем является строка из запятой и пробела.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var names = 'Маша, Петя, Марина, Василий';
+
+var arr = names.split(', ');
+
+for (var i = 0; i &lt; arr.length; i++) {
+  alert( 'Вам сообщение ' + arr[i] );
+}</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">Второй аргумент <code>split</code></span></div>
+<div class="important__content"><p>У метода <code>split</code> есть необязательный второй аргумент – ограничение на количество элементов в массиве. Если их больше, чем указано – остаток массива будет отброшен:</p>
+<div class="code-example" data-highlight-inline="0:28-29" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "a,b,c,d".split(',', 2) ); // a,b</code></pre>
+</div>
+</div>
+</div></div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Разбивка по буквам</span></div>
+<div class="important__content"><p>Вызов <code>split</code> с пустой строкой разобьёт по буквам:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "тест";
+
+alert( str.split('') ); // т,е,с,т</code></pre>
+</div>
+</div>
+</div></div></div>
+<h2><a class="main__anchor" href="#метод-join" name="метод-join">Метод join</a></h2><p>Вызов <code>arr.join(str)</code> делает в точности противоположное <code>split</code>. Он берет массив и склеивает его в строку, используя <code>str</code> как разделитель.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr = ['Маша', 'Петя', 'Марина', 'Василий'];
+
+var str = arr.join(';');
+
+alert( str ); // Маша;Петя;Марина;Василий</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">new Array + join = Повторение строки</span></div>
+<div class="important__content"><p>Код для повторения строки <code>3</code> раза:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( new Array(4).join("ля") ); // ляляля</code></pre>
+</div>
+</div>
+</div><p>Как видно, <code>new Array(4)</code> делает массив без элементов длины 4, который <code>join</code> объединяет в строку, вставляя <em>между его элементами</em> строку <code>"ля"</code>.</p>
+<p>В результате, так как элементы пусты, получается повторение строки. Такой вот небольшой трюк.</p>
+</div></div>
+<h2><a class="main__anchor" href="#удаление-из-массива" name="удаление-из-массива">Удаление из массива</a></h2><p>Так как массивы являются объектами, то для удаления ключа можно воспользоваться обычным <code>delete</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr = ["Я", "иду", "домой"];
+
+delete arr[1]; // значение с индексом 1 удалено
+
+// теперь arr = ["Я", undefined, "домой"];
+alert( arr[1] ); // undefined</code></pre>
+</div>
+</div>
+</div><p>Да, элемент удален из массива, но не так, как нам этого хочется. Образовалась «дырка».</p>
+<p>Это потому, что оператор <code>delete</code> удаляет пару «ключ-значение». Это – все, что он делает. Обычно же при удалении из массива мы хотим, чтобы оставшиеся элементы сдвинулись и заполнили образовавшийся промежуток.</p>
+<p>Поэтому для удаления используются специальные методы: из начала – <code>shift</code>, с конца – <code>pop</code>, а из середины – <code>splice</code>, с которым мы сейчас познакомимся.</p>
+<h2><a class="main__anchor" href="#метод-splice" name="метод-splice">Метод splice</a></h2><p>Метод <code>splice</code> – это универсальный раскладной нож для работы с массивами. Умеет все: удалять элементы, вставлять элементы, заменять элементы – по очереди и одновременно.</p>
+<p>Его синтаксис:</p>
+<dl>
+<dt><code>arr.splice(index[, deleteCount, elem1, ..., elemN])</code></dt>
+<dd>Удалить <code>deleteCount</code> элементов, начиная с номера <code>index</code>, а затем вставить <code>elem1, ..., elemN</code> на их место. Возвращает массив из удалённых элементов.</dd>
+</dl>
+<p>Этот метод проще всего понять, рассмотрев примеры.</p>
+<p>Начнём с удаления:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr = ["Я", "изучаю", "JavaScript"];
+
+arr.splice(1, 1); // начиная с позиции 1, удалить 1 элемент
+
+alert( arr ); //  осталось ["Я", "JavaScript"]</code></pre>
+</div>
+</div>
+</div><p>В следующем примере мы удалим 3 элемента и вставим другие на их место:</p>
+<div class="code-example" data-highlight-inline="0:11-35,5:24-39" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr = ["Я", "сейчас", "изучаю", "JavaScript"];
+
+// удалить 3 первых элемента и добавить другие вместо них
+arr.splice(0, 3, "Мы", "изучаем")
+
+alert( arr ) // теперь ["Мы", "изучаем", "JavaScript"]</code></pre>
+</div>
+</div>
+</div><p>Здесь видно, что <code>splice</code> возвращает массив из удаленных элементов:</p>
+<div class="code-example" data-highlight-inline="0:11-25" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr = ["Я", "сейчас", "изучаю", "JavaScript"];
+
+// удалить 2 первых элемента
+var removed = arr.splice(0, 2);
+
+alert( removed ); // "Я", "сейчас" &lt;-- array of removed elements</code></pre>
+</div>
+</div>
+</div><p>Метод <code>splice</code> также может вставлять элементы без удаления, для этого достаточно установить <code>deleteCount</code> в <code>0</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr = ["Я", "изучаю", "JavaScript"];
+
+// с позиции 2
+// удалить 0
+// вставить "сложный", "язык"
+arr.splice(2, 0, "сложный", "язык");
+
+alert( arr ); // "Я", "изучаю", "сложный", "язык", "JavaScript"</code></pre>
+</div>
+</div>
+</div><p>Допускается использование отрицательного номера позиции, которая в этом случае отсчитывается с конца:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr = [1, 2, 5]
+
+// начиная с позиции индексом -1 (перед последним элементом)
+// удалить 0 элементов,
+// затем вставить числа 3 и 4
+arr.splice(-1, 0, 3, 4);
+
+alert( arr ); // результат: 1,2,3,4,5</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#метод-slice" name="метод-slice">Метод slice</a></h2><p>Метод <code>slice(begin, end)</code> копирует участок массива от <code>begin</code> до <code>end</code>, не включая <code>end</code>. Исходный массив при этом не меняется.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr = ["Почему", "надо", "учить", "JavaScript"];
+
+var arr2 = arr.slice(1, 3); // элементы 1, 2 (не включая 3)
+
+alert( arr2 ); // надо, учить</code></pre>
+</div>
+</div>
+</div><p>Аргументы ведут себя так же, как и в строковом <code>slice</code>:</p>
+<ul>
+<li>
+<p>Если не указать <code>end</code> – копирование будет до конца массива:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr = ["Почему", "надо", "учить", "JavaScript"];
+
+alert( arr.slice(1) ); // взять все элементы, начиная с номера 1</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Можно использовать отрицательные индексы, они отсчитываются с конца:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr2 = arr.slice(-2); // копировать от 2-го элемента с конца и дальше</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Если вообще не указать аргументов – скопируется весь массив:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var fullCopy = arr.slice();</code></pre>
+</div>
+</div>
+</div></li>
+</ul>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Совсем как в строках</span></div>
+<div class="important__content"><p>Синтаксис метода <code>slice</code> одинаков для строк и для массивов. Тем проще его запомнить.</p>
+</div></div>
+<h2><a class="main__anchor" href="#сортировка-метод-sort-fn" name="сортировка-метод-sort-fn">Сортировка, метод sort(fn)</a></h2><p>Метод <code>sort()</code> сортирует массив <em>на месте</em>. Например:</p>
+<div class="code-example" data-highlight-inline="4:18-26" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr = [ 1, 2, 15 ];
+
+arr.sort();
+
+alert( arr );  // 1, 15, 2</code></pre>
+</div>
+</div>
+</div><p>Не заметили ничего странного в этом примере?</p>
+<p>Порядок стал <code>1, 15, 2</code>, это точно не сортировка чисел. Почему?</p>
+<p><strong>Это произошло потому, что по умолчанию <code>sort</code> сортирует, преобразуя элементы к строке.</strong></p>
+<p>Поэтому и порядок у них строковый, ведь <code>"2" &gt; "15"</code>.</p>
+<h3><a class="main__anchor" href="#свой-порядок-сортировки" name="свой-порядок-сортировки">Свой порядок сортировки</a></h3><p>Для указания своего порядка сортировки в метод <code>arr.sort(fn)</code> нужно передать функцию <code>fn</code> от двух элементов, которая умеет сравнивать их.</p>
+<p>Внутренний алгоритм функции сортировки умеет сортировать любые массивы – апельсинов, яблок, пользователей, и тех и других и третьих – чего угодно. Но для этого ему нужно знать, как их сравнивать. Эту роль и выполняет <code>fn</code>.</p>
+<p>Если эту функцию не указать, то элементы сортируются как строки.</p>
+<p>Например, укажем эту функцию явно, отсортируем элементы массива как числа:</p>
+<div class="code-example" data-highlight-block="7-7" data-highlight-inline="9:16-24" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function compareNumeric(a, b) {
+  if (a &gt; b) return 1;
+  if (a &lt; b) return -1;
+}
+
+var arr = [ 1, 2, 15 ];
+
+arr.sort(compareNumeric);
+
+alert(arr);  // 1, 2, 15</code></pre>
+</div>
+</div>
+</div><p>Обратите внимание, мы передаём в <code>sort()</code> именно саму функцию <code>compareNumeric</code>, без вызова через скобки. Был бы ошибкой следующий код:</p>
+<div class="code-example" data-highlight-inline="0:24-26" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">arr.sort( compareNumeric() );  // не сработает</code></pre>
+</div>
+</div>
+</div><p>Как видно из примера выше, функция, передаваемая <code>sort</code>, должна иметь два аргумента.</p>
+<p>Алгоритм сортировки, встроенный в JavaScript, будет передавать ей для сравнения элементы массива. Она должна возвращать:</p>
+<ul>
+<li>Положительное значение, если <code>a &gt; b</code>,</li>
+<li>Отрицательное значение, если <code>a &lt; b</code>,</li>
+<li>Если равны – можно <code>0</code>, но вообще – не важно, что возвращать, их взаимный порядок не имеет значения.</li>
+</ul>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Алгоритм сортировки</span></div>
+<div class="important__content"><p>В методе <code>sort</code>, внутри самого интерпретатора JavaScript, реализован универсальный алгоритм сортировки. Как правило, это <a href="http://algolist.manual.ru/sort/quick_sort.php">««быстрая сортировка»»</a>, дополнительно оптимизированная для небольших массивов.</p>
+<p>Он решает, какие пары элементов и когда сравнивать, чтобы отсортировать побыстрее. Мы даём ему функцию – способ сравнения, дальше он вызывает её сам.</p>
+<p>Кстати, те значения, с которыми <code>sort</code> вызывает функцию сравнения, можно увидеть, если вставить в неё <code>alert</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">[1, -2, 15, 2, 0, 8].sort(function(a, b) {
+  alert( a + " &lt;&gt; " + b );
+});</code></pre>
+</div>
+</div>
+</div></div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Сравнение <code>compareNumeric</code> в одну строку</span></div>
+<div class="important__content"><p>Функцию <code>compareNumeric</code> для сравнения элементов-чисел можно упростить до одной строчки.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function compareNumeric(a, b) {
+  return a - b;
+}</code></pre>
+</div>
+</div>
+</div><p>Эта функция вполне подходит для <code>sort</code>, так как возвращает положительное число, если <code>a &gt; b</code>, отрицательное, если наоборот, и <code>0</code>, если числа равны.</p>
+</div></div>
+<h2><a class="main__anchor" href="#reverse" name="reverse">reverse</a></h2><p>Метод <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/reverse">arr.reverse()</a> меняет порядок элементов в массиве на обратный.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr = [1, 2, 3];
+arr.reverse();
+
+alert( arr ); // 3,2,1</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#concat" name="concat">concat</a></h2><p>Метод <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/concat">arr.concat(value1, value2, … valueN)</a> создаёт новый массив, в который копируются элементы из <code>arr</code>, а также <code>value1, value2, ... valueN</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="1-1" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr = [1, 2];
+var newArr = arr.concat(3, 4);
+
+alert( newArr ); // 1,2,3,4</code></pre>
+</div>
+</div>
+</div><p>У <code>concat</code> есть одна забавная особенность.</p>
+<p>Если аргумент <code>concat</code> – массив, то <code>concat</code> добавляет элементы из него.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr = [1, 2];
+
+var newArr = arr.concat([3, 4], 5); // то же самое, что arr.concat(3,4,5)
+
+alert( newArr ); // 1,2,3,4,5</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#indexof-lastindexof" name="indexof-lastindexof">indexOf/lastIndexOf</a></h2><p>Эти методы не поддерживаются в IE8-. Для их поддержки подключите библиотеку <a href="https://github.com/kriskowal/es5-shim">ES5-shim</a>.</p>
+<p>Метод <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/indexOf">«arr.indexOf(searchElement[, fromIndex])»</a> возвращает номер элемента <code>searchElement</code> в массиве <code>arr</code> или <code>-1</code>, если его нет.</p>
+<p>Поиск начинается с номера <code>fromIndex</code>, если он указан. Если нет – с начала массива.</p>
+<p><strong>Для поиска используется строгое сравнение <code>===</code>.</strong></p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr = [1, 0, false];
+
+alert( arr.indexOf(0) ); // 1
+alert( arr.indexOf(false) ); // 2
+alert( arr.indexOf(null) ); // -1</code></pre>
+</div>
+</div>
+</div><p>Как вы могли заметить, по синтаксису он полностью аналогичен методу <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String/indexOf">indexOf для строк</a>.</p>
+<p>Метод <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/lastIndexOf">«arr.lastIndexOf(searchElement[, fromIndex])»</a> ищет справа-налево: с конца массива или с номера <code>fromIndex</code>, если он указан.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Методы <code>indexOf/lastIndexOf</code> осуществляют поиск перебором</span></div>
+<div class="important__content"><p>Если нужно проверить, существует ли значение в массиве – его нужно перебрать. Только так. Внутренняя реализация <code>indexOf/lastIndexOf</code> осуществляет полный перебор, аналогичный циклу <code>for</code> по массиву. Чем длиннее массив, тем дольше он будет работать.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Коллекция уникальных элементов</span></div>
+<div class="important__content"><p>Рассмотрим задачу – есть коллекция строк, и нужно быстро проверять: есть ли в ней какой-то элемент. Массив для этого не подходит из-за медленного <code>indexOf</code>. Но подходит объект! Доступ к свойству объекта осуществляется очень быстро, так что можно сделать все элементы ключами объекта и проверять, есть ли уже такой ключ.</p>
+<p>Например, организуем такую проверку для коллекции строк <code>"div"</code>, <code>"a"</code> и <code>"form"</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var store = {}; // объект для коллекции
+
+var items = ["div", "a", "form"];
+
+for (var i = 0; i &lt; items.length; i++) {
+  var key = items[i]; // для каждого элемента создаём свойство
+  store[key] = true; // значение здесь не важно
+}</code></pre>
+</div>
+</div>
+</div><p>Теперь для проверки, есть ли ключ <code>key</code>, достаточно выполнить <code>if (store[key])</code>. Если есть – можно использовать значение, если нет – добавить.</p>
+<p>Такое решение работает только со строками, но применимо к любым элементам, для которых можно вычислить строковый  «уникальный ключ».</p>
+</div></div>
+<h2><a class="main__anchor" href="#object-keys-obj" name="object-keys-obj">Object.keys(obj)</a></h2><p>Ранее мы говорили о том, что свойства объекта можно перебрать в цикле <code>for..in</code>.</p>
+<p>Если мы хотим работать с ними в виде массива, то к нашим услугам – замечательный метод <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Object/keys">Object.keys(obj)</a>. Он поддерживается везде, кроме IE8-:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  name: "Петя",
+  age: 30
+}
+
+var keys = Object.keys(user);
+
+alert( keys ); // name, age</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Методы:</p>
+<ul>
+<li><code>push/pop</code>, <code>shift/unshift</code>, <code>splice</code> – для добавления и удаления элементов.</li>
+<li><code>join/split</code> – для преобразования строки в массив и обратно.</li>
+<li><code>slice</code> – копирует участок массива.</li>
+<li><code>sort</code> – для сортировки массива. Если не передать функцию сравнения – сортирует элементы как строки.</li>
+<li><code>reverse</code> – меняет порядок элементов на обратный.</li>
+<li><code>concat</code> – объединяет массивы.</li>
+<li><code>indexOf/lastIndexOf</code> – возвращают позицию элемента в массиве (не поддерживается в IE8-).</li>
+</ul>
+<p>Изученных нами методов достаточно в 95% случаях, но существуют и другие. Для знакомства с ними рекомендуется заглянуть в справочник <a href="http://javascript.ru/Array">Array</a> и <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array">Array в Mozilla Developer Network</a>.</p>
+</cut></div></meta></article></main></div></body></html>

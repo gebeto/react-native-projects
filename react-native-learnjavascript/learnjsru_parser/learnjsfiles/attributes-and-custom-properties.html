@@ -1,0 +1,585 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Атрибуты и DOM-свойства" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>При чтении HTML браузер генерирует DOM-модель. При этом большинство стандартных HTML-атрибутов становятся свойствами соответствующих объектов.</p>
+<p>Например, если тег выглядит как <code>&lt;body id="page"&gt;</code>, то у объекта будет свойство <code>body.id = "page"</code>.</p>
+<p>Но это преобразование – не один-в-один. Бывают ситуации, когда атрибут имеет одно значение, а свойство – другое. Бывает и так, что атрибут есть, а свойства с таким названием не создаётся.</p>
+<p>Если коротко – HTML-атрибуты и DOM-свойства обычно, но не всегда соответствуют друг другу, нужно понимать, что такое свойство и что такое атрибут, чтобы работать с ними правильно.</p>
+<cut>
+<h2><a class="main__anchor" href="#свои-dom-свойства" name="свои-dom-свойства">Свои DOM-свойства</a></h2><p>Ранее мы видели некоторые встроенные свойства DOM-узлов. Но, технически, никто нас ими не ограничивает.</p>
+<p><strong>Узел DOM – это объект, поэтому, как и любой объект в JavaScript, он может содержать  пользовательские свойства и методы.</strong></p>
+<p>Например, создадим в <code>document.body</code> новое свойство и запишем в него объект:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">document.body.myData = {
+  name: 'Петр',
+  familyName: 'Петрович'
+};
+
+alert( document.body.myData.name ); // Петр</code></pre>
+</div>
+</div>
+</div><p>Можно добавить и новую функцию:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">document.body.sayHi = function() {
+  alert( this.nodeName );
+}
+
+document.body.sayHi(); // BODY, выполнилась с правильным this</code></pre>
+</div>
+</div>
+</div><p>Нестандартные свойства и методы видны только в JavaScript и никак не влияют на отображение соответствующего тега.</p>
+<p>Обратим внимание, пользовательские DOM-свойства:</p>
+<ul>
+<li>Могут иметь любое значение.</li>
+<li>Названия свойств <em>чувствительны</em> к регистру.</li>
+<li>Работают за счет того, что DOM-узлы являются объектами JavaScript.</li>
+</ul>
+<h2><a class="main__anchor" href="#атрибуты" name="атрибуты">Атрибуты</a></h2><p>Элементам DOM, с другой стороны, соответствуют HTML-теги, у которых есть текстовые атрибуты.</p>
+<p>Конечно, здесь речь именно об узлах-элементах, не о текстовых узлах или комментариях.</p>
+<p>Доступ к атрибутам осуществляется при помощи стандартных методов:</p>
+<ul>
+<li><code>elem.hasAttribute(name)</code> – проверяет наличие атрибута</li>
+<li><code>elem.getAttribute(name)</code> – получает значение атрибута</li>
+<li><code>elem.setAttribute(name, value)</code> – устанавливает атрибут</li>
+<li><code>elem.removeAttribute(name)</code> – удаляет атрибут</li>
+</ul>
+<p>Эти методы работают со значением, которое находится в HTML.</p>
+<p>Также все атрибуты элемента можно получить с помощью свойства <code>elem.attributes</code>, которое содержит псевдо-массив объектов типа <a href="http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-637646024">Attr</a>.</p>
+<p>В отличие от свойств, атрибуты:</p>
+<ul>
+<li>Всегда являются строками.</li>
+<li>Их имя <em>нечувствительно</em> к регистру (ведь это HTML)</li>
+<li>Видны в <code>innerHTML</code> (за исключением старых IE)</li>
+</ul>
+<p>Рассмотрим отличия между DOM-свойствами и атрибутами на примере HTML-кода:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;body&gt;
+  &lt;div id="elem" about="Elephant" class="smiling"&gt;&lt;/div&gt;
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><p>Пример ниже устанавливает атрибуты и демонстрирует их особенности.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;body&gt;
+  &lt;div id="elem" about="Elephant"&gt;&lt;/div&gt;
+
+  &lt;script&gt;
+    alert( elem.getAttribute('About') ); // (1) 'Elephant', атрибут получен
+
+    elem.setAttribute('Test', 123); // (2) атрибут Test установлен
+    alert( document.body.innerHTML ); // (3) в HTML видны все атрибуты!
+
+    var attrs = elem.attributes; // (4) можно получить коллекцию атрибутов
+    for (var i = 0; i &lt; attrs.length; i++) {
+      alert( attrs[i].name + " = " + attrs[i].value );
+    }
+  &lt;/script&gt;
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><p>При запуске кода выше обратите внимание:</p>
+<ol>
+<li><code>getAttribute('About')</code> – первая буква имени атрибута <code>About</code> написана в верхнем регистре, а в HTML – в нижнем, но это не имеет значения, так как имена нечувствительны к регистру.</li>
+<li>Мы можем записать в атрибут любое значение, но оно будет превращено в строку. Объекты также будут  автоматически преобразованы.</li>
+<li>После добавления атрибута его можно увидеть в <code>innerHTML</code> элемента.</li>
+<li>Коллекция <code>attributes</code> содержит все атрибуты в виде объектов со свойствами <code>name</code> и <code>value</code>.</li>
+</ol>
+<h2><a class="main__anchor" href="#когда-полезен-доступ-к-атрибутам" name="когда-полезен-доступ-к-атрибутам">Когда полезен доступ к атрибутам?</a></h2><p>Когда браузер читает HTML и создаёт DOM-модель, то он создаёт свойства для всех <em>стандартных</em> атрибутов.</p>
+<p>Например, свойства тега <code>'A'</code> описаны в спецификации DOM: <a href="http://www.w3.org/TR/REC-DOM-Level-1/level-one-html.html#ID-48250443">HTMLAnchorElement</a>.</p>
+<p>Например, у него есть свойство <code>"href"</code>. Кроме того, он имеет <code>"id"</code> и другие свойства, общие для всех элементов, которые описаны в спецификации в <a href="http://www.w3.org/TR/REC-DOM-Level-1/level-one-html.html#ID-58190037">HTMLElement</a>.</p>
+<p>Все стандартные свойства DOM синхронизируются с атрибутами, однако не всегда такая синхронизация происходит 1-в-1, поэтому иногда нам нужно значение именно из HTML, то есть атрибут.</p>
+<p>Рассмотрим несколько примеров.</p>
+<h3><a class="main__anchor" href="#ссылка-как-есть-из-атрибута-href" name="ссылка-как-есть-из-атрибута-href">Ссылка «как есть» из атрибута href</a></h3><p>Синхронизация не гарантирует одинакового значения в атрибуте и свойстве.</p>
+<p>Для примера, посмотрим, что произойдет с атрибутом <code>"href"</code> при изменении свойства:</p>
+<div class="code-example" data-demo-height="30" data-highlight-block="2-2" data-highlight-inline="5:37-47" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;a id="a" href="#"&gt;&lt;/a&gt;
+&lt;script&gt;
+  a.href = '/';
+
+  alert( 'атрибут:' + a.getAttribute('href') ); // '/'
+  alert( 'свойство:' + a.href );  // полный URL
+
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Это происходит потому, что атрибут может быть любым, а свойство <code>href</code>, <a href="http://www.w3.org/TR/REC-html40/struct/links.html#adef-href">в соответствии со спецификацией W3C</a>, должно быть полной ссылкой.</p>
+<p>Стало быть, если мы хотим именно то, что в HTML, то нужно обращаться через атрибут.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Есть и другие подобные атрибуты</span></div>
+<div class="important__content"><p>Кстати, есть и другие атрибуты, которые не копируются в точности. Например, DOM-свойство <code>input.checked</code> имеет логическое значение <code>true/false</code>, а HTML-атрибут <code>checked</code> – любое строковое, важно лишь его наличие.</p>
+<p>Работа с <code>checked</code> через атрибут и свойство:</p>
+<div class="code-example" data-highlight-block="3-3,7-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input id="input" type="checkbox" checked&gt;
+
+&lt;script&gt;
+  // работа с checked через атрибут
+  alert( input.getAttribute('checked') ); // пустая строка
+  input.removeAttribute('checked'); // снять галочку
+
+  // работа с checked через свойство
+  alert( input.checked ); // false &lt;-- может быть только true/false
+  input.checked = true; // поставить галочку
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div></div></div>
+<h3><a class="main__anchor" href="#исходное-значение-value" name="исходное-значение-value">Исходное значение value</a></h3><p>Изменение некоторых свойств обновляет атрибут. Но это скорее исключение, чем правило.</p>
+<p><strong>Чаще синхронизация – односторонняя: свойство зависит от атрибута, но не наоборот.</strong></p>
+<p>Например, при изменении свойства <code>input.value</code> атрибут <code>input.getAttribute('value')</code> не меняется:</p>
+<div class="code-example" data-demo-height="30" data-highlight-block="3-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;body&gt;
+  &lt;input id="input" type="text" value="markup"&gt;
+  &lt;script&gt;
+    input.value = 'new'; // поменяли свойство
+
+    alert( input.getAttribute('value') ); // 'markup', не изменилось!
+  &lt;/script&gt;
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><p>То есть, изменение DOM-свойства <code>value</code> на атрибут не влияет, он остаётся таким же.</p>
+<p>А вот изменение атрибута обновляет свойство:</p>
+<div class="code-example" data-demo-height="30" data-highlight-block="3-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;body&gt;
+  &lt;input id="input" type="text" value="markup"&gt;
+  &lt;script&gt;
+    input.setAttribute('value', 'new'); // поменяли атрибут
+
+    alert( input.value ); // 'new', input.value изменилось!
+  &lt;/script&gt;
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><p>Эту особенность можно красиво использовать.</p>
+<p>Получается, что атрибут <code>input.getAttribute('value')</code> хранит оригинальное (исходное) значение даже после того, как пользователь заполнил поле и свойство изменилось.</p>
+<p>Например, можно взять изначальное значение из атрибута и сравнить со свойством, чтобы узнать, изменилось ли значение. А при необходимости и перезаписать свойство атрибутом, отменив изменения.</p>
+<h2><a class="main__anchor" href="#классы-в-виде-строки-classname" name="классы-в-виде-строки-classname">Классы в виде строки: className</a></h2><p>Атрибуту <code>"class"</code> соответствует свойство <code>className</code>.</p>
+<p>Так как слово <code>"class"</code> является зарезервированным словом в Javascript, то при проектировании DOM решили, что соответствующее свойство будет называться <code>className</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;body class="main page"&gt;
+  &lt;script&gt;
+    // прочитать класс элемента
+    alert( document.body.className ); // main page
+
+    // поменять класс элемента
+    document.body.className = "class1 class2";
+  &lt;/script&gt;
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><p>Кстати, есть и другие атрибуты, которые называются иначе, чем свойство. Например, атрибуту <code>for</code> (<code>&lt;label for="..."&gt;</code>) соответствует свойство с названием <code>htmlFor</code>.</p>
+<h2><a class="main__anchor" href="#классы-в-виде-объекта-classlist" name="классы-в-виде-объекта-classlist">Классы в виде объекта: classList</a></h2><p>Атрибут <code>class</code> – уникален. Ему соответствует аж целых два свойства!</p>
+<p>Работать с классами как со строкой неудобно. Поэтому, кроме <code>className</code>, в современных браузерах есть свойство <code>classList</code>.</p>
+<p><strong>Свойство <code>classList</code> – это объект для работы с классами.</strong></p>
+<p>Оно поддерживается в IE начиная с IE10, но его можно эмулировать в IE8+, подключив мини-библиотеку <a href="https://github.com/eligrey/classList.js">classList.js</a>.</p>
+<p>Методы <code>classList</code>:</p>
+<ul>
+<li><code>elem.classList.contains("class")</code> – возвращает <code>true/false</code>, в зависимости от того, есть ли у элемента класс <code>class</code>.</li>
+<li><code>elem.classList.add/remove("class")</code> – добавляет/удаляет класс <code>class</code></li>
+<li><code>elem.classList.toggle("class")</code> – если класса <code>class</code> нет, добавляет его, если есть – удаляет.</li>
+</ul>
+<p>Кроме того, можно перебрать классы через <code>for</code>, так как <code>classList</code> – это псевдо-массив.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;body class="main page"&gt;
+  &lt;script&gt;
+    var classList = document.body.classList;
+
+    classList.remove('page'); // удалить класс
+    classList.add('post'); // добавить класс
+
+    for (var i = 0; i &lt; classList.length; i++) { // перечислить классы
+      alert( classList[i] ); // main, затем post
+    }
+
+    alert( classList.contains('post') ); // проверить наличие класса
+
+    alert( document.body.className ); // main post, тоже работает
+  &lt;/script&gt;
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#нестандартные-атрибуты" name="нестандартные-атрибуты">Нестандартные атрибуты</a></h2><p>У каждого элемента есть некоторый набор стандартных свойств, например для <code>&lt;a&gt;</code> это будут <code>href</code>, <code>name</code>, <code>title</code>, а для <code>&lt;img&gt;</code> это будут <code>src</code>, <code>alt</code>, и так далее.</p>
+<p>Точный набор свойств описан в стандарте, обычно мы более-менее представляем, если пользуемся HTML, какие свойства могут быть, а какие – нет.</p>
+<p>Для нестандартных атрибутов DOM-свойство не создаётся.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="4-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div id="elem" href="http://ya.ru" about="Elephant"&gt;&lt;/div&gt;
+
+&lt;script&gt;
+  alert( elem.id ); // elem
+  alert( elem.about ); // undefined
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Свойство является стандартным, только если оно описано в стандарте именно для этого элемента.</p>
+<p>То есть, если назначить элементу <code>&lt;img&gt;</code> атрибут <code>href</code>, то свойство <code>img.href</code> от этого не появится. Как, впрочем, и если назначить ссылке <code>&lt;a&gt;</code> атрибут <code>alt</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;img id="img" href="test"&gt;
+&lt;a id="link" alt="test"&gt;&lt;/a&gt;
+
+&lt;script&gt;
+  alert( img.href ); // undefined
+  alert( link.alt ); // undefined
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Нестандартные атрибуты иногда используют для CSS.</p>
+<p>В примере ниже для показа «состояния заказа» используется атрибут <code>order-state</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  .order[order-state="new"] {
+    color: green;
+  }
+
+  .order[order-state="pending"] {
+    color: blue;
+  }
+
+  .order[order-state="canceled"] {
+    color: red;
+  }
+&lt;/style&gt;
+
+&lt;div class="order" order-state="new"&gt;
+  Новый заказ.
+&lt;/div&gt;
+
+&lt;div class="order" order-state="pending"&gt;
+  Ожидающий заказ.
+&lt;/div&gt;
+
+&lt;div class="order" order-state="canceled"&gt;
+  Заказ отменён.
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</div><p>Почему именно атрибут? Разве нельзя было сделать классы <code>.order-state-new</code>, <code>.order-state-pending</code>, <code>order-state-canceled</code>?</p>
+<p>Конечно можно, но манипулировать атрибутом из JavaScript гораздо проще.</p>
+<p>Например, если нужно отменить заказ, неважно в каком он состоянии сейчас – это сделает код:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">div.setAttribute('order-state', 'canceled');</code></pre>
+</div>
+</div>
+</div><p>Для классов – нужно знать, какой класс у заказа сейчас. И тогда мы можем снять старый класс, и поставить новый:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">div.classList.remove('order-state-new');
+div.classList.add('order-state-canceled');</code></pre>
+</div>
+</div>
+</div><p>…То есть, требуется больше исходной информации и надо написать больше букв. Это менее удобно.</p>
+<p>Проще говоря, значение атрибута – произвольная строка, значение класса – это «есть» или «нет», поэтому естественно, что атрибуты «мощнее» и бывают удобнее классов как в JS так и в CSS.</p>
+<h2><a class="main__anchor" href="#свойство-dataset-data-атрибуты" name="свойство-dataset-data-атрибуты">Свойство dataset, data-атрибуты</a></h2><p>С помощью нестандартных атрибутов можно привязать к элементу данные, которые будут доступны в JavaScript.</p>
+<p>Как правило, это делается при помощи атрибутов с названиями, начинающимися на <code>data-</code>, например:</p>
+<div class="code-example" data-highlight-inline="0:15-25,0:37-55" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div id="elem" data-about="Elephant" data-user-location="street"&gt;
+  По улице прошёлся слон. Весьма красив и толст был он.
+&lt;/div&gt;
+&lt;script&gt;
+  alert( elem.getAttribute('data-about') ); // Elephant
+  alert( elem.getAttribute('data-user-location') ); // street
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p><a href="http://www.w3.org/TR/2010/WD-html5-20101019/elements.html#embedding-custom-non-visible-data-with-the-data-attributes">Стандарт HTML5</a> специально разрешает атрибуты <code>data-*</code> и резервирует их для пользовательских данных.</p>
+<p>При этом во всех браузерах, кроме IE10-, к таким атрибутам можно обратиться не только как к атрибутам, но и как к свойствам, при помощи специального свойства <code>dataset</code>:</p>
+<div class="code-example" data-highlight-block="4-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div id="elem" data-about="Elephant" data-user-location="street"&gt;
+  По улице прошёлся слон. Весьма красив и толст был он.
+&lt;/div&gt;
+&lt;script&gt;
+  alert( elem.dataset.about ); // Elephant
+  alert( elem.dataset.userLocation ); // street
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Обратим внимание – название <code>data-user-location</code> трансформировалось в <code>dataset.userLocation</code>. Дефис превращается в большую букву.</p>
+<h2><a class="main__anchor" href="#полифилл-для-атрибута-hidden" name="полифилл-для-атрибута-hidden">Полифилл для атрибута hidden</a></h2><p>Для старых браузеров современные атрибуты иногда нуждаются в полифилле. Как правило, такой полифилл включает в себя не только JavaScript, но и CSS.</p>
+<p>Например, свойство/атрибут hidden не поддерживается в IE11.</p>
+<p>Этот атрибут должен прятать элемент, действие весьма простое, для его поддержки в HTML достаточно такого CSS:</p>
+<div class="code-example" data-demo-height="80" data-highlight-block="1-1" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  [hidden] { display: none }
+&lt;/style&gt;
+
+&lt;div&gt;Текст&lt;/div&gt;
+&lt;div hidden&gt;С атрибутом hidden&lt;/div&gt;
+&lt;div id="last"&gt;Со свойством hidden&lt;/div&gt;
+
+&lt;script&gt;
+  last.hidden = true;
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Если запустить в IE11- пример выше, то <code>&lt;div hidden&gt;</code> будет скрыт, а вот последний <code>div</code>, которому поставили свойство <code>hidden</code> в JavaScript – по-прежнему виден.</p>
+<p>Это потому что CSS «не видит» присвоенное свойство, нужно синхронизировать его в атрибут.</p>
+<p>Вот так – уже работает:</p>
+<div class="code-example" data-demo-height="80" data-highlight-block="1-1,5-14" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  [hidden] { display: none }
+&lt;/style&gt;
+
+&lt;script&gt;
+  if (document.documentElement.hidden === undefined) {
+    Object.defineProperty(Element.prototype, "hidden", {
+      set: function(value) {
+        this.setAttribute('hidden', value);
+      },
+      get: function() {
+        return this.getAttribute('hidden');
+      }
+    });
+  }
+&lt;/script&gt;
+
+&lt;div&gt;Текст&lt;/div&gt;
+&lt;div hidden&gt;С атрибутом hidden&lt;/div&gt;
+&lt;div id="last"&gt;Со свойством hidden&lt;/div&gt;
+
+&lt;script&gt;
+  last.hidden = true;
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#особенности-ie8" name="особенности-ie8">«Особенности» IE8</a></h2><p>Если вам нужна поддержка этих версий IE – есть пара нюансов.</p>
+<ol>
+<li>
+<p>Во-первых, версии IE8- синхронизируют все свойства и атрибуты, а не только стандартные:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">document.body.setAttribute('my', 123);
+
+alert( document.body.my ); // 123 в IE8-</code></pre>
+</div>
+</div>
+</div><p>При этом даже тип данных не меняется. Атрибут не становится строкой, как ему положено.</p>
+</li>
+<li>
+<p>Ещё одна некорректность IE8-: для изменения класса нужно использовать именно свойство <code>className</code>, вызов <code>setAttribute('class', ...)</code> не сработает.</p>
+</li>
+</ol>
+<p>Вывод из этого довольно прост – чтобы не иметь проблем в IE8, нужно использовать всегда только свойства, кроме тех ситуаций, когда нужны именно атрибуты. Впрочем, это в любом случае хорошая практика.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Атрибуты – это то, что написано в HTML.</li>
+<li>Свойство – это то, что находится в свойстве DOM-объекта.</li>
+</ul>
+<p>Таблица сравнений для атрибутов и свойств:</p>
+<table>
+<thead>
+<tr>
+<th>Свойства</th>
+<th>Атрибуты</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Любое значение</td>
+<td>Строка</td>
+</tr>
+<tr>
+<td>Названия регистрозависимы</td>
+<td>Не чувствительны к регистру</td>
+</tr>
+<tr>
+<td>Не видны в <code>innerHTML</code></td>
+<td>Видны в <code>innerHTML</code></td>
+</tr>
+</tbody>
+</table>
+<p>Синхронизация между атрибутами и свойствами:</p>
+<ul>
+<li>Стандартные свойства и атрибуты синхронизируются: установка атрибута автоматически ставит свойство DOM. Некоторые свойства синхронизируются в обе стороны.</li>
+<li>Бывает так, что свойство не совсем соответствует атрибуту. Например, «логические» свойства вроде <code>checked</code>, <code>selected</code> всегда имеют значение <code>true/false</code>, а в атрибут можно записать произвольную строку.Выше мы видели другие примеры на эту тему, например <code>href</code>.</li>
+</ul>
+<p>Нестандартные атрибуты:</p>
+<ul>
+<li>Нестандартный атрибут (если забыть глюки старых IE) никогда не попадёт в свойство, так что для кросс-браузерного доступа к нему нужно обязательно использовать <code>getAttribute</code>.</li>
+<li>Атрибуты, название которых начинается с <code>data-</code>, можно прочитать через <code>dataset</code>. Эта возможность не поддерживается  IE10-.</li>
+</ul>
+<p>Для того, чтобы избежать проблем со старыми IE, а также для более короткого и понятного кода старайтесь везде использовать свойства, а атрибуты – только там, где это <em>действительно</em> нужно.</p>
+<p>А <em>действительно</em> нужны атрибуты очень редко – лишь в следующих трёх случаях:</p>
+<ol>
+<li>Когда нужно кросс-браузерно получить нестандартный HTML-атрибут.</li>
+<li>Когда нужно получить «оригинальное значение» стандартного HTML-атрибута, например, <code>&lt;input value="..."&gt;</code>.</li>
+<li>Когда нужно получить список всех атрибутов, включая пользовательские. Для этого используется коллекция <code>attributes</code>.</li>
+</ol>
+<p>Если вы хотите использовать собственные атрибуты в HTML, то помните, что атрибуты с именем, начинающимся на <code>data-</code> валидны в HTML5 и современные браузеры поддерживают доступ к ним через свойство <code>dataset</code>.</p>
+</cut></div></meta></article></main></div></body></html>

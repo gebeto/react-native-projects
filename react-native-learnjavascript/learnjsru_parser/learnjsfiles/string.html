@@ -1,0 +1,712 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Строки" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В JavaScript любые текстовые данные являются строками. Не существует отдельного типа «символ», который есть в ряде других языков.</p>
+<p>Внутренним форматом строк, вне зависимости от кодировки страницы, является <a href="http://ru.wikipedia.org/wiki/%D0%AE%D0%BD%D0%B8%D0%BA%D0%BE%D0%B4">Юникод (Unicode)</a>.</p>
+<cut>
+<h2><a class="main__anchor" href="#создание-строк" name="создание-строк">Создание строк</a></h2><p>Строки создаются при помощи двойных или одинарных кавычек:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var text = "моя строка";
+
+var anotherText = 'еще строка';
+
+var str = "012345";</code></pre>
+</div>
+</div>
+</div><p>В JavaScript нет разницы между двойными и одинарными кавычками.</p>
+<h3><a class="main__anchor" href="#специальные-символы" name="специальные-символы">Специальные символы</a></h3><p>Строки могут содержать специальные символы. Самый часто используемый из таких символов – это «перевод строки».</p>
+<p>Он обозначается как <code>\n</code>, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 'Привет\nМир' ); // выведет "Мир" на новой строке</code></pre>
+</div>
+</div>
+</div><p>Есть и более редкие символы, вот их список:</p>
+<table>
+<caption>Специальные символы</caption>
+<thead>
+<tr><th>Символ</th><th>Описание</th></tr>
+</thead>
+<tbody>
+<tr><td>\b</td><td>Backspace</td></tr>
+<tr><td>\f</td><td>Form feed</td></tr>
+<tr><td>\n</td><td>New line</td></tr>
+<tr><td>\r</td><td>Carriage return</td></tr>
+<tr><td>\t</td><td>Tab</td></tr>
+<tr><td>\uNNNN</td><td>Символ в кодировке Юникод с шестнадцатеричным кодом `NNNN`. Например, `\u00A9` -- юникодное представление символа копирайт ©
+</td></tr>
+</tbody>
+</table>
+<h3><a class="main__anchor" href="#экранирование-специальных-символов" name="экранирование-специальных-символов">Экранирование специальных символов</a></h3><p>Если строка в одинарных кавычках, то внутренние одинарные кавычки внутри должны быть <em>экранированы</em>, то есть снабжены обратным слешем <code>\'</code>, вот так:</p>
+<div class="code-example" data-highlight-inline="0:11-15" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = 'I\'m a JavaScript programmer';</code></pre>
+</div>
+</div>
+</div><p>В двойных кавычках – экранируются внутренние двойные:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "I'm a JavaScript \"programmer\" ";
+alert( str ); // I'm a JavaScript "programmer"</code></pre>
+</div>
+</div>
+</div><p>Экранирование служит исключительно для правильного восприятия строки JavaScript. В памяти строка будет содержать сам символ без <code>'\'</code>. Вы можете увидеть это, запустив пример выше.</p>
+<p>Сам символ обратного слэша <code>'\'</code> является служебным, поэтому всегда экранируется, т.е пишется как <code>\\</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = ' символ \\ ';
+
+alert( str ); // символ \</code></pre>
+</div>
+</div>
+</div><p>Заэкранировать можно любой символ. Если он не специальный, то ничего не произойдёт:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "\a" ); // a
+// идентично alert(  "a"  );</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#методы-и-свойства" name="методы-и-свойства">Методы и свойства</a></h2><p>Здесь мы рассмотрим методы и свойства строк, с некоторыми из которых мы знакомились ранее, в главе <a href="/properties-and-methods">Введение в методы и свойства</a>.</p>
+<h3><a class="main__anchor" href="#длина-length" name="длина-length">Длина length</a></h3><p>Одно из самых частых действий со строкой – это получение ее длины:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "My\n"; // 3 символа. Третий - перевод строки
+
+alert( str.length ); // 3</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#доступ-к-символам" name="доступ-к-символам">Доступ к символам</a></h3><p>Чтобы получить символ, используйте вызов <code>charAt(позиция)</code>. Первый символ имеет позицию <code>0</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "jQuery";
+alert( str.charAt(0) ); // "j"</code></pre>
+</div>
+</div>
+</div><p>В JavaScript <strong>нет отдельного типа «символ»</strong>, так что <code>charAt</code> возвращает строку, состоящую из выбранного символа.</p>
+<p>Также для доступа к символу можно также использовать квадратные скобки:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "Я - современный браузер!";
+alert( str[0] ); // "Я"</code></pre>
+</div>
+</div>
+</div><p>Разница между этим способом и <code>charAt</code> заключается в том, что если символа нет – <code>charAt</code> выдает пустую строку, а скобки – <code>undefined</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "".charAt(0) ); // пустая строка
+alert( "" [0] ); // undefined</code></pre>
+</div>
+</div>
+</div><p>Вообще же метод <code>charAt</code> существует по историческим причинам, ведь квадратные скобки – проще и короче.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Вызов метода – всегда со скобками</span></div>
+<div class="important__content"><p>Обратите внимание, <code>str.length</code> – это <em>свойство</em> строки, а <code>str.charAt(pos)</code> – <em>метод</em>, т.е. функция.</p>
+<p>Обращение к методу всегда идет со скобками, а к свойству – без скобок.</p>
+</div></div>
+<h3><a class="main__anchor" href="#изменения-строк" name="изменения-строк">Изменения строк</a></h3><p>Содержимое строки в JavaScript нельзя изменять. Нельзя взять символ посередине и заменить его. Как только строка создана – она такая навсегда.</p>
+<p>Можно лишь создать целиком новую строку и присвоить в переменную вместо старой, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "строка";
+
+str = str[3] + str[4] + str[5];
+
+alert( str ); // ока</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#смена-регистра" name="смена-регистра">Смена регистра</a></h3><p>Методы <code>toLowerCase()</code> и <code>toUpperCase()</code> меняют регистр строки на нижний/верхний:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "Интерфейс".toUpperCase() ); // ИНТЕРФЕЙС</code></pre>
+</div>
+</div>
+</div><p>Пример ниже получает первый символ и приводит его к нижнему регистру:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "Интерфейс" [0].toLowerCase() ); // 'и'</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#поиск-подстроки" name="поиск-подстроки">Поиск подстроки</a></h3><p>Для поиска подстроки есть метод <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String/indexOf">indexOf(подстрока[, начальная_позиция])</a>.</p>
+<p>Он возвращает позицию, на которой находится <code>подстрока</code> или <code>-1</code>, если ничего не найдено. Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "Widget with id";
+
+alert( str.indexOf("Widget") ); // 0, т.к. "Widget" найден прямо в начале str
+alert( str.indexOf("id") ); // 1, т.к. "id" найден, начиная с позиции 1
+alert( str.indexOf("widget") ); // -1, не найдено, так как поиск учитывает регистр</code></pre>
+</div>
+</div>
+</div><p>Необязательный второй аргумент позволяет искать, начиная с указанной позиции. Например, первый раз <code>"id"</code> появляется на позиции <code>1</code>. Чтобы найти его следующее появление – запустим поиск с позиции <code>2</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "Widget with id";
+
+alert(str.indexOf("id", 2)) // 12, поиск начат с позиции 2</code></pre>
+</div>
+</div>
+</div><p>Также существует аналогичный метод <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String/lastIndexOf">lastIndexOf</a>, который ищет не с начала, а с конца строки.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">На заметку:</span></div>
+<div class="important__content"><p>Для красивого вызова <code>indexOf</code> применяется побитовый оператор НЕ <code>'~'</code>.</p>
+<p>Дело в том, что вызов <code>~n</code> эквивалентен выражению <code>-(n+1)</code>, например:</p>
+<div class="code-example" data-highlight-block="3-3" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( ~2 ); // -(2+1) = -3
+alert( ~1 ); // -(1+1) = -2
+alert( ~0 ); // -(0+1) = -1
+alert( ~-1 ); // -(-1+1) = 0</code></pre>
+</div>
+</div>
+</div><p>Как видно, <code>~n</code> – ноль только в случае, когда <code>n == -1</code>.</p>
+<p>То есть, проверка <code>if ( ~str.indexOf(...) )</code> означает, что результат <code>indexOf</code> отличен от <code>-1</code>, т.е. совпадение есть.</p>
+<p>Вот так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "Widget";
+
+if (~str.indexOf("get")) {
+  alert( 'совпадение есть!' );
+}</code></pre>
+</div>
+</div>
+</div><p>Вообще, использовать возможности языка неочевидным образом не рекомендуется, поскольку ухудшает читаемость кода.</p>
+<p>Однако, в данном случае, все в порядке. Просто запомните: <code>'~'</code> читается как «не минус один», а <code>"if ~str.indexOf"</code> читается как <code>"если найдено"</code>.</p>
+</div></div>
+<h3><a class="main__anchor" href="#поиск-всех-вхождений" name="поиск-всех-вхождений">Поиск всех вхождений</a></h3><p>Чтобы найти все вхождения подстроки, нужно запустить <code>indexOf</code> в цикле. Как только получаем очередную позицию – начинаем следующий поиск со следующей.</p>
+<p>Пример такого цикла:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "Ослик Иа-Иа посмотрел на виадук"; // ищем в этой строке
+var target = "Иа"; // цель поиска
+
+var pos = 0;
+while (true) {
+  var foundPos = str.indexOf(target, pos);
+  if (foundPos == -1) break;
+
+  alert( foundPos ); // нашли на этой позиции
+  pos = foundPos + 1; // продолжить поиск со следующей
+}</code></pre>
+</div>
+</div>
+</div><p>Такой цикл начинает поиск с позиции <code>0</code>, затем найдя подстроку на позиции <code>foundPos</code>, следующий поиск продолжит с позиции <code>pos = foundPos+1</code>, и так далее, пока что-то находит.</p>
+<p>Впрочем, тот же алгоритм можно записать и короче:</p>
+<div class="code-example" data-highlight-block="3-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "Ослик Иа-Иа посмотрел на виадук"; // ищем в этой строке
+var target = "Иа"; // цель поиска
+
+var pos = -1;
+while ((pos = str.indexOf(target, pos + 1)) != -1) {
+  alert( pos );
+}</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#взятие-подстроки-substr-substring-slice" name="взятие-подстроки-substr-substring-slice">Взятие подстроки: substr, substring, slice.</a></h3><p>В JavaScript существуют целых 3 (!) метода для взятия подстроки, с небольшими отличиями между ними.</p>
+<dl>
+<dt><code>substring(start [, end])</code></dt>
+<dd>
+<p>Метод <code>substring(start, end)</code> возвращает подстроку с позиции <code>start</code> до, но не включая <code>end</code>.</p>
+<div class="code-example" data-highlight-inline="0:11-12" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "stringify";
+alert(str.substring(0,1)); // "s", символы с позиции 0 по 1 не включая 1.</code></pre>
+</div>
+</div>
+</div><p>Если аргумент <code>end</code> отсутствует, то идет до конца строки:</p>
+<div class="code-example" data-highlight-inline="0:13-20" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "stringify";
+alert(str.substring(2)); // ringify, символы с позиции 2 до конца</code></pre>
+</div>
+</div>
+</div></dd>
+<dt><dt><code>substr(start [, length])</code></dt>
+<dd>
+<p>Первый аргумент имеет такой же смысл, как и в <code>substring</code>, а второй содержит не конечную позицию, а количество символов.</p>
+<div class="code-example" data-highlight-inline="0:13-17" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "stringify";
+str = str.substr(2,4); // ring, со 2-й позиции 4 символа
+alert(str)</code></pre>
+</div>
+</div>
+</div><p>Если второго аргумента нет – подразумевается «до конца строки».</p>
+</dd>
+<dt><code>slice(start [, end])</code></dt>
+<dd>
+<p>Возвращает часть строки от позиции <code>start</code> до, но не включая, позиции <code>end</code>. Смысл параметров – такой же как в <code>substring</code>.</p>
+</dd>
+</dt></dl>
+<h3><a class="main__anchor" href="#отрицательные-аргументы" name="отрицательные-аргументы">Отрицательные аргументы</a></h3><p>Различие между <code>substring</code> и <code>slice</code> – в том, как они работают с отрицательными и выходящими за границу строки аргументами:</p>
+<dl>
+<dt><code>substring(start, end)</code></dt>
+<dd>
+<p>Отрицательные аргументы интерпретируются как равные нулю. Слишком большие значения усекаются до длины строки:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "testme".substring(-2) ); // "testme", -2 становится 0</code></pre>
+</div>
+</div>
+</div><p>Кроме того, если <code>start &gt; end</code>, то аргументы меняются местами, т.е. возвращается участок строки <em>между</em> <code>start</code> и <code>end</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "testme".substring(4, -1) ); // "test"
+// -1 становится 0 -&gt; получили substring(4, 0)
+// 4 &gt; 0, так что аргументы меняются местами -&gt; substring(0, 4) = "test"</code></pre>
+</div>
+</div>
+</div></dd>
+<dt><code>slice</code></dt>
+<dd>
+<p>Отрицательные значения отсчитываются от конца строки:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "testme".slice(-2) ); // "me", от 2 позиции с конца</code></pre>
+</div>
+</div>
+</div><div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "testme".slice(1, -1) ); // "estm", от 1 позиции до первой с конца.</code></pre>
+</div>
+</div>
+</div><p>Это гораздо более удобно, чем странная логика <code>substring</code>.</p>
+</dd>
+</dl>
+<p>Отрицательное значение первого параметра поддерживается в <code>substr</code> во всех браузерах, кроме IE8-.</p>
+<p>Если выбирать из этих трёх методов один, для использования в большинстве ситуаций – то это будет <code>slice</code>: он и отрицательные аргументы поддерживает и работает наиболее очевидно.</p>
+<h2><a class="main__anchor" href="#кодировка-юникод" name="кодировка-юникод">Кодировка Юникод</a></h2><p>Как мы знаем, символы сравниваются в алфавитном порядке <code>'А' &lt; 'Б' &lt; 'В' &lt; ... &lt; 'Я'</code>.</p>
+<p>Но есть несколько странностей…</p>
+<ol>
+<li>
+<p>Почему буква <code>'а'</code> маленькая больше буквы <code>'Я'</code> большой?</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 'а' &gt; 'Я' ); // true</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Буква <code>'ё'</code> находится в алфавите между <code>е</code> и <code>ж</code>: <code>абвгде<strong>ё</strong>жз…</code>. Но почему тогда <code>'ё'</code> больше <code>'я'</code>?</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 'ё' &gt; 'я' ); // true</code></pre>
+</div>
+</div>
+</div></li>
+</ol>
+<p>Чтобы разобраться с этим, обратимся к внутреннему представлению строк в JavaScript.</p>
+<p><strong>Все строки имеют внутреннюю кодировку <a href="http://ru.wikipedia.org/wiki/%D0%AE%D0%BD%D0%B8%D0%BA%D0%BE%D0%B4">Юникод</a>.</strong></p>
+<p>Неважно, на каком языке написана страница, находится ли она в windows-1251 или utf-8. Внутри JavaScript-интерпретатора все строки приводятся к единому «юникодному» виду. Каждому символу соответствует свой код.</p>
+<p>Есть метод для получения символа по его коду:</p>
+<dl>
+<dt>String.fromCharCode(code)</dt>
+<dd>
+<p>Возвращает символ по коду <code>code</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( String.fromCharCode(1072) ); // 'а'</code></pre>
+</div>
+</div>
+</div></dd>
+</dl>
+<p>…И метод для получения цифрового кода из символа:</p>
+<dl>
+<dt>str.charCodeAt(pos)</dt>
+<dd>
+<p>Возвращает код символа на позиции <code>pos</code>. Отсчет позиции начинается с нуля.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "абрикос".charCodeAt(0) ); // 1072, код 'а'</code></pre>
+</div>
+</div>
+</div></dd>
+</dl>
+<p>Теперь вернемся к примерам выше. Почему сравнения <code>'ё' &gt; 'я'</code> и <code>'а' &gt; 'Я'</code> дают такой странный результат?</p>
+<p>Дело в том, что <strong>символы сравниваются не по алфавиту, а по коду</strong>. У кого код больше – тот и больше. В юникоде есть много разных символов. Кириллическим буквам соответствует только небольшая часть из них, подробнее – <a href="http://ru.wikipedia.org/wiki/%D0%9A%D0%B8%D1%80%D0%B8%D0%BB%D0%BB%D0%B8%D1%86%D0%B0_%D0%B2_%D0%AE%D0%BD%D0%B8%D0%BA%D0%BE%D0%B4%D0%B5">Кириллица в Юникоде</a>.</p>
+<p>Выведем отрезок символов юникода с кодами от <code>1034</code> до <code>1113</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = '';
+for (var i = 1034; i &lt;= 1113; i++) {
+  str += String.fromCharCode(i);
+}
+alert( str );</code></pre>
+</div>
+</div>
+</div><p>Результат:</p>
+<div style="overflow: auto">
+<code>ЊЋЌЍЎЏАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяѐёђѓєѕіїјљ</code>
+</div>
+<p>Мы можем увидеть из этого отрезка две важных вещи:</p>
+<ol>
+<li>
+<p><strong>Строчные буквы идут после заглавных, поэтому они всегда больше.</strong></p>
+<p>В частности, <code>'а'(код 1072) &gt; 'Я'(код 1071)</code>.</p>
+<p>То же самое происходит и в английском алфавите, там <code>'a' &gt; 'Z'</code>.</p>
+</li>
+<li>
+<p><strong>Ряд букв, например <code>ё</code>, находятся вне основного алфавита.</strong></p>
+<p>В частности, маленькая буква <code>ё</code> имеет код, больший чем <code>я</code>, поэтому <strong><code>'ё'(код 1105) &gt; 'я'(код 1103)</code></strong>.</p>
+<p>Кстати, большая буква <code>Ё</code> располагается в Unicode до <code>А</code>, поэтому <strong><code>'Ё'</code>(код 1025) &lt; <code>'А'</code>(код 1040)</strong>. Удивительно: есть буква меньше чем <code>А</code> :)</p>
+</li>
+</ol>
+<p><strong>Буква <code>ё</code> не уникальна, точки над буквой используются и в других языках, приводя к тому же результату.</strong></p>
+<p>Например, при работе с немецкими названиями:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "ö" &gt; "z" ); // true</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">Юникод в HTML</span></div>
+<div class="important__content"><p>Кстати, если мы знаем код символа в кодировке юникод, то можем добавить его в HTML, используя «числовую ссылку» (numeric character reference).</p>
+<p>Для этого нужно написать сначала <code>&amp;#</code>, затем код, и завершить точкой с запятой <code>';'</code>. Например, символ <code>'а'</code> в виде числовой ссылки: <code>&amp;#1072;</code>.</p>
+<p>Если код хотят дать в 16-ричной системе счисления, то начинают с <code>&amp;#x</code>.</p>
+<p>В юникоде есть много забавных и полезных символов, например, символ ножниц: ✂ (<code>&amp;#x2702;</code>), дроби: ½ (<code>&amp;#xBD;</code>) ¾ (<code>&amp;#xBE;</code>) и другие. Их можно использовать вместо картинок в дизайне.</p>
+</div></div>
+<h2><a class="main__anchor" href="#посимвольное-сравнение" name="посимвольное-сравнение">Посимвольное сравнение</a></h2><p>Сравнение строк работает <em>лексикографически</em>, иначе говоря, посимвольно.</p>
+<p>Сравнение строк <code>s1</code> и <code>s2</code> обрабатывается по следующему алгоритму:</p>
+<ol>
+<li>Сравниваются первые символы: <code>s1[0]</code> и <code>s2[0]</code>. Если они разные, то сравниваем их и, в зависимости от результата их сравнения, возвратить <code>true</code> или <code>false</code>. Если же они одинаковые, то…</li>
+<li>Сравниваются вторые символы <code>s1[1]</code> и <code>s2[1]</code></li>
+<li>Затем третьи <code>s1[2]</code> и <code>s2[2]</code> и так далее, пока символы не будут наконец разными, и тогда какой символ больше – та строка и больше. Если же в какой-либо строке закончились символы, то считаем, что она меньше, а если закончились в обеих – они равны.</li>
+</ol>
+<p>Спецификация языка определяет этот алгоритм более детально. Если же говорить простыми словами, смысл алгоритма в точности соответствует порядку, по которому имена заносятся в орфографический словарь.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">"Вася" &gt; "Ваня" // true, т.к. начальные символы совпадают, а потом 'с' &gt; 'н'
+"Дома" &gt; "До" // true, т.к. начало совпадает, но в 1-й строке больше символов</code></pre>
+</div>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Числа в виде строк сравниваются как строки</span></div>
+<div class="important__content"><p>Бывает, что числа приходят в скрипт в виде строк, например как результат <code>prompt</code>. В этом случае результат их сравнения будет неверным:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "2" &gt; "14" ); // true, так как это строки, и для первых символов верно "2" &gt; "1"</code></pre>
+</div>
+</div>
+</div><p>Если хотя бы один аргумент – не строка, то другой будет преобразован к числу:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 2 &gt; "14" ); // false</code></pre>
+</div>
+</div>
+</div></div></div>
+<h2><a class="main__anchor" href="#правильное-сравнение" name="правильное-сравнение">Правильное сравнение</a></h2><p>Все современные браузеры, кроме IE10- (для которых нужно подключить библиотеку <a href="https://github.com/andyearnshaw/Intl.js/">Intl.JS</a>) поддерживают стандарт <a href="http://www.ecma-international.org/ecma-402/1.0/ECMA-402.pdf">ECMA 402</a>, поддерживающий сравнение строк на разных языках, с учётом их правил.</p>
+<p>Способ использования:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "Ёлки";
+
+alert( str.localeCompare("Яблони") ); // -1</code></pre>
+</div>
+</div>
+</div><p>Метод <code>str1.localeCompare(str2)</code> возвращает <code>-1</code>, если <code>str1 &lt; str2</code>, <code>1</code>, если <code>str1 &gt; str2</code> и <code>0</code>, если они равны.</p>
+<p>Более подробно про устройство этого метода можно будет узнать в статье <a href="/intl">Intl: интернационализация в JavaScript</a>, когда это вам понадобится.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Строки в JavaScript имеют внутреннюю кодировку Юникод. При написании строки можно использовать специальные символы, например <code>\n</code> и вставлять юникодные символы по коду.</li>
+<li>Мы познакомились со свойством <code>length</code> и методами <code>charAt</code>, <code>toLowerCase/toUpperCase</code>, <code>substring/substr/slice</code> (предпочтителен <code>slice</code>). Есть и другие методы, например <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/Trim">trim</a> обрезает пробелы с начала и конца строки.</li>
+<li>Строки сравниваются побуквенно. Поэтому если число получено в виде строки, то такие числа могут сравниваться некорректно, нужно преобразовать его к типу <em>number</em>.</li>
+<li>При сравнении строк следует иметь в виду, что буквы сравниваются по их кодам. Поэтому большая буква меньше маленькой, а буква <code>ё</code> вообще вне основного алфавита.</li>
+<li>Для правильного сравнения существует целый стандарт ECMA 402. Это не такое простое дело, много языков и много правил. Он поддерживается во всех современных браузерах, кроме IE10-, в которых нужна библиотека <a href="https://github.com/andyearnshaw/Intl.js/">https://github.com/andyearnshaw/Intl.js/</a>. Такое сравнение работает через вызов <code>str1.localeCompare(str2)</code>.</li>
+</ul>
+<p>Больше информации о методах для строк можно получить в справочнике: <a href="http://javascript.ru/String">http://javascript.ru/String</a>.</p>
+</cut></div></meta></article></main></div></body></html>

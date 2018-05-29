@@ -1,0 +1,160 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Привлечение внимания к окну" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Проверить, находится ли окно в фокусе, а также перевести внимание посетителя на него – сложно.</p>
+<p>В первую очередь, это потому, что JavaScript не интегрирован с оконным менеджером ОС. Кроме того, браузер охраняет права посетителя: если он хочет скрыть окно, то JavaScript не может его остановить.</p>
+<p>Но кое-что сделать, конечно, можно. Об этом и поговорим.</p>
+<cut>
+<h2><a class="main__anchor" href="#метод-window-focus" name="метод-window-focus">Метод window.focus</a></h2><p>Метод <code>window.focus</code> позволяет сфокусироваться на окне. Он работает по-разному в разных ОС и браузерах.</p>
+<p>Проверьте, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">setInterval(function() { window.focus() }, 1000);</code></pre>
+</div>
+</div>
+</div><p>Что будет, если запустить этот код, и затем переключиться в другое окно или вкладку?</p>
+<p>Можно подумать, что окно будет оказываться в фокусе раз в секунду. Но это не так.</p>
+<p>Произойдет одно из трех:</p>
+<ol>
+<li>Вообще никакого эффекта. Самый распространённый случай, если в окне много вкладок.</li>
+<li>Окно развернется (при необходимости) и выйдет на передний план. Обычно это происходит, когда метод <code>window.focus()</code> вызывается для попапа, а активно  сейчас – главное окно. То есть, в этом случае вызов сработает.</li>
+<li>Заголовок окна начнет мигать. Чтобы увидеть это в действии – откройте данную страницу в IE, запустите код и переключитесь на другое окно. Браузер попытается привлечь Ваше внимание миганием/мерцанием заголовка окна.</li>
+</ol>
+<h2><a class="main__anchor" href="#мерцание-заголовка" name="мерцание-заголовка">Мерцание заголовка</a></h2><p>В дополнение к <code>window.focus()</code> используют мерцание заголовка окна, как показано в примере ниже:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script&gt;
+  var win = open('/', 'test', 'width=300,height=300')
+
+  function getAttention(win) {
+    if (win.closed) {
+      alert( "Окно закрыто, привлечь внимание к нему нельзя" );
+      return;
+    }
+
+    win.focus();
+    var i = 0;
+    var show = ['************', win.document.title];
+
+    var focusTimer = setInterval(function() {
+      if (win.closed) {
+        clearInterval(focusTimer);
+        return;
+      }
+      win.document.title = show[i++ % 2];
+    }, 1000);
+
+    win.document.onmousemove = function() {
+      clearInterval(focusTimer);
+      win.document.title = show[1];
+      win.document.onmousemove = null;
+    }
+  }
+&lt;/script&gt;
+
+&lt;input type="button" onclick="getAttention(win)" value="getAttention(win)"&gt;</code></pre>
+</div>
+</div>
+</div><p>Запустите код и сверните всплывающее окно. А затем – нажмите кнопку с надписью «getAttention(win)». Браузер будет привлекать ваше внимание, как умеет ;)</p>
+<p>Обратите внимание: в коде есть проверка на <code>win.closed</code>. Попытка манипулирования закрытым окном вызовет исключение.</p>
+<p>Как только посетитель сфокусировался на окне индикация прекращается. Для определения момента фокусировки в примере выше используется событие <code>document.onmousemove</code>.</p>
+<p>Можно было использовать событие <code>window.onfocus</code>, но, оказывается, оно ненадежно.</p>
+<h2><a class="main__anchor" href="#событие-window-onfocus" name="событие-window-onfocus">Событие window.onfocus</a></h2><p>Вот переписанный вариант функции <code>getAttention(win)</code>, с использованием события <code>onfocus</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script&gt;
+  var win = open('/', 'test', 'width=300,height=300')
+
+  function getAttention(win) {
+    if (win.closed) {
+      alert( "Окно закрыто, привлечь внимание к нему нельзя" );
+      return;
+    }
+
+    var i = 0;
+    var show = ['************', win.document.title];
+
+    function stop() {
+      clearInterval(focusTimer);
+      win.document.title = show[1];
+    }
+
+    win.onfocus = function() {
+      stop();
+      win.onfocus = null;
+    }
+
+    var focusTimer = setInterval(function() {
+      if (win.closed) {
+        clearInterval(focusTimer);
+        return;
+      }
+
+      win.document.title = show[i++ % 2];
+    }, 1000);
+
+    win.focus();
+  }
+&lt;/script&gt;
+
+&lt;input type="button" onclick="getAttention(win)" value="getAttention(win)"&gt;</code></pre>
+</div>
+</div>
+</div><p>Далее мы посмотрим случаи, когда он не срабатывает, и почему нам всё же нужно <code>document.onmousemove</code>.</p>
+<h3><a class="main__anchor" href="#когда-событие-onfocus-не-работает" name="когда-событие-onfocus-не-работает">Когда событие onfocus не работает?</a></h3><p>Возможно такое, что посетитель переключается на окно, а <code>window.onfocus</code> не происходит.</p>
+<p>Это потому, что переключение между окнами и фокусировка – это разные вещи. Например, если курсор находится в поле для ввода URL браузера, то считается, что окно не в фокусе, хотя посетитель переключился на это окно.</p>
+<p>Попробуйте проделать следующее:</p>
+<ol>
+<li>Запустите пример с <code>getAttention</code> в Chrome или IE (кстати, в них нельзя отключить адресную панель).</li>
+<li>Поместите курсор в панель адреса всплывающего окна.</li>
+<li>Перейдите обратно к главному окну и нажмите кнопку <code>getAttention(win)</code></li>
+</ol>
+<p><strong>Вы увидите, что несмотря на то, что вы переключились на окно, и оно сейчас на переднем плане, событие <code>onfocus</code> не срабатывает.</strong></p>
+<p>Есть и другие случаи, когда переключение между окнами не вызывает <code>window.onfocus</code>. Скажем, если окно сфокусировать щелчком в поле ввода формы, то в IE события <code>window.onfocus</code> (а также <code>window.onfocusin</code>) – не сработают!</p>
+<p>Можно попробовать поймать момент фокусировки и по-другому, повесив дополнительные обработчики событий на <code>document</code>. В главе <a href="/focus-blur">Фокусировка: focus/blur</a> описана техника делегирования для <code>focus/blur</code>.</p>
+<p>Но этот способ получает фокус только если посетитель сфокусируется где-то в документе: щелкнет или сделает еще какое-то действие в документе, а не просто посмотрит на него и проведет над ним мышкой.</p>
+<p>Впрочем, никто не мешает использовать сочетание всех описанных методов.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Фокусировка и привлечение внимания к окну:</p>
+<ul>
+<li>
+<p>Метод <code>focus</code> для <code>window</code> не надёжен. Окнами и вкладками браузера можно уверенно управлять только на уровне ОС.</p>
+<p>Поэтому для привлечения внимания посетителя к окну стоит также использовать  мерцающий заголовок окна.</p>
+</li>
+</ul>
+<p>Обнаружение переключения на окно:</p>
+<ul>
+<li>
+<p>У <code>window</code> есть событие <code>onfocus</code>, но оно также ненадёжно.</p>
+<p>Поэтому для определения переключения на окно – используйте его вместе с делегируемым <code>focus</code> на документе, а также <code>document.onmousemove</code>.</p>
+</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

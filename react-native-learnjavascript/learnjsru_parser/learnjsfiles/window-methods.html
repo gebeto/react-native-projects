@@ -1,0 +1,224 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Открытие окон и методы window" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Всплывающее окно («попап» – от англ. Popup window) – один из старейших способов показать пользователю ещё один документ.</p>
+<p>В этой статье мы рассмотрим открытие окон и ряд тонких моментов, которые с этим связаны.</p>
+<cut>
+<p>Простейший пример:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">window.open("http://ya.ru");</code></pre>
+</div>
+</div>
+</div><p>…При запуске откроется новое окно с указанным URL.</p>
+<p>Большинство браузеров по умолчанию создают новую вкладку вместо отдельного окна, но чуть далее мы увидим, что можно и «заказать» именно окно.</p>
+<h2><a class="main__anchor" href="#блокировщик-всплывающих-окон" name="блокировщик-всплывающих-окон">Блокировщик всплывающих окон</a></h2><p>Рекламные попапы очень надоели посетителям, аж со времён 20-го века, поэтому современные браузеры всплывающие окна обычно блокируют. При этом пользователь, конечно, может изменить настройки блокирования для конкретного сайта.</p>
+<p><strong>Всплывающее окно блокируется в том случае, если вызов <code>window.open</code> произошёл не в результате действия посетителя.</strong></p>
+<p>Как же браузер понимает – посетитель вызвал открытие окна или нет?</p>
+<p>Для этого при работе скрипта он хранит внутренний «флаг», который говорит – инициировал посетитель выполнение или нет. Например, при клике на кнопку весь код, который выполнится в результате, включая вложенные вызовы, будет иметь флаг «инициировано посетителем» и попапы при этом разрешены.</p>
+<p>А если код был на странице и выполнился автоматически при её загрузке – у него этого флага не будет. Попапы будут заблокированы.</p>
+<h2><a class="main__anchor" href="#полный-синтаксис-window-open" name="полный-синтаксис-window-open">Полный синтаксис window.open</a></h2><p>Полный синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">win = window.open(url, name, params)</code></pre>
+</div>
+</div>
+</div><p>Функция возвращает ссылку на объект <code>window</code> нового окна, либо <code>null</code>, если окно было заблокировано браузером.</p>
+<p>Параметры:</p>
+<dl>
+<dt><code>url</code></dt>
+<dd>URL для загрузки в новое окно.</dd>
+<dt><code>name</code></dt>
+<dd>Имя нового окна. Может быть использовано в параметре <code>target</code> в формах. Если позднее вызвать <code>window.open()</code> с тем же именем, то браузеры (кроме IE) заменяют существующее окно на новое.</dd>
+<dt><code>params</code></dt>
+<dd>Строка с конфигурацией для нового окна. Состоит из параметров, перечисленных через запятую. Пробелов в ней быть не должно.</dd>
+</dl>
+<p>Значения параметров <code>params</code>.</p>
+<ol>
+<li>Настройки расположения окна:</li>
+</ol>
+<dl>
+<dt><code>left/top</code> (число)</dt>
+<dd>
+<p>Координаты верхнего левого угла относительно экрана. Ограничение: новое окно не может быть позиционированно за пределами экрана.</p>
+</dd>
+<dt><code>width/height</code> (число)</dt>
+<dd>
+<p>Ширина/высота нового окна. Минимальные значения ограничены, так что невозможно создать невидимое окно с нулевыми размерами.</p>
+<p>Если координаты и размеры не указаны, то обычно браузер открывает не окно, а новую вкладку.</p>
+</dd>
+</dl>
+<ol start="2">
+<li>Свойства окна:</li>
+</ol>
+<dl>
+<dt><code>menubar</code> (yes/no)</dt>
+<dd>Скрыть или показать строку меню браузера.</dd>
+<dt><code>toolbar</code> (yes/no)</dt>
+<dd>Показать или скрыть панель навигации браузера (кнопки назад, вперед, обновить страницу и остальные) в новом окне.</dd>
+<dt><code>location</code> (yes/no)</dt>
+<dd>Показать/скрыть поле URL-адреса в новом окне. По умолчанию Firefox и IE не позволяют скрывать строку адреса.</dd>
+<dt><code>status</code> (yes/no)</dt>
+<dd>Показать или скрыть строку состояния. С другой стороны, браузер может в принудительном порядке показать строку состояния.</dd>
+<dt><code>resizable</code> (yes/no)</dt>
+<dd>Позволяет отключить возможность изменять размеры нового окна. Значение <code>no</code> обычно неудобно посетителям.</dd>
+<dt><code>scrollbars</code> (yes/no)</dt>
+<dd>Разрешает убрать полосы прокрутки для нового окна. Значение <code>no</code> обычно неудобно посетителям.</dd>
+</dl>
+<ol start="3">
+<li>Еще есть небольшое количество не кросс-браузерных свойств, которые обычно не используются. Вы можете узнать о них в документации, например MDN: <a href="https://developer.mozilla.org/en/DOM/window.open">window.open</a>.</li>
+</ol>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Важно:</span></div>
+<div class="important__content"><p>Браузер подходит к этим параметрам интеллектуально. Он может проигнорировать их часть или даже все, они скорее являются «пожеланиями», нежели «требованиями».</p>
+</div></div>
+<p>Важные моменты:</p>
+<ul>
+<li>Если при вызове <code>open</code> указан только первый параметр,  параметр отсутствует, то используются параметры по умолчанию. Обычно при этом будет открыто не окно, а вкладка, что зачастую более удобно.</li>
+<li>Если указана строка с параметрами, но некоторые <code>yes/no</code> параметры отсутствуют, то браузер выставляет их в <code>no</code>. Поэтому убедитесь, что все нужные вам параметры выставлены в <code>yes</code>.</li>
+<li>Когда не указан <code>top/left</code>, то браузер откроет окно с небольшим смещением относительно левого верхнего угла последнего открытого окна.</li>
+<li>Если не указаны <code>width/height</code>, новое окно будет такого же размера, как последнее открытое.</li>
+</ul>
+<h2><a class="main__anchor" href="#доступ-к-новому-окну" name="доступ-к-новому-окну">Доступ к новому окну</a></h2><p>Вызов <code>window.open</code> возвращает ссылку на новое окно. Она может быть использована для манипуляции свойствами окна, изменения URL, доступа к его переменным и т.п.</p>
+<p>В примере ниже мы заполняем новое окно содержимым целиком из JavaScript:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var newWin = window.open("about:blank", "hello", "width=200,height=200");
+
+newWin.document.write("Привет, мир!");</code></pre>
+</div>
+</div>
+</div><p>А здесь модифицируем содержимое после загрузки:</p>
+<div class="code-example" data-highlight-inline="7:12-18" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var newWin = window.open('/', 'example', 'width=600,height=400');
+
+alert(newWin.location.href); // (*) about:blank, загрузка ещё не началась
+
+newWin.onload = function() {
+
+  // создать div в документе нового окна
+  var div = newWin.document.createElement('div'),
+      body = newWin.document.body;
+
+  div.innerHTML = 'Добро пожаловать!'
+  div.style.fontSize = '30px'
+
+  // вставить первым элементом в body нового окна
+  body.insertBefore(div, body.firstChild);
+}</code></pre>
+</div>
+</div>
+</div><p>Обратим внимание: сразу после <code>window.open</code> новое окно ещё не загружено. Это демонстрирует <code>alert</code> в строке <code>(*)</code>. Поэтому в примере выше окно модифицируется при <code>onload</code>. Можно было и поставить обработчик на <code>DOMContentLoaded</code> для <code>newWin.document</code>.</p>
+<p><strong>Связь между окнами – двухсторонняя.</strong></p>
+<p>Родительское окно получает ссылку на новое через <code>window.open</code>, а дочернее – ссылку на родителя <code>window.opener</code>.</p>
+<p>Оно тоже может его модифицировать.</p>
+<p>Если запустить пример ниже, то новое окно заменит содержимое текущего на <code>'Test'</code>:</p>
+<div class="code-example" data-highlight-inline="3:11-57" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var newWin = window.open("about:blank", "hello", "width=200,height=200");
+
+newWin.document.write(
+  "&lt;script&gt;window.opener.document.body.innerHTML = 'Test'&lt;/script&gt;"
+);</code></pre>
+</div>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Same Origin Policy – защита проверкой протокол-сайт-порт</span></div>
+<div class="important__content"><p>Большинство действий, особенно получение содержимого окна и его переменных, возможны лишь в том случае, если URL нового окна происходит из того же источника (англ. – <em>«Same Origin»</em>), т.е. совпадают домен, протокол и порт.</p>
+<p>Иначе говоря, если новое окно содержит документ с того же сайта.</p>
+<p>Больше информации об этом будет позже, в главе <a href="/same-origin-policy">Кросс-доменные ограничения и их обход</a>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#события" name="события">События</a></h2><p>Наиболее важные события при работе с окном браузера:</p>
+<ul>
+<li><code>onresize</code> – событие изменения размера окна.</li>
+<li><code>onscroll</code> – событие при прокрутке окна.</li>
+<li><code>onload</code> – полностью загрузилась страница со всеми ресурсами.</li>
+<li><code>onfocus/onblur</code> – получение/потеря фокуса.</li>
+</ul>
+<h2><a class="main__anchor" href="#методы-и-свойства" name="методы-и-свойства">Методы и свойства</a></h2><dl>
+<dt><code>window.closed</code></dt>
+<dd>Свойство <code>window.closed</code> равно <code>true</code>, если окно закрыто. Может быть использовано, чтобы проверить, закрыл ли посетитель попап.</dd>
+<dt><dt><code>window.close()</code></dt>
+<dd>Закрывает попап без предупреждений и уведомлений. Вообще, метод <code>close()</code> можно вызвать для любого окна, в том числе, текущего. Но если окно открыто не с помощью <code>window.open()</code>, то браузер может проигнорировать вызов <code>close</code> или запросить подтверждение.</dd>
+</dt></dl>
+<h2><a class="main__anchor" href="#перемещение-и-изменение-размеров-окна" name="перемещение-и-изменение-размеров-окна">Перемещение и изменение размеров окна</a></h2><p>Существует несколько методов для перемещения/изменения размеров окна.</p>
+<dl>
+<dt><code>win.moveBy(x,y)</code></dt>
+<dd>Перемещает окно относительно текущего положения на <code>x</code> пикселей вправо и <code>y</code> пикселей вниз. Допускаются отрицательные значения.</dd>
+<dt><code>win.moveTo(x,y)</code></dt>
+<dd>Передвигает окно в заданную координатами <code>x</code> и <code>y</code> точку экрана монитора.</dd>
+<dt><code>win.resizeBy(width,height)</code></dt>
+<dd>Изменяет размер окна на заданную величину <code>width/height</code> (ширина/высота). Допускаются отрицательные значения.</dd>
+<dt><code>win.resizeTo(width,height)</code></dt>
+<dd>Изменяет размер окна на заданное значение.</dd>
+</dl>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Важно:</span></div>
+<div class="important__content"><p>Чтобы предотвратить использование этих методов с плохими целями, браузеры часто блокируют их выполнение. Как правило, они работают, если окно <code>win</code> открыто вызовом <a href="https://developer.mozilla.org/en-US/docs/Web/API/window.open">window.open</a> из JavaScript текущей страницы и в нём нет дополнительных вкладок.</p>
+</div></div>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Ни свернуть ни развернуть</span></div>
+<div class="important__content"><p>Заметим, что JavaScript не может ни свернуть ни развернуть ни «максимизировать» (Windows) окно.</p>
+<p>Эти функции операционной системы от Frontend-разработчиков скрыты. Вызовы, описанные выше, в случае свёрнутого или максимизированного окна не работают.</p>
+</div></div>
+<h2><a class="main__anchor" href="#прокрутка-окна" name="прокрутка-окна">Прокрутка окна</a></h2><p>Прокрутка окна требуется, пожалуй, чаще всего. Мы уже говорили о ней в главе <a href="/metrics-window">Размеры и прокрутка страницы</a>:</p>
+<dl>
+<dt><code>win.scrollBy(x,y)</code></dt>
+<dd>Прокрутка окна на заданное число пикселей вперед или назад. Допускаются отрицательные значения.</dd>
+<dt><code>win.scrollTo(x,y)</code></dt>
+<dd>Прокручивает окно к заданным координатам.</dd>
+<dt><code>elem.scrollIntoView(top)</code></dt>
+<dd>Этот метод прокрутки вызывается на элементе. При этом окно прокручивается так, чтобы элемент был полностью видим. Если параметр <code>top</code> равен <code>true</code> или не задан, то верх элемента совпадает с верхом окна. Если он равен <code>false</code>, то окно прокручивается так, чтобы нижний край элемента совпал с нижним краем окна.</dd>
+</dl>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Всплывающее окно открывается с помощью вызова <code>window.open(url, name, params)</code>.</li>
+<li>Метод <code>window.open</code> возвращает ссылку на новое окно или <code>null</code>, если окно было заблокировано.</li>
+<li>Современные браузеры блокируют окна, если <code>window.open</code> вызвано не в результате действия посетителя.</li>
+<li>Обычно открывается вкладка, но если заданы размеры и позиция – то именно окно.</li>
+<li>Новое окно имеет ссылку на родительское в <code>window.opener</code>.</li>
+<li>Окна могут общаться между собой как угодно, если они из одного источника. Иначе действуют жёсткие ограничения безопасности.</li>
+</ul>
+<p>Всплывающие окна используются нечасто. Ведь загрузить новую информацию можно динамически, с помощью технологии AJAX, а показать – в элементе <code>&lt;div&gt;</code>, расположенным над страницей (<code>z-index</code>). Ещё одна альтернатива – тег <code>&lt;iframe&gt;</code>.</p>
+<p>Но в некоторых случаях всплывающие окна бывают очень даже полезны. Например, отдельное окно сервиса онлайн-консультаций. Посетитель может ходить по сайту в основном окне, а общаться в чате – во вспомогательном.</p>
+<p>Если вы хотите использовать всплывающее окно, предупредите посетителя об этом, так же и при использовании <code>target="_blank"</code> в ссылках или формах. Иконка открывающегося окошка на ссылке поможет посетителю понять, что происходит и не потерять оба окна из поля зрения.</p>
+</cut></div></meta></article></main></div></body></html>

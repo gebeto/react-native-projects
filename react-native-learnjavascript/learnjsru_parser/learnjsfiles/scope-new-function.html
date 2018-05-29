@@ -1,0 +1,93 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="[[Scope]] для new Function" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><h2><a class="main__anchor" href="#scope-Function" name="scope-Function">Присвоение [[Scope]] для new Function</a></h2><p>Есть одно исключение из общего правила присвоения <code>[[Scope]]</code>, которое мы рассматривали в предыдущей главе.</p>
+<p>При создании функции с использованием  <code>new Function</code>, её свойство <code>[[Scope]]</code> ссылается не на текущий <code>LexicalEnvironment</code>, а на <code>window</code>.</p>
+<h2><a class="main__anchor" href="#пример" name="пример">Пример</a></h2><p>Следующий пример демонстрирует как функция, созданная <code>new Function</code>, игнорирует внешнюю переменную <code>a</code> и выводит глобальную вместо неё:</p>
+<div class="code-example" data-highlight-block="5-5" data-highlight-inline="10:16-17" data-refresh="1" data-trusted="0">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var a = 1;
+
+function getFunc() {
+  var a = 2;
+
+  var func = new Function('', 'alert(a)');
+
+  return func;
+}
+
+getFunc()(); // 1, из window</code></pre>
+</div>
+</div>
+</div><p>Сравним с обычным поведением:</p>
+<div class="code-example" data-highlight-block="5-5" data-highlight-inline="10:16-17" data-refresh="1" data-trusted="0">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var a = 1;
+
+function getFunc() {
+  var a = 2;
+
+  var func = function() { alert(a); };
+
+  return func;
+}
+
+getFunc()(); // 2, из LexicalEnvironment функции getFunc</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#почему-так-сделано" name="почему-так-сделано">Почему так сделано?</a></h2><div class="important important_warn">
+<div class="important__header"><span class="important__type">Продвинутые знания</span></div>
+<div class="important__content"><p>Содержимое этой секции содержит продвинутую информацию теоретического характера, которая прямо сейчас не обязательна для дальнейшего изучения JavaScript.</p>
+</div></div>
+<p>Эта особенность <code>new Function</code>, хоть и выглядит странно, на самом деле весьма полезна.</p>
+<p>Представьте себе, что нам действительно нужно создать функцию из строки кода. Текст кода этой функции неизвестен на момент написания скрипта (иначе зачем <code>new Function</code>), но станет известен позже, например получен с сервера или из других источников данных.</p>
+<p>Предположим, что этому коду надо будет взаимодействовать с внешними переменными основного скрипта.</p>
+<p>Но проблема в том, что JavaScript при выкладывании на «боевой сервер» предварительно сжимается минификатором – специальной программой, которая уменьшает размер кода, убирая из него лишние комментарии, пробелы, что очень важно – переименовывает локальные переменные на более короткие.</p>
+<p>То есть, если внутри функции есть <code>var userName</code>, то минификатор заменит её на <code>var a</code> (или другую букву, чтобы не было конфликта), предполагая, что так как переменная видна только внутри функции, то этого всё равно никто не заметит, а код станет короче. И обычно проблем нет.</p>
+<p>…Но если бы <code>new Function</code> могла обращаться к внешним переменным, то при попытке доступа к <code>userName</code> в сжатом коде была бы ошибка, так как минификатор переименовал её.</p>
+<p><strong>Получается, что даже если бы мы захотели использовать локальные переменные в <code>new Function</code>, то после сжатия были бы проблемы, так как минификатор переименовывает локальные переменные.</strong></p>
+<p>Описанная особенность <code>new Function</code> просто-таки спасает нас от ошибок.</p>
+<p>Ну а если внутри функции, создаваемой через <code>new Function</code>, всё же нужно использовать какие-то данные – без проблем, нужно всего лишь предусмотреть соответствующие параметры и передавать их явным образом, например так:</p>
+<div class="code-example" data-highlight-block="0-0,4-4" data-refresh="1" data-trusted="0">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var sum = new Function('a, b', ' return a + b; ');
+
+var a = 1, b = 2;
+
+alert( sum(a, b) ); // 3</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Функции, создаваемые через <code>new Function</code>, имеют значением <code>[[Scope]]</code> не внешний объект переменных, а <code>window</code>.</li>
+<li>Следствие – такие функции не могут использовать замыкание. Но это хорошо, так как бережёт от ошибок проектирования, да и при сжатии JavaScript проблем не будет. Если же внешние переменные реально нужны – их можно передать в качестве параметров.</li>
+</ul>
+</div></meta></article></main></div></body></html>

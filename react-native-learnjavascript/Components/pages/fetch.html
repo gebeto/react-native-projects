@@ -1,0 +1,73 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Метод fetch: замена XMLHttpRequest" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Метод <a href="https://fetch.spec.whatwg.org/">fetch</a> – это <code>XMLHttpRequest</code> нового поколения. Он предоставляет улучшенный интерфейс для осуществления запросов к серверу: как по части возможностей и контроля над происходящим, так и по синтаксису, так как построен на <a href="/promise">промисах</a>.</p>
+<p>Поддержка в браузерах пока не очень распространена, но есть <a href="https://github.com/github/fetch">полифилл</a> и не один.</p>
+<h2><a class="main__anchor" href="#синтаксис" name="синтаксис">Синтаксис</a></h2><p>Синтаксис метода <code>fetch</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">let promise = fetch(url[, options]);</code></pre>
+</div>
+</div>
+</div><ul>
+<li><code>url</code> – URL, на который сделать запрос,</li>
+<li><code>options</code> – необязательный объект с настройками запроса.</li>
+</ul>
+<p>Свойства <code>options</code>:</p>
+<ul>
+<li><code>method</code> – метод запроса,</li>
+<li><code>headers</code> – заголовки запроса (объект),</li>
+<li><code>body</code> – тело запроса: <code>FormData</code>, <code>Blob</code>, строка и т.п.</li>
+<li><code>mode</code> – одно из: «same-origin», «no-cors», «cors», указывает, в каком режиме кросс-доменности предполагается делать запрос.</li>
+<li><code>credentials</code> – одно из: «omit», «same-origin», «include», указывает, пересылать ли куки и заголовки авторизации вместе с запросом.</li>
+<li><code>cache</code> – одно из «default», «no-store», «reload», «no-cache», «force-cache», «only-if-cached», указывает, как кешировать запрос.</li>
+<li><code>redirect</code> – можно поставить «follow» для обычного поведения при коде 30x (следовать редиректу) или «error» для интерпретации редиректа как ошибки.</li>
+</ul>
+<p>Как видно, всевозможных настроек здесь больше, чем в <code>XMLHttpRequest</code>. Вместе с тем, надо понимать, что если мы используем полифилл, то ничего более гибкого, чем оригинальный <code>XMLHttpRequest</code> мы из этого не получим.</p>
+<p>Разве что, <code>fetch</code>, возможно, будет удобнее пользоваться.</p>
+<h2><a class="main__anchor" href="#использование" name="использование">Использование</a></h2><p>При вызове <code>fetch</code> возвращает промис, который, когда получен ответ, выполняет коллбэки с объектом <a href="https://fetch.spec.whatwg.org/#response">Response</a> или с ошибкой, если запрос не удался.</p>
+<p>Пример использования:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+fetch('/article/fetch/user.json')
+  .then(function(response) {
+    alert(response.headers.get('Content-Type')); // application/json; charset=utf-8
+    alert(response.status); // 200
+
+    return response.json();
+   })
+  .then(function(user) {
+    alert(user.name); // iliakan
+  })
+  .catch( alert );</code></pre>
+</div>
+</div>
+</div><p>Объект <code>response</code> кроме доступа к заголовкам <code>headers</code>, статусу <code>status</code> и некоторым другим полям ответа, даёт возможность прочитать его тело, в желаемом формате.</p>
+<p>Варианты описаны в спецификации <a href="https://fetch.spec.whatwg.org/#body">Body</a>, они включают в себя:</p>
+<ul>
+<li><code>response.arrayBuffer()</code></li>
+<li><code>response.blob()</code></li>
+<li><code>response.formData()</code></li>
+<li><code>response.json()</code></li>
+<li><code>response.text()</code></li>
+</ul>
+<p>Соответствующий вызов возвращает промис, который, когда ответ будет получен, вызовет коллбэк с результатом.</p>
+<p>В примере выше мы можем в первом <code>.then</code> проанализировать ответ и, если он нас устроит – вернуть промис с нужным форматом. Следующий <code>.then</code> уже будет содержать полный ответ сервера.</p>
+<p>Больше примеров вы можете найти в описании <a href="https://github.com/github/fetch">полифилла для fetch</a>.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Метод <code>fetch</code> – уже сейчас удобная альтернатива <code>XMLHttpRequest</code> для тех, кто не хочет ждать и любит промисы.</p>
+<p>Детальное описание этого метода есть в стандарте <a href="https://fetch.spec.whatwg.org/">Fetch</a>, а простейшие примеры запросов – в описании к <a href="https://github.com/github/fetch">полифиллу</a>.</p>
+</div></meta></article></main></div></body></html>

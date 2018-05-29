@@ -1,0 +1,344 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Фокусировка: focus/blur" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Говорят, что элемент «получает фокус», когда посетитель фокусируется на нём. Обычно фокусировка автоматически происходит при нажатии на элементе мышкой, но также можно перейти на нужный элемент клавиатурой – через клавишу <kbd class="shortcut">Tab</kbd>, нажатие пальцем на планшете и так далее.</p>
+<p>Момент получения фокуса и потери очень важен.</p>
+<p>При получении фокуса мы можем подгрузить данные для автодополнения, начать отслеживать изменения. При потере – проверить данные, которые ввёл посетитель.</p>
+<p>Кроме того, иногда полезно «вручную», из JavaScript перевести фокус на нужный элемент, например, на поле в динамически созданной форме.</p>
+<cut>
+<h2><a class="main__anchor" href="#события-focus-blur" name="события-focus-blur">События focus/blur</a></h2><p>Событие <code>focus</code> вызывается тогда, когда пользователь фокусируется на элементе, а  <code>blur</code> – когда фокус исчезает, например посетитель кликает на другом месте экрана.</p>
+<p>Давайте сразу посмотрим на них в деле, используем для проверки («валидации») введённых в форму значений.</p>
+<p>В примере ниже:</p>
+<ul>
+<li>Обработчик <code>onblur</code> проверяет, что в поле введено число, если нет – показывает ошибку.</li>
+<li>Обработчик <code>onfocus</code>, если текущее состояние поля ввода – «ошибка» – скрывает её (потом при <code>onblur</code> будет повторная проверка).</li>
+</ul>
+<p>В примере ниже, если набрать что-нибудь в поле «возраст» и завершить ввод, нажав <kbd class="shortcut">Tab</kbd> или кликнув в другое место страницы, то введённое значение будет автоматически проверено:</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-highlight-inline="7:0-12,15:0-13" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt; .error { border-color: red; } &lt;/style&gt;
+
+Введите ваш возраст: &lt;input type="text" id="input"&gt;
+
+&lt;div id="error"&gt;&lt;/div&gt;
+
+&lt;script&gt;
+input.onblur = function() {
+  if (isNaN(this.value)) { // введено не число
+    // показать ошибку
+    this.className = "error";
+    error.innerHTML = 'Вы ввели не число. Исправьте, пожалуйста.'
+  }
+};
+
+input.onfocus = function() {
+  if (this.className == 'error') { // сбросить состояние "ошибка", если оно есть
+    this.className = "";
+    error.innerHTML = "";
+  }
+};
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-94ze7h" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><h2><a class="main__anchor" href="#методы-focus-blur" name="методы-focus-blur">Методы focus/blur</a></h2><p>Методы с теми же названиями переводят/уводят фокус с элемента.</p>
+<p>Для примера модифицируем пример выше, чтобы при неверном вводе посетитель просто не мог уйти с элемента:</p>
+<div class="code-example" data-autorun="true" data-demo-height="80" data-highlight-block="19-20" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  .error {
+    background: red;
+  }
+&lt;/style&gt;
+
+&lt;div&gt;Возраст:
+  &lt;input type="text" id="age"&gt;
+&lt;/div&gt;
+
+&lt;div&gt;Имя:
+  &lt;input type="text"&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  age.onblur = function() {
+    if (isNaN(this.value)) { // введено не число
+      // показать ошибку
+      this.classList.add("error");
+      //... и вернуть фокус обратно
+      age.focus();
+    } else {
+      this.classList.remove("error");
+    }
+  };
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-ajb2kv" src="about:blank" style="height:80px"></iframe>
+</div>
+</div><p>Этот пример работает во всех браузерах, кроме Firefox (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=53579">ошибка</a>).</p>
+<p>Если ввести что-то нецифровое в поле «возраст», и потом попытаться табом или мышкой перейти на другой <code>&lt;input&gt;</code>, то обработчик <code>onblur</code> вернёт фокус обратно.</p>
+<p>Обратим внимание – если из <code>onblur</code> сделать <code>event.preventDefault()</code>, то такого же эффекта не будет, потому что <code>onblur</code> срабатывает уже <em>после</em> того, как элемент потерял фокус.</p>
+<h2><a class="main__anchor" href="#html5-и-css3-вместо-focus-blur" name="html5-и-css3-вместо-focus-blur">HTML5 и CSS3 вместо focus/blur</a></h2><p>Прежде чем переходить к более сложным примерам, использующим JavaScript, мы рассмотрим три примера, когда его использовать не надо, а достаточно современного HTML/CSS.</p>
+<h3><a class="main__anchor" href="#подсветка-при-фокусировке" name="подсветка-при-фокусировке">Подсветка при фокусировке</a></h3><p>Стилизация полей ввода может быть решена средствами CSS (CSS2.1), а именно – селектором <code>:focus</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-highlight-inline="1:0-11" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+input:focus {
+  background: #FA6;
+  outline: none;  /* убрать рамку */
+}
+&lt;/style&gt;
+&lt;input type="text"&gt;
+
+&lt;p&gt;Селектор :focus выделит элемент при фокусировке на нем и уберёт рамку, которой браузер выделяет этот элемент по умолчанию.&lt;/p&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-4as0y6" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><p>В IE (включая более старые) скрыть фокус также может установка специального атрибута <a href="http://msdn.microsoft.com/en-us/library/ie/ms533783.aspx">hideFocus</a>.</p>
+<h3><a class="main__anchor" href="#автофокус" name="автофокус">Автофокус</a></h3><p>При загрузке страницы, если на ней существует элемент с атрибутом <code>autofocus</code> – браузер автоматически фокусируется на этом элементе. Работает во всех браузерах, кроме IE9-.</p>
+<div class="code-example" data-highlight-inline="0:33-42" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="text" name="search" autofocus&gt;</code></pre>
+</div>
+</div>
+</div><p>Если нужны старые IE, то же самое может сделать JavaScript:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="text" name="search"&gt;
+&lt;script&gt;
+  document.getElementsByName('search')[0].focus();
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Как правило, этот атрибут используется при изначальной загрузке, для страниц поиска и так далее, где главный элемент очевиден.</p>
+<h3><a class="main__anchor" href="#плейсхолдер" name="плейсхолдер">Плейсхолдер</a></h3><p><em>Плейсхолдер</em> – это значение-подсказка внутри <code>INPUT</code>, которое автоматически исчезает при фокусировке и существует, пока посетитель не начал вводить текст.</p>
+<p>Во всех браузерах, кроме IE9-, это реализуется специальным атрибутом <code>placeholder</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="80" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="text" placeholder="E-mail"&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-brmjbi" src="about:blank" style="height:80px"></iframe>
+</div>
+</div><p>В некоторых браузерах этот текст можно стилизовать:</p>
+<div class="code-example" data-autorun="true" data-demo-height="80" data-highlight-inline="1:3-30,5:3-27,9:3-26" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+.my::-webkit-input-placeholder {
+  color: red;
+  font-style: italic;
+}
+.my::-moz-input-placeholder {
+  color: red;
+  font-style: italic;
+}
+.my::-ms-input-placeholder {
+  color: red;
+  font-style: italic;
+}
+&lt;/style&gt;
+
+&lt;input class="my" type="text" placeholder="E-mail"&gt;
+Стилизованный плейсхолдер</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-5v3lrj" src="about:blank" style="height:80px"></iframe>
+</div>
+</div><h2><a class="main__anchor" href="#разрешаем-фокус-на-любом-элементе-tabindex" name="разрешаем-фокус-на-любом-элементе-tabindex">Разрешаем фокус на любом элементе: tabindex</a></h2><p>По умолчанию не все элементы поддерживают фокусировку.</p>
+<p>Перечень элементов немного рознится от браузера к браузеру, например, список для IE описан <a href="http://msdn.microsoft.com/en-us/library/ms536934.aspx">в MSDN</a>, одно лишь верно всегда – заведомо поддерживают <code>focus/blur</code> те элементы, c которыми посетитель может взаимодействовать: <code>&lt;button&gt;</code>, <code>&lt;input&gt;</code>, <code>&lt;select&gt;</code>, <code>&lt;a&gt;</code> и т.д.</p>
+<p>С другой стороны, на элементах для форматирования, таких как <code>&lt;div&gt;</code>, <code>&lt;span&gt;</code>, <code>&lt;table&gt;</code> – по умолчанию сфокусироваться нельзя. Впрочем, существует способ включить фокусировку и для них.</p>
+<p>В HTML есть атрибут <code>tabindex</code>.</p>
+<p>Его основной смысл – это указать номер элемента при переборе клавишей <kbd class="shortcut">Tab</kbd>.</p>
+<p>То есть, если есть два элемента, первый имеет <code>tabindex="1"</code>, а второй <code>tabindex="2"</code>, то нажатие <kbd class="shortcut">Tab</kbd> при фокусе на первом элементе – переведёт его на второй.</p>
+<p>Исключением являются специальные значения:</p>
+<ul>
+<li><code>tabindex="0"</code> делает элемент всегда последним.</li>
+<li><code>tabindex="-1"</code> означает, что клавиша <kbd class="shortcut">Tab</kbd> будет элемент игнорировать.</li>
+</ul>
+<p><strong>Любой элемент поддерживает фокусировку, если у него есть <code>tabindex</code>.</strong></p>
+<p>В примере ниже есть список элементов. Кликните на любой из них и нажмите «tab».</p>
+<div class="code-example" data-autorun="true" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">Кликните на первый элемент списка и нажмите Tab. Внимание! Дальнейшие нажатия Tab могут вывести за границы iframe'а с примером.
+&lt;ul&gt;
+  &lt;li tabindex="1"&gt;Один&lt;/li&gt;
+  &lt;li tabindex="0"&gt;Ноль&lt;/li&gt;
+  &lt;li tabindex="2"&gt;Два&lt;/li&gt;
+  &lt;li tabindex="-1"&gt;Минус один&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;style&gt;
+  li { cursor: pointer; }
+  :focus { outline: 1px dashed green; }
+&lt;/style&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-enki50" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><p>Порядок перемещения по клавише «Tab» в примере выше должен быть таким: <code>1 - 2 - 0</code> (ноль всегда последний). Продвинутые пользователи частенько используют «Tab» для навигации, и ваше хорошее отношение к ним будет вознаграждено :)</p>
+<p>Обычно <code>&lt;li&gt;</code> не поддерживает фокусировку, но здесь есть <code>tabindex</code>.</p>
+<h2><a class="main__anchor" href="#делегирование-с-focus-blur" name="делегирование-с-focus-blur">Делегирование с focus/blur</a></h2><p>События <code>focus</code> и <code>blur</code> не всплывают.</p>
+<p>Это грустно, поскольку мы не можем использовать делегирование с ними. Например, мы не можем сделать так, чтобы при фокусировке в форме она вся подсвечивалась:</p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-highlight-inline="1:6-40" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!-- при фокусировке на форме ставим ей класс --&gt;
+&lt;form onfocus="this.className='focused'"&gt;
+  &lt;input type="text" name="name" value="Ваше имя"&gt;
+  &lt;input type="text" name="surname" value="Ваша фамилия"&gt;
+&lt;/form&gt;
+
+&lt;style&gt; .focused { outline: 1px solid red; } &lt;/style&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-bo72i5" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><p>Пример выше не работает, т.к. при фокусировке на любом <code>&lt;input&gt;</code> событие <code>focus</code> срабатывает только на этом элементе и не всплывает наверх. Так что обработчик <code>onfocus</code> на форме никогда не сработает.</p>
+<p>Что делать? Неужели мы должны присваивать обработчик каждому полю <code>&lt;input&gt;</code>?</p>
+<p><strong>Это забавно, но хотя <code>focus/blur</code> не всплывают, они могут быть пойманы на фазе перехвата.</strong></p>
+<p>Вот так сработает:</p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-highlight-block="12-19" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;form id="form"&gt;
+  &lt;input type="text" name="name" value="Ваше имя"&gt;
+  &lt;input type="text" name="surname" value="Ваша фамилия"&gt;
+&lt;/form&gt;
+
+&lt;style&gt;
+  .focused {
+    outline: 1px solid red;
+  }
+&lt;/style&gt;
+
+&lt;script&gt;
+  // ставим обработчики на фазе перехвата, последний аргумент true
+  form.addEventListener("focus", function() {
+    this.classList.add('focused');
+  }, true);
+
+  form.addEventListener("blur", function() {
+    this.classList.remove('focused');
+  }, true);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-corbjn" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><h3><a class="main__anchor" href="#события-focusin-focusout" name="события-focusin-focusout">События focusin/focusout</a></h3><p>События <code>focusin/focusout</code> – то же самое, что и <code>focus/blur</code>, только они всплывают.</p>
+<p>У них две особенности:</p>
+<ul>
+<li>Не поддерживаются Firefox (хотя поддерживаются даже старейшими IE), см. <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=687787">https://bugzilla.mozilla.org/show_bug.cgi?id=687787</a>.</li>
+<li>Должны быть назначены не через <code>on</code>-свойство, а при помощи <code>elem.addEventListener</code>.</li>
+</ul>
+<p>Из-за отсутствия подержки Firefox эти события используют редко. Получается, что во всех браузерах можно использовать <code>focus</code> на стадии перехвата, ну а <code>focusin/focusout</code> – в IE8-, где стадии перехвата нет.</p>
+<p>Подсветка формы в примере ниже работает во всех браузерах.</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;form name="form"&gt;
+  &lt;input type="text" name="name" value="Ваше имя"&gt;
+  &lt;input type="text" name="surname" value="Ваша фамилия"&gt;
+&lt;/form&gt;
+&lt;style&gt;
+  .focused {
+    outline: 1px solid red;
+  }
+&lt;/style&gt;
+
+&lt;script&gt;
+  function onFormFocus() {
+    this.className = 'focused';
+  }
+
+  function onFormBlur() {
+    this.className = '';
+  }
+
+  var form = document.forms.form;
+
+  if (form.addEventListener) {
+    // focus/blur на стадии перехвата срабатывают во всех браузерах
+    // поэтому используем их
+    form.addEventListener('focus', onFormFocus, true);
+    form.addEventListener('blur', onFormBlur, true);
+  } else {
+    // ветка для IE8-, где нет стадии перехвата, но есть focusin/focusout
+    form.onfocusin = onFormFocus;
+    form.onfocusout = onFormBlur;
+  }
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-d8ij2g" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>События <code>focus/blur</code> происходят при получении и снятия фокуса с элемента.</p>
+<p>У них есть особенности:</p>
+<ul>
+<li>
+<p>Они не всплывают. Но на фазе перехвата их можно перехватить. Это странно, но это так, не спрашивайте почему.</p>
+<p>Везде, кроме Firefox, поддерживаются всплывающие альтернативы <code>focusin/focusout</code>.</p>
+</li>
+<li>
+<p>По умолчанию многие элементы не могут получить фокус. Например, если вы кликните по <code>DIV</code>, то фокусировка на нем не произойдет.</p>
+<p>Но это можно изменить, если поставить элементу атрибут <code>tabIndex</code>. Этот атрибут также дает возможность контролировать порядок перехода при нажатии <kbd class="shortcut">Tab</kbd>.</p>
+</li>
+</ul>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Текущий элемент: <code>document.activeElement</code></span></div>
+<div class="important__content"><p>Кстати, текущий элемент, на котором фокус, доступен как <code>document.activeElement</code>.</p>
+</div></div>
+</cut></div></meta></article></main></div></body></html>

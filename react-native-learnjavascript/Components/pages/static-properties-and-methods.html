@@ -1,0 +1,265 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Статические и фабричные методы" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Методы и свойства, которые не привязаны к конкретному экземпляру объекта, называют «статическими». Их записывают прямо в саму функцию-конструктор.</p>
+<cut>
+<h2><a class="main__anchor" href="#статические-свойства" name="статические-свойства">Статические свойства</a></h2><p>В коде ниже используются статические свойства <code>Article.count</code> и <code>Article.DEFAULT_FORMAT</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Article() {
+  Article.count++;
+}
+
+Article.count = 0; // статическое свойство-переменная
+Article.DEFAULT_FORMAT = "html"; // статическое свойство-константа</code></pre>
+</div>
+</div>
+</div><p>Они хранят данные, специфичные не для одного объекта, а для всех статей целиком.</p>
+<p>Как правило, это чаще константы, такие как формат «по умолчанию» <code>Article.DEFAULT_FORMAT</code>.</p>
+<h2><a class="main__anchor" href="#статические-методы" name="статические-методы">Статические методы</a></h2><p>С примерами статических методов мы уже знакомы: это встроенные методы <a href="http://javascript.ru/String.fromCharCode">String.fromCharCode</a>, <a href="http://javascript.ru/Date.parse">Date.parse</a>.</p>
+<p>Создадим для <code>Article</code> статический метод <code>Article.showCount()</code>:</p>
+<div class="code-example" data-highlight-block="8-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Article() {
+  Article.count++;
+
+  //...
+}
+Article.count = 0;
+
+Article.showCount = function() {
+  alert( this.count ); // (1)
+}
+
+// использование
+new Article();
+new Article();
+Article.showCount(); // (2)</code></pre>
+</div>
+</div>
+</div><p>Здесь <code>Article.count</code> – статическое свойство, а <code>Article.showCount</code> – статический метод.</p>
+<p>Обратим внимание на использование <code>this</code> в примере выше. Несмотря на то, что переменная и метод – статические, он всё ещё полезен. В строке <code>(1)</code> он равен <code>Article</code>.</p>
+<h2><a class="main__anchor" href="#пример-сравнение-объектов" name="пример-сравнение-объектов">Пример: сравнение объектов</a></h2><p>Ещё один хороший способ применения – сравнение объектов.</p>
+<p>Например, у нас есть объект <code>Journal</code> для журналов. Журналы можно сравнивать – по толщине, по весу, по другим параметрам.</p>
+<p>Объявим «стандартную» функцию сравнения, которая будет сравнивать по дате издания. Эта функция сравнения, естественно, не привязана к конкретному журналу, но относится к журналам вообще.</p>
+<p>Поэтому зададим её как статический метод <code>Journal.compare</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Journal(date) {
+  this.date = date;
+  // ...
+}
+
+// возвращает значение, большее 0, если A больше B, иначе меньшее 0
+Journal.compare = function(journalA, journalB) {
+  return journalA.date - journalB.date;
+};</code></pre>
+</div>
+</div>
+</div><p>В примере ниже эта функция используется для поиска самого раннего журнала из массива:</p>
+<div class="code-example" data-highlight-block="13-15,27-28" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Journal(date) {
+  this.date = date;
+
+  this.formatDate = function(date) {
+    return date.getDate() + '.' + (date.getMonth() + 1) + '.' + date.getFullYear();
+  };
+
+  this.getTitle = function() {
+    return "Выпуск от " + this.formatDate(this.date);
+  };
+
+}
+
+Journal.compare = function(journalA, journalB) {
+  return journalA.date - journalB.date;
+};
+
+// использование:
+var journals = [
+  new Journal(new Date(2012, 1, 1)),
+  new Journal(new Date(2012, 0, 1)),
+  new Journal(new Date(2011, 11, 1))
+];
+
+function findMin(journals) {
+  var min = 0;
+  for (var i = 0; i &lt; journals.length; i++) {
+    // используем статический метод
+    if (Journal.compare(journals[min], journals[i]) &gt; 0) min = i;
+  }
+  return journals[min];
+}
+
+alert( findMin(journals).getTitle() );</code></pre>
+</div>
+</div>
+</div><p><strong>Статический метод также можно использовать для функций, которые вообще не требуют наличия объекта.</strong></p>
+<p>Например, метод <code>formatDate(date)</code> можно сделать статическим. Он будет форматировать дату «как это принято в журналах», при этом его можно использовать в любом месте кода, не обязательно создавать журнал.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-inline="7:7-35" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Journal() { /*...*/ }
+
+Journal.formatDate = function(date) {
+  return date.getDate() + '.' + (date.getMonth()+1) + '.' + date.getFullYear();
+}
+
+// ни одного объекта Journal нет, просто форматируем дату
+alert( Journal.formatDate(new Date) );</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#фабричные-методы" name="фабричные-методы">Фабричные методы</a></h2><p>Рассмотрим ситуацию, когда объект нужно создавать различными способами. Например, это реализовано во встроенном объекте <a href="/datetime">Date</a>. Он по-разному обрабатывает аргументы разных типов:</p>
+<ul>
+<li><code>new Date()</code> – создаёт объект с текущей датой,</li>
+<li><code>new Date(milliseconds)</code> – создаёт дату по количеству миллисекунд <code>milliseconds</code>,</li>
+<li><code>new Date(year, month, day ...)</code> – создаёт дату по компонентам год, месяц, день…</li>
+<li><code>new Date(datestring)</code> – читает дату из строки <code>datestring</code></li>
+</ul>
+<p><strong>«Фабричный статический метод» – удобная альтернатива такому конструктору. Так называется статический метод, который служит для создания новых объектов (поэтому и называется «фабричным»).</strong></p>
+<p>Пример встроенного фабричного метода – <a href="http://javascript.ru/String.fromCharCode">String.fromCharCode(code)</a>. Этот метод создает строку из кода символа:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = String.fromCharCode(65);
+alert( str ); // 'A'</code></pre>
+</div>
+</div>
+</div><p>Но строки – слишком простой пример, посмотрим что-нибудь посложнее.</p>
+<p>Допустим, нам нужно создавать объекты <code>User</code>: анонимные <code>new User()</code> и с данными <code>new User({name: 'Вася', age: 25})</code>.</p>
+<p>Можно, конечно, создать полиморфную функцию-конструктор <code>User</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function User(userData) {
+  if (userData) { // если указаны данные -- одна ветка if
+    this.name = userData.name;
+    this.age = userData.age;
+  } else { // если не указаны -- другая
+    this.name = 'Аноним';
+  }
+
+  this.sayHi = function() {
+    alert(this.name)
+  };
+  // ...
+}
+
+// Использование
+
+var guest = new User();
+guest.sayHi(); // Аноним
+
+var knownUser = new User({
+  name: 'Вася',
+  age: 25
+});
+knownUser.sayHi(); // Вася</code></pre>
+</div>
+</div>
+</div><p>Подход с использованием фабричных методов был бы другим. Вместо разбора параметров в конструкторе – делаем два метода: <code>User.createAnonymous</code> и <code>User.createFromData</code>.</p>
+<p>Код:</p>
+<div class="code-example" data-highlight-block="21-28" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function User() {
+  this.sayHi = function() {
+    alert(this.name)
+  };
+}
+
+User.createAnonymous = function() {
+  var user = new User;
+  user.name = 'Аноним';
+  return user;
+}
+
+User.createFromData = function(userData) {
+  var user = new User;
+  user.name = userData.name;
+  user.age = userData.age;
+  return user;
+}
+
+// Использование
+
+var guest = User.createAnonymous();
+guest.sayHi(); // Аноним
+
+var knownUser = User.createFromData({
+  name: 'Вася',
+  age: 25
+});
+knownUser.sayHi(); // Вася</code></pre>
+</div>
+</div>
+</div><p>Преимущества использования фабричных методов:</p>
+<div class="balance balance_single"><div class="balance__pluses"><div class="balance__content"><ul class="balance__list"><li>Лучшая читаемость кода. Как конструктора – вместо одной большой функции несколько маленьких, так и вызывающего кода – явно видно, что именно создаётся.</li>
+<li>Лучший контроль ошибок, т.к. если в <code>createFromData</code> ничего не передали, то будет ошибка, а полиморфный конструктор создал бы анонимного посетителя.</li>
+<li>Удобная расширяемость. Например, нужно добавить создание администратора, без аргументов. Фабричный метод сделать легко: <code>User.createAdmin = function() { ... }</code>. А для  полиморфного конструктора вызов без аргумента создаст анонима, так что нужно добавить параметр – «тип посетителя» и усложнить этим код.</li>
+</ul></div></div></div><p><strong>Поэтому полиморфные конструкторы лучше использовать там, где нужен именно полиморфизм</strong>, т.е. когда непонятно, какого типа аргумент передадут, и хочется в одном конструкторе охватить все варианты.</p>
+<p>А в остальных случаях отличная альтернатива – фабричные методы.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Статические свойства и методы объекта удобно применять в следующих случаях:</p>
+<ul>
+<li>Общие действия и подсчёты, имеющие отношения ко всем объектам данного типа. В примерах выше это подсчёт количества.</li>
+<li>Методы, не привязанные к конкретному объекту, например сравнение.</li>
+<li>Вспомогательные методы, которые полезны вне объекта, например для форматирования даты.</li>
+<li>Фабричные методы.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

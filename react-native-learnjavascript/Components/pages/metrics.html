@@ -1,0 +1,247 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Размеры и прокрутка элементов" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Для того, чтобы показывать элементы на произвольных местах страницы, необходимо во-первых, знать CSS-позиционирование, а во-вторых – уметь работать с «геометрией элементов» из JavaScript.</p>
+<p>В этой главе мы поговорим о размерах элементов DOM, способах их вычисления и <em>метриках</em> – различных свойствах, которые содержат эту информацию.</p>
+<cut>
+<h2><a class="main__anchor" href="#образец-документа" name="образец-документа">Образец документа</a></h2><p>Мы будем использовать для примера вот такой элемент, у которого есть рамка (border), поля (padding), и прокрутка:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div id="example"&gt;
+  ...Текст...
+&lt;/div&gt;
+&lt;style&gt;
+  #example {
+    width: 300px;
+
+    height: 200px;
+
+    border: 25px solid #E8C48F; /* рамка 25px */
+
+    padding: 20px;              /* поля 20px */
+
+    overflow: auto;             /* прокрутка */
+  }
+&lt;/style&gt;</code></pre>
+</div>
+</div>
+</div><p>У него нет отступов <code>margin</code>, в этой главе они не важны, так как метрики касаются именно размеров самого элемента, отступы в них не учитываются.</p>
+<p>Результат выглядит так:</p>
+<figure><div class="image" style="width:566px">
+<div class="image__ratio" style="padding-top:82.86219081272085%"></div>
+<img alt="" class="image__image" height="469" src="article/metrics/metric-css.png" width="566">
+</img></div></figure><p>Вы можете открыть <a href="http://plnkr.co/edit/iQIbur6EeZDAe015k65z?p=preview">этот документ в песочнице</a>.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Внимание, полоса прокрутки!</span></div>
+<div class="important__content"><p>В иллюстрации выше намеренно продемонстрирован самый сложный и полный случай, когда у элемента есть ещё и полоса прокрутки.</p>
+<p>В этом случае полоса прокрутки «отодвигает» содержимое вместе с <code>padding</code> влево, отбирая у него место.</p>
+<p>Именно поэтому ширина содержимого обозначена как <code>content width</code> и равна <code>284px</code>, а не <code>300px</code>, как в CSS.</p>
+<p>Точное значение получено в предположении, что ширина полосы прокрутки равна <code>16px</code>, то есть после её вычитания на содержимое остаётся <code>300 - 16 = 284px</code>. Конечно, она сильно зависит от браузера, устройства, ОС.</p>
+<p>Мы должны в точности понимать, что происходит с размерами элемента при наличии полосы прокрутки, поэтому на картинке выше это отражено.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Поле <code>padding</code> заполнено текстом</span></div>
+<div class="important__content"><p>Обычно поля <code>padding</code> изображают пустыми, но так как текста много, то он заполняет нижнее поле <code>padding-bottom</code> в примере выше.</p>
+<p>Во избежание путаницы заметим, что <code>padding</code> там, всё же, есть. Поля <code>padding</code> по CSS в элементе выше одинаковы со всех сторон. А такое заполнение – нормальное поведение браузера.</p>
+</div></div>
+<h2><a class="main__anchor" href="#метрики" name="метрики">Метрики</a></h2><p>У элементов существует ряд свойств, содержащих их внешние и внутренние размеры. Мы будем называть их «метриками».</p>
+<p>Метрики, в отличие от свойств CSS, содержат числа, всегда в пикселях и без единиц измерения на конце.</p>
+<p>Вот общая картина:</p>
+<figure><div class="image" style="width:670px">
+<div class="image__ratio" style="padding-top:89.8507462686567%"></div>
+<img alt="" class="image__image" height="602" src="article/metrics/metric-all.png" width="670">
+</img></div></figure><p>На картинке все они с трудом помещаются, но, как мы увидим далее, их значения просты и понятны.</p>
+<p>Будем исследовать их снаружи элемента и вовнутрь.</p>
+<h2><a class="main__anchor" href="#offsetparent-offsetleft-top" name="offsetparent-offsetleft-top">offsetParent, offsetLeft/Top</a></h2><p>Ситуации, когда эти свойства нужны, можно перечислить по пальцам. Они возникают действительно редко. Как правило, эти свойства используют, потому что не знают средств правильной работы с координатами, о которых мы поговорим позже.</p>
+<p>Несмотря на то, что эти свойства нужны реже всего, они – самые «внешние», поэтому начнём с них.</p>
+<p><strong>В <code>offsetParent</code> находится ссылка на родительский элемент в смысле отображения на странице.</strong></p>
+<p>Уточним, что имеется в виду.</p>
+<p>Когда браузер рисует страницу, то он высчитывает дерево расположения элементов, иначе говоря «дерево геометрии» или «дерево рендеринга», которое содержит всю информацию о размерах.</p>
+<p>При этом одни элементы естественным образом рисуются внутри других. Но, к примеру, если у элемента стоит <code>position:absolute</code>, то его расположение вычисляется уже не относительно непосредственного родителя <code>parentNode</code>, а относительно ближайшего <a href="http://www.w3.org/TR/CSS21/visuren.html#position-props">позиционированного элемента</a> (т.е. свойство <code>position</code> которого не равно <code>static</code>), или <code>BODY</code>, если такой отсутствует.</p>
+<p>Получается, что элемент имеет в дополнение к обычному родителю в DOM – ещё одного «родителя по позиционированию», то есть относительно которого он рисуется. Этот элемент и будет в свойстве <code>offsetParent</code>.</p>
+<p><strong>Свойства <code>offsetLeft/Top</code> задают смещение относительно <code>offsetParent</code>.</strong></p>
+<p>В примере ниже внутренний <code>&lt;div&gt;</code> имеет DOM-родителя <code>&lt;form&gt;</code>, но <code>offsetParent</code> у него <code>&lt;main&gt;</code>, и сдвиги относительно его верхнего-левого угла будут в <code>offsetLeft/Top</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;main style="position: relative"&gt;
+  &lt;form&gt;
+    &lt;div id="example" style="position: absolute; left: 180px; top: 180px"&gt;...&lt;/div&gt;
+  &lt;/form&gt;
+&lt;/main&gt;</code></pre>
+</div>
+</div>
+</div><figure><div class="image" style="width:641px">
+<div class="image__ratio" style="padding-top:87.6755070202808%"></div>
+<img alt="" class="image__image" height="562" src="article/metrics/metric-offset-parent.png" width="641">
+</img></div></figure><h2><a class="main__anchor" href="#offsetwidth-height" name="offsetwidth-height">offsetWidth/Height</a></h2><p>Теперь переходим к самому элементу.</p>
+<p>Эти два свойства – самые простые. Они содержат «внешнюю» ширину/высоту элемента, то есть его полный размер, включая рамки <code>border</code>.</p>
+<figure><div class="image" style="width:508px">
+<div class="image__ratio" style="padding-top:100.19685039370079%"></div>
+<img alt="" class="image__image" height="509" src="article/metrics/metric-offset-width-height.png" width="508">
+</img></div></figure><p>Для нашего элемента:</p>
+<ul>
+<li><code>offsetWidth = 390</code> – внешняя ширина блока, её можно получить сложением CSS-ширины (<code>300px</code>, но её часть на рисунке выше отнимает прокрутка, поэтому <code>284 + 16</code>), полей(<code>2*20px</code>) и рамок (<code>2*25px</code>).</li>
+<li><code>offsetHeight = 290</code> – внешняя высота блока.</li>
+</ul>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Метрики для невидимых элементов равны нулю.</span></div>
+<div class="important__content"><p>Координаты и размеры в JavaScript устанавливаются только для <em>видимых</em> элементов.</p>
+<p>Для элементов с <code>display:none</code> или находящихся вне документа дерево рендеринга не строится. Для них метрики равны нулю. Кстати, и <code>offsetParent</code> для таких элементов тоже <code>null</code>.</p>
+<p><strong>Это дает нам замечательный способ для проверки, виден ли элемент</strong>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function isHidden(elem) {
+  return !elem.offsetWidth &amp;&amp; !elem.offsetHeight;
+}</code></pre>
+</div>
+</div>
+</div><ul>
+<li>Работает, даже если родителю элемента установлено свойство <code>display:none</code>.</li>
+<li>Работает для всех элементов, кроме <code>TR</code>, с которым возникают некоторые проблемы в разных браузерах. Обычно, проверяются не <code>TR</code>, поэтому всё ок.</li>
+<li>Считает элемент видимым, даже если позиционирован за пределами экрана или  имеет свойство <code>visibility:hidden</code>.</li>
+<li>«Схлопнутый» элемент, например пустой <code>div</code> без высоты и ширины, будет считаться невидимым.</li>
+</ul>
+</div></div>
+<h2><a class="main__anchor" href="#clienttop-left" name="clienttop-left">clientTop/Left</a></h2><p>Далее внутри элемента у нас рамки <code>border</code>.</p>
+<p>Для них есть свойства-метрики <code>clientTop</code> и <code>clientLeft</code>.</p>
+<p>В нашем примере:</p>
+<ul>
+<li><code>clientLeft = 25</code> – ширина левой рамки</li>
+<li><code>clientTop = 25</code> – ширина верхней рамки</li>
+</ul>
+<figure><div class="image" style="width:353px">
+<div class="image__ratio" style="padding-top:89.51841359773371%"></div>
+<img alt="" class="image__image" height="316" src="article/metrics/metric-client-left-top.png" width="353">
+</img></div></figure><p>…Но на самом деле они – вовсе не рамки, а отступ внутренней части элемента от внешней.</p>
+<p>В чём же разница?</p>
+<p>Она возникает тогда, когда документ располагается <em>справа налево</em> (операционная система на арабском языке или иврите). Полоса прокрутки в этом случае находится слева, и тогда свойство <code>clientLeft</code> включает в себя еще и ширину полосы прокрутки.</p>
+<p>Получится так:</p>
+<figure><div class="image" style="width:359px">
+<div class="image__ratio" style="padding-top:88.02228412256268%"></div>
+<img alt="" class="image__image" height="316" src="article/metrics/metric-client-left-top-rtl.png" width="359">
+</img></div></figure><h2><a class="main__anchor" href="#clientwidth-height" name="clientwidth-height">clientWidth/Height</a></h2><p>Эти свойства – размер элемента внутри рамок <code>border</code>.</p>
+<p>Они включают в себя ширину содержимого <code>width</code> вместе с полями <code>padding</code>, но без прокрутки.</p>
+<figure><div class="image" style="width:500px">
+<div class="image__ratio" style="padding-top:98.6%"></div>
+<img alt="" class="image__image" height="493" src="article/metrics/metric-client-width-height.png" width="500">
+</img></div></figure><p>На рисунке выше посмотрим вначале на <code>clientHeight</code>, её посчитать проще всего. Прокрутки нет, так что это в точности то, что внутри рамок: CSS-высота <code>200px</code> плюс верхнее и нижнее поля <code>padding</code> (по <code>20px</code>), итого <code>240px</code>.</p>
+<p>На рисунке  нижний <code>padding</code> заполнен текстом, но это неважно: по правилам он всегда входит в <code>clientHeight</code>.</p>
+<p>Теперь <code>clientWidth</code> – ширина содержимого здесь не равна CSS-ширине, её часть «съедает» полоса прокрутки.
+Поэтому в <code>clientWidth</code> входит не CSS-ширина, а реальная ширина содержимого <code>284px</code> плюс левое и правое поля <code>padding</code> (по <code>20px</code>), итого <code>324px</code>.</p>
+<p><strong>Если <code>padding</code> нет, то <code>clientWidth/Height</code> в точности равны размеру области содержимого, внутри рамок и полосы прокрутки.</strong></p>
+<figure><div class="image" style="width:409px">
+<div class="image__ratio" style="padding-top:114.18092909535453%"></div>
+<img alt="" class="image__image" height="467" src="article/metrics/metric-client-width-nopadding.png" width="409">
+</img></div></figure><p>Поэтому в тех случаях, когда мы точно знаем, что <code>padding</code> нет, их используют для определения внутренних размеров элемента.</p>
+<h2><a class="main__anchor" href="#scrollwidth-height" name="scrollwidth-height">scrollWidth/Height</a></h2><p>Эти свойства – аналоги <code>clientWidth/clientHeight</code>, но с учетом прокрутки.</p>
+<p>Свойства <code>clientWidth/clientHeight</code> относятся только к видимой области элемента, а <code>scrollWidth/scrollHeight</code> добавляют к ней прокрученную (которую не видно) по горизонтали/вертикали.</p>
+<figure><div class="image" style="width:463px">
+<div class="image__ratio" style="padding-top:115.76673866090712%"></div>
+<img alt="" class="image__image" height="536" src="article/metrics/metric-scroll-width-height.png" width="463">
+</img></div></figure><p>На рисунке выше:</p>
+<ul>
+<li><code>scrollHeight = 723</code> – полная внутренняя высота, включая прокрученную область.</li>
+<li><code>scrollWidth = 324</code> – полная внутренняя ширина, в данном случае прокрутки нет, поэтому она равна <code>clientWidth</code>.</li>
+</ul>
+<p>Эти свойства можно использовать, чтобы «распахнуть» элемент на всю ширину/высоту, таким кодом:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">element.style.height = element.scrollHeight + 'px';</code></pre>
+</div>
+</div>
+</div><p>Нажмите на кнопку, чтобы распахнуть элемент:</p>
+<div id="scrollOpen" style="width:300px;height:200px; padding: 0;overflow: auto; border:1px solid black;">текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст текст</div>
+<p><button onclick="document.getElementById('scrollOpen').style.height = document.getElementById('scrollOpen').scrollHeight + 'px'" style="padding:0">element.style.height = element.scrollHeight + „px“</button></p>
+<h2><a class="main__anchor" href="#scrollleft-scrolltop" name="scrollleft-scrolltop">scrollLeft/scrollTop</a></h2><p>Свойства <code>scrollLeft/scrollTop</code> – ширина/высота невидимой, прокрученной в данный момент, части элемента слева и сверху.</p>
+<p>Следующая иллюстрация показывает значения <code>scrollHeight</code> и <code>scrollTop</code> для блока с вертикальной прокруткой.</p>
+<figure><div class="image" style="width:489px">
+<div class="image__ratio" style="padding-top:110.83844580777095%"></div>
+<img alt="" class="image__image" height="542" src="article/metrics/metric-scroll-top.png" width="489">
+</img></div></figure><div class="important important_smart">
+<div class="important__header"><span class="important__type"><code>scrollLeft/scrollTop</code> можно изменять</span></div>
+<div class="important__content"><p>В отличие от большинства свойств, которые доступны только для чтения, значения <code>scrollLeft/scrollTop</code> можно изменить, и браузер выполнит прокрутку элемента.</p>
+<p>При клике на следующий элемент будет выполняться код <code>elem.scrollTop += 10</code>. Поэтому он будет прокручиваться на <code>10px</code> вниз:</p>
+<div onclick="this.scrollTop+=10" style="cursor:pointer;border:1px solid black;width:100px;height:80px;overflow:auto">Кликни<br>Меня<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</br></br></br></br></br></br></br></br></br></br></div>
+</div></div>
+<h2><a class="main__anchor" href="#не-стоит-брать-width-height-из-css" name="не-стоит-брать-width-height-из-css">Не стоит брать width/height из CSS</a></h2><p>Мы рассмотрели метрики – свойства, которые есть у DOM-элементов. Их обычно используют для получения их различных высот, ширин и прочих расстояний.</p>
+<p>Теперь несколько слов о том, как <em>не</em> надо делать.</p>
+<p>Как мы знаем, CSS-высоту и ширину можно установить с помощью <code>elem.style</code> и извлечь, используя <code>getComputedStyle</code>, которые в подробностях обсуждаются в главе <a href="/styles-and-classes">Стили, getComputedStyle</a>.</p>
+<p>Получение ширины элемента может быть таким:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var elem = document.body;
+
+alert( getComputedStyle(elem).width ); // вывести CSS-ширину для elem</code></pre>
+</div>
+</div>
+</div><p>Не лучше ли получать ширину так, вместо метрик? Вовсе нет!</p>
+<ol>
+<li>
+<p>Во-первых, CSS-свойства <code>width/height</code> зависят от другого свойства – <code>box-sizing</code>, которое определяет, что такое, собственно, эти ширина и высота. Получается, что изменение <code>box-sizing</code>, к примеру, для более удобной вёрстки, сломает такой JavaScript.</p>
+</li>
+<li>
+<p>Во-вторых, в CSS свойства <code>width/height</code> могут быть равны <code>auto</code>, например, для инлайн-элемента:</p>
+<div class="code-example" data-highlight-block="3-3" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;span id="elem"&gt;Привет!&lt;/span&gt;
+
+&lt;script&gt;
+  alert( getComputedStyle(elem).width ); // auto
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Конечно, с точки зрения CSS размер <code>auto</code>  – совершенно нормально, но нам-то в JavaScript нужен конкретный размер в пикселях, который мы могли бы использовать для вычислений. Получается, что в данном случае ширина <code>width</code> из CSS вообще бесполезна.</p>
+</li>
+</ol>
+<p>Есть и ещё одна причина.</p>
+<p>Полоса прокрутки – причина многих проблем и недопониманий. Как говорится, «дьявол кроется в деталях». Недопустимо, чтобы наш код работал на элементах без прокрутки и начинал «глючить» с ней.</p>
+<p>Как мы говорили ранее, при наличии вертикальной полосы прокрутки, в зависимости от браузера, устройства и операционной системы, она может сдвинуть содержимое.</p>
+<p>Получается, что реальная ширина содержимого меньше CSS-ширины. И это учитывают свойства <code>clientWidth/clientHeight</code>.</p>
+<p>…Но при этом некоторые браузеры также учитывают это в результате <code>getComputedStyle(elem).width</code>, то есть возвращают реальную внутреннюю ширину, а некоторые – именно CSS-свойство. Эти кросс-браузерные отличия – ещё один повод не использовать такой подход, а использовать свойства-метрики.</p>
+<p>Если ваш браузер показывает полосу прокрутки (например, под Windows почти все браузеры так делают), то вы можете протестировать это сами, нажав на кнопку в ифрейме ниже.</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/metrics/cssWidthScroll/" target="_blank" title="открыть в новом окне"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/metrics/cssWidthScroll/" style="height:300px"></iframe>
+</div><p>У элемента с текстом в стилях указано <code>width:300px</code>.</p>
+<p>На момент написания этой главы при тестировании в Chrome под Windows <code>alert</code> выводил <code>283px</code>, а в Firefox – <code>300px</code>. При этом оба браузера показывали прокрутку. Это из-за того, что Firefox возвращал именно CSS-ширину, а Chrome – реальную ширину, за вычетом прокрутки.</p>
+<p>Описанные разночтения касаются только чтения свойства <code>getComputedStyle(...).width</code> из JavaScript, визуальное отображение корректно в обоих случаях.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>У элементов есть следующие метрики:</p>
+<ul>
+<li><code>offsetParent</code> – «родитель по дереву рендеринга» – ближайшая ячейка таблицы, body для статического позиционирования или ближайший позиционированный элемент для других типов позиционирования.</li>
+<li><code>offsetLeft/offsetTop</code> – позиция в пикселях левого верхнего угла блока, относительно его <code>offsetParent</code>.</li>
+<li><code>offsetWidth/offsetHeight</code> – «внешняя» ширина/высота блока, включая рамки.</li>
+<li><code>clientLeft/clientTop</code> – отступ области содержимого от левого-верхнего угла элемента. Если операционная система располагает вертикальную прокрутку справа, то равны ширинам левой/верхней рамки, если же слева (ОС на иврите, арабском), то <code>clientLeft</code> включает в себя прокрутку.</li>
+<li><code>clientWidth/clientHeight</code> – ширина/высота содержимого вместе с полями <code>padding</code>, но без полосы прокрутки.</li>
+<li><code>scrollWidth/scrollHeight</code> – ширина/высота содержимого, включая прокручиваемую область. Включает в себя <code>padding</code> и не включает полосы прокрутки.</li>
+<li><code>scrollLeft/scrollTop</code> – ширина/высота прокрученной части документа, считается от верхнего левого угла.</li>
+</ul>
+<p>Все свойства, доступны только для чтения, кроме <code>scrollLeft/scrollTop</code>. Изменение этих свойств заставляет браузер прокручивать элемент.</p>
+<p>В этой главе мы считали, что страница находится в режиме соответствия стандартам. В режиме совместимости – некоторые старые браузеры требуют <code>document.body</code> вместо <code>documentElement</code>, в остальном всё так же. Конечно, по возможности, стоит использовать только режим соответствия стандарту.</p>
+</cut></div></meta></article></main></div></body></html>

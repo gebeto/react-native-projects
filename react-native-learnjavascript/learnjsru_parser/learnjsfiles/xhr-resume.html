@@ -1,0 +1,361 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="XMLHttpRequest: возобновляемая закачка" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Современный <code>XMLHttpRequest</code> даёт возможность загружать файл как угодно: во множество потоков, с догрузкой, с подсчётом контрольной суммы и т.п.</p>
+<p>Здесь мы рассмотрим общий подход к организации загрузки, а его уже можно расширять, адаптировать к своему фреймворку и так далее.</p>
+<p>Поддержка – все браузеры кроме IE9-.</p>
+<cut>
+<h2><a class="main__anchor" href="#неточный-upload-onprogress" name="неточный-upload-onprogress">Неточный upload.onprogress</a></h2><p>Ранее мы рассматривали загрузку с индикатором прогресса. Казалось бы, сделать возобновляемую загрузку на его основе очень просто.</p>
+<p>Есть же <code>xhr.upload.onprogress</code> – ставим на него обработчик, по свойству <code>loaded</code>  события <code>onprogress</code> смотрим, сколько байт загрузилось. А при обрыве – возобновляем загрузку с последнего байта.</p>
+<p>К счастью, отослать на сервер не весь файл, а только нужную часть его – не проблема, <a href="http://www.w3.org/TR/FileAPI/">File API</a> позволяет прочитать выбранный участок из файла и отправить его.</p>
+<p>Примерно так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var slice = file.slice(10, 100); // прочитать байты с 10-го по 99-й включительно
+
+xhr.send(slice); // ... и отправить эти байты в запросе.</code></pre>
+</div>
+</div>
+</div><p>…Но такая модель не жизнеспособна!</p>
+<p>Всё дело в том, что <code>upload.onprogress</code> срабатывает, когда байты <em>отправлены</em>, но были ли они получены сервером – браузер не знает. Может, их прокси-сервер забуферизовал, может серверный процесс «упал» в процессе обработки, может соединение порвалось и байты так и не дошли до получателя.</p>
+<p><strong>Поэтому <code>onprogress</code> годится лишь для красивенького рисования прогресса.</strong></p>
+<p>Для загрузки нам нужно точно знать количество загруженных байт. Это может сообщить только сервер.</p>
+<h2><a class="main__anchor" href="#алгоритм-возобновляемой-загрузки" name="алгоритм-возобновляемой-загрузки">Алгоритм возобновляемой загрузки</a></h2><p>Загрузкой файла будет заведовать объект <code>Uploader</code>, его примерный общий вид:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Uploader(file, onSuccess, onFail, onProgress) {
+
+  var fileId = file.name + '-' + file.size + '-' + +file.lastModifiedDate;
+
+  var errorCount = 0;
+
+  var MAX_ERROR_COUNT = 6;
+
+  function upload() {
+    ...
+  }
+
+  function pause() {
+    ...
+  }
+
+  this.upload = upload;
+  this.pause = pause;
+}</code></pre>
+</div>
+</div>
+</div><ul>
+<li>Аргументы для <code>new Uploader</code>:</li>
+</ul>
+<dl>
+<dt><code>file</code></dt>
+<dd>Объект File API. Может быть получен из формы, либо как результат Drag’n’Drop.<dd>
+<code>onSuccess</code>, <code>onFail</code>, <code>onProgress</code></dd>
+</dd></dl>
+<dd>Функции-коллбэки, которые будут вызываться в процессе (`onProgress`) и при окончании загрузки.
+<ul>
+<li>Подробнее про важные данные, с которыми мы будем работать в процессе загрузки:</li>
+</ul>
+<dl>
+<dt><code>fileId</code></dt>
+<dd>Уникальный идентификатор файла, генерируется по имени, размеру и дате модификации. По нему мы всегда сможем возобновить загрузку, в том числе и после закрытия и открытия браузера.</dd>
+<dt><code>startByte</code></dt>
+<dd>С какого байта загружать. Изначально – с нулевого.</dd>
+<dt><code>errorCount / MAX_ERROR_COUNT</code></dt>
+<dd>Текущее число ошибок / максимальное число ошибок подряд, после которого загрузка считается проваленной.</dd>
+</dl>
+<p>Алгоритм загрузки:</p>
+<ol>
+<li>Генерируем <code>fileId</code> из названия, размера, даты модификации файла. Можно добавить и идентификатор посетителя.</li>
+<li>Спрашиваем сервер, есть ли уже такой файл, и если да – сколько байт уже загружено?</li>
+<li>Отсылаем файл с позиции, которую сказал сервер.</li>
+</ol>
+<p>При этом загрузку можно прервать в любой момент, просто оборвав все запросы.</p>
+<p>Демо ниже, к сожалению, работает лишь частично, так как на этом сайте Node.JS стоит за сервером Nginx, который буферизует все закачки, не передавая их в Node.JS до полного завершения.</p>
+<p>Вы можете скачать пример и запустить локально для полноценной демонстрации:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">server.js</div><div class="code-tabs__switch">uploader.js</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/xhr-resume/upload-resume/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_download" href="/tutorial/zipview/upload-resume.zip?plunkId=x6HMURNHqYgusiQgMaNJ" target="_blank"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:160px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/xhr-resume/upload-resume/"></iframe></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>var http = require('http');
+var static = require('node-static');
+var fileServer = new static.Server('.');
+var path = require('path');
+var fs = require('fs');
+
+var uploads = {};
+
+function onUpload(req, res) {
+
+  var fileId = req.headers['x-file-id'];
+  var startByte = req.headers['x-start-byte'];
+
+  if (!fileId) {
+    res.writeHead(400, "No file id");
+    res.end();
+  }
+
+  // файлы будем записывать "в никуда"
+  var filePath = '/dev/null';
+  // можно положить файл и в реальное место
+  // var filePath = path.join('/tmp', fileId);
+
+  console.log("onUpload fileId: ", fileId);
+
+  // инициализация новой загрузки
+  if (!uploads[fileId]) uploads[fileId] = {};
+  var upload = uploads[fileId];
+
+  console.log("bytesReceived:" + upload.bytesReceived + " startByte:" + startByte)
+
+  // если байт 0, то создать новый файл, иначе проверить размер и дописать
+  if (startByte == 0) {
+    upload.bytesReceived = 0;
+    var fileStream = fs.createWriteStream(filePath, {
+      flags: 'w'
+    });
+    console.log("New file created: " + filePath);
+  } else {
+    if (upload.bytesReceived != startByte) {
+      res.writeHead(400, "Wrong start byte");
+      res.end(upload.bytesReceived);
+      return;
+    }
+    // добавляем в существующий файл
+    fileStream = fs.createWriteStream(filePath, {
+      flags: 'a'
+    });
+    console.log("File reopened: " + filePath);
+  }
+
+
+  req.on('data', function(data) {
+    upload.bytesReceived += data.length;
+  });
+
+  // отправить тело запроса в файл
+  req.pipe(fileStream);
+
+  // в конце -- событие end
+  fileStream.on('close', function() {
+    if (upload.bytesReceived == req.headers['x-file-size']) {
+      // полностью загрузили
+      console.log("File finished");
+      delete uploads[fileId];
+
+      // при необходимости - обработать завершённую загрузку файла
+
+      res.end("Success " + upload.bytesReceived);
+    } else {
+      // соединение оборвано, дескриптор закрылся но файл оставляем
+      console.log("File unfinished, stopped at " + upload.bytesReceived);
+      res.end();
+    }
+  });
+
+  // при ошибках - завершение запроса
+  fileStream.on('error', function(err) {
+    console.log("fileStream error");
+    res.writeHead(500, "File error");
+    res.end();
+  });
+
+}
+
+function onStatus(req, res) {
+  var fileId = req.headers['x-file-id'];
+  var upload = uploads[fileId];
+  console.log("onStatus fileId:", fileId, " upload:", upload);
+  if (!upload) {
+    res.end("0")
+  } else {
+    res.end(String(upload.bytesReceived));
+  }
+}
+
+
+function accept(req, res) {
+  if (req.url == '/status') {
+    onStatus(req, res);
+  } else if (req.url == '/upload' &amp;&amp; req.method == 'POST') {
+    onUpload(req, res);
+  } else {
+    fileServer.serve(req, res);
+  }
+
+}
+
+
+
+
+// -----------------------------------
+
+if (!module.parent) {
+  http.createServer(accept).listen(8080);
+  console.log('Сервер запущен на порту 8080');
+} else {
+  exports.accept = accept;
+}</code></pre></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>function Uploader(file, onSuccess, onFail, onProgress) {
+
+  // fileId уникальным образом идентифицирует файл
+  // можно добавить идентификатор сессии посетителя, но он и так будет в заголовках
+  var fileId = file.name + '-' + file.size + '-' + +file.lastModifiedDate;
+
+  // сделать из fileId число (хеш, алгоритм неважен), мы будем передавать его в заголовке,
+  // в заголовках разрешены только ASCII-символы
+  fileId = hashCode(fileId);
+
+  var errorCount = 0;
+
+  // если количество ошибок подряд превысит MAX_ERROR_COUNT, то стоп
+  var MAX_ERROR_COUNT = 6;
+
+  var startByte = 0;
+
+  var xhrUpload;
+  var xhrStatus;
+
+  function upload() {
+    console.log("upload: check status");
+    xhrStatus = new XMLHttpRequest();
+
+    xhrStatus.onload = xhrStatus.onerror = function() {
+
+      if (this.status == 200) {
+        startByte = +this.responseText || 0;
+        console.log("upload: startByte=" + startByte);
+        send();
+        return;
+      }
+
+      // что-то не так
+      if (errorCount++ &lt; MAX_ERROR_COUNT) {
+        setTimeout(upload, 1000 * errorCount); // через 1 сек пробуем ещё раз
+      } else {
+        onError(this.statusText);
+      }
+
+    };
+
+    xhrStatus.open("GET", "status", true);
+    xhrStatus.setRequestHeader('X-File-Id', fileId);
+    xhrStatus.send();
+  }
+
+
+  function send() {
+
+    xhrUpload = new XMLHttpRequest();
+    xhrUpload.onload = xhrUpload.onerror = function() {
+      console.log("upload end status:" + this.status + " text:" + this.statusText);
+
+      if (this.status == 200) {
+        // успешное завершение загрузки
+        onSuccess();
+        return;
+      }
+
+      // что-то не так
+      if (errorCount++ &lt; MAX_ERROR_COUNT) {
+        setTimeout(resume, 1000 * errorCount); // через 1,2,4,8,16 сек пробуем ещё раз
+      } else {
+        onError(this.statusText);
+      }
+    };
+
+    xhrUpload.open("POST", "upload", true);
+    // какой файл догружаем /загружаем
+    xhrUpload.setRequestHeader('X-File-Id', fileId);
+
+    xhrUpload.upload.onprogress = function(e) {
+      errorCount = 0;
+      onProgress(startByte + e.loaded, startByte + e.total);
+    }
+
+    // отослать, начиная с байта startByte
+    xhrUpload.send(file.slice(startByte));
+  }
+
+  function pause() {
+    xhrStatus &amp;&amp; xhrStatus.abort();
+    xhrUpload &amp;&amp; xhrUpload.abort();
+  }
+
+
+  this.upload = upload;
+  this.pause = pause;
+}
+
+// вспомогательная функция: получение 32-битного числа из строки
+
+function hashCode(str) {
+  if (str.length == 0) return 0;
+
+  var hash = 0,
+    i, chr, len;
+  for (i = 0; i &lt; str.length; i++) {
+    chr = str.charCodeAt(i);
+    hash = ((hash &lt;&lt; 5) - hash) + chr;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+};</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;body&gt;
+
+  &lt;head&gt;
+    &lt;meta charset="utf-8"&gt;
+    &lt;script src="uploader.js"&gt;&lt;/script&gt;
+  &lt;/head&gt;
+  &lt;form name="upload" method="POST" enctype="multipart/form-data" action="/upload"&gt;
+    &lt;input type="file" name="myfile"&gt;
+    &lt;input type="submit" name="submit" value="Загрузить"&gt;
+  &lt;/form&gt;
+
+  &lt;button onclick="uploader.pause()"&gt;Пауза&lt;/button&gt;
+
+
+  &lt;div id="log"&gt;Индикация прогресса&lt;/div&gt;
+
+  &lt;script&gt;
+    function log(html) {
+      document.getElementById('log').innerHTML = html;
+      //console.log(html);
+    }
+
+    function onSuccess() {
+      log('success');
+    }
+
+    function onError() {
+      log('error');
+    }
+
+    function onProgress(loaded, total) {
+      log("progress " + loaded + ' / ' + total);
+    }
+
+    var uploader;
+
+    document.forms.upload.onsubmit = function() {
+      var file = this.elements.myfile.files[0];
+      if (!file) return false;
+
+      uploader = new Uploader(file, onSuccess, onError, onProgress);
+      uploader.upload();
+      return false;
+    }
+  &lt;/script&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>Полный код включает также сервер на Node.JS с функциям <code>onUpload</code> – начало и возобновление загрузки, а также <code>onStatus</code> – для получения состояния загрузки.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Мы рассмотрели довольно простой алгоритм возобновляемой загрузки.</p>
+<p>Его можно усложнить:</p>
+<ul>
+<li>добавить подсчёт контрольных сумм, проверку целостности пересылаемых файлов,</li>
+<li>для индикации прогресса вместо неточного <code>xhr.upload.onprogress</code> – сделать дополнительный запрос к серверу, в который тот будет отдавать текущий прогресс.</li>
+<li>разбивать файл на части и грузить в несколько потоков, несколькими параллельными запросами.</li>
+</ul>
+<p>Как можно видеть, возможности современного XMLHttpRequest в плане загрузки файлов приближаются к полноценному файловому менеджеру – полный контроль над заголовками, индикатор прогресса и т.п.</p>
+</dd></cut></div></meta></article></main></div></body></html>

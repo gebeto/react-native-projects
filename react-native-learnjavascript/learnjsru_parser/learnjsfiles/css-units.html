@@ -1,0 +1,296 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Единицы измерения: "px", "em", "rem" и другие' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В этом очерке я постараюсь не только рассказать о различных единицах измерения, но и построить общую картину – что и когда выбирать.</p>
+<cut>
+<h2><a class="main__anchor" href="#пиксели-px" name="пиксели-px">Пиксели: px</a></h2><p>Пиксель <code>px</code> – это самая базовая, абсолютная и окончательная единица измерения.</p>
+<p>Количество пикселей задаётся в настройках <a href="http://ru.wikipedia.org/wiki/%D0%A0%D0%B0%D0%B7%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5_(%D0%BA%D0%BE%D0%BC%D0%BF%D1%8C%D1%8E%D1%82%D0%B5%D1%80%D0%BD%D0%B0%D1%8F_%D0%B3%D1%80%D0%B0%D1%84%D0%B8%D0%BA%D0%B0)">разрешения экрана</a>, один <code>px</code> – это как раз один такой пиксель на экране.  Все значения браузер в итоге пересчитает в пиксели.</p>
+<p>Пиксели могут быть дробными, например размер можно задать в <code>16.5px</code>. Это совершенно нормально, браузер сам использует дробные пиксели для внутренних вычислений. К примеру, есть элемент шириной в <code>100px</code>, его нужно разделить на три части – волей-неволей появляются <code>33.333...px</code>. При окончательном отображении дробные пиксели, конечно же, округляются и становятся целыми.</p>
+<p>Для мобильных устройств, у которых много пикселей на экране, но сам экран маленький, чтобы обеспечить читаемость, браузер автоматически применяет масштабирование.</p>
+<div class="balance"><div class="balance__pluses">
+<div class="balance__content">
+<div class="balance__title">Достоинства</div><ul class="balance__list"><li>Главное достоинство пикселя – чёткость и понятность</li>
+</ul></div></div><div class="balance__minuses">
+<div class="balance__content">
+<div class="balance__title">Недостатки</div><ul class="balance__list"><li>Другие единицы измерения – в некотором смысле «мощнее», они являются относительными и позволяют устанавливать соотношения между различными размерами</li>
+</ul></div></div></div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Давно на свалке: <code>mm</code>, <code>cm</code>, <code>pt</code>, <code>pc</code></span></div>
+<div class="important__content"><p>Существуют также  «производные» от пикселя единицы измерения: <code>mm</code>, <code>cm</code>, <code>pt</code> и <code>pc</code>, но они давно отправились на свалку истории.</p>
+<p>Вот, если интересно, их значения:</p>
+<ul>
+<li><code>1mm</code> (мм) = <code>3.8px</code></li>
+<li><code>1cm</code> (см) = <code>38px</code></li>
+<li><code>1pt</code> (типографский пункт) = <code>4/3 px</code></li>
+<li><code>1pc</code> (типографская пика) = <code>16px</code></li>
+</ul>
+<p>Так как браузер пересчитывает эти значения в пиксели, то смысла в их употреблении нет.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Почему в сантиметре <code>cm</code> содержится ровно 38 пикселей?</span></div>
+<div class="important__content"><p>В реальной жизни сантиметр – это эталон длины, одна сотая метра. А <a href="http://ru.wikipedia.org/wiki/%D0%9F%D0%B8%D0%BA%D1%81%D0%B5%D0%BB%D1%8C">пиксель</a> может быть разным, в зависимости от экрана.</p>
+<p>Но в формулах выше под пикселем понимается «сферический пиксель в вакууме», точка на «стандартизованном экране», характеристики которого описаны в <a href="http://www.w3.org/TR/CSS2/syndata.html#length-units">спецификации</a>.</p>
+<p>Поэтому ни о каком соответствии <code>cm</code> реальному сантиметру здесь нет и речи. Это полностью синтетическая и производная единица измерения, которая не нужна.</p>
+</div></div>
+<h2><a class="main__anchor" href="#относительно-шрифта-em" name="относительно-шрифта-em">Относительно шрифта: em</a></h2><p><code>1em</code> – текущий размер шрифта.</p>
+<p>Можно брать любые пропорции от текущего шрифта: <code>2em</code>, <code>0.5em</code> и т.п.</p>
+<p><strong>Размеры в <code>em</code> – <em>относительные</em>, они определяются по текущему контексту.</strong></p>
+<p>Например, давайте сравним <code>px</code> с <code>em</code> на таком примере:</p>
+<div class="code-example" data-autorun="true" data-demo-height="80" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div style="font-size:24px"&gt;
+  Страусы
+  &lt;div style="font-size:24px"&gt;Живут также в Африке&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-7i39xu" src="about:blank" style="height:80px"></iframe>
+</div>
+</div><p><code>24</code> пикселей – и в Африке <code>24</code> пикселей, поэтому размер шрифта в <code>&lt;div&gt;</code> одинаков.</p>
+<p>А вот аналогичный пример с <code>em</code> вместо <code>px</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="120" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div style="font-size:1.5em"&gt;
+  Страусы
+  &lt;div style="font-size:1.5em"&gt;Живут также в Африке&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-1nb4nf" src="about:blank" style="height:120px"></iframe>
+</div>
+</div><p>Так как значение в <code>em</code> высчитывается относительно <em>текущего шрифта</em>, то вложенная строка в <code>1.5</code> раза больше, чем первая.</p>
+<p>Выходит, размеры, заданные в <code>em</code>, будут уменьшаться или увеличиваться вместе со шрифтом. С учётом того, что размер шрифта обычно определяется в родителе, и может быть изменён ровно в одном месте, это бывает очень удобно.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Что такое размер шрифта?</span></div>
+<div class="important__content"><p>Что такое «размер шрифта»? Это вовсе не «размер самой большой буквы в нём», как можно было бы подумать.</p>
+<p>Размер шрифта – это некоторая «условная единица», которая встроена в шрифт.</p>
+<p>Она обычно чуть больше, чем расстояние от верха самой большой буквы до низа самой маленькой. То есть, предполагается, что в эту высоту помещается любая буква или их сочетание. Но при этом  «хвосты» букв, таких как <code>р</code>, <code>g</code> могут заходить за это значение, то есть вылезать снизу. Поэтому обычно высоту строки делают чуть больше, чем размер шрифта.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Единицы <code>ex</code> и <code>ch</code></span></div>
+<div class="important__content"><p>В спецификации указаны также единицы <a href="http://www.w3.org/TR/css3-values/#ex-unit">ex</a> и <a href="http://www.w3.org/TR/css3-values/#ch-unit">ch</a>, которые означают размер символа <code>"x"</code> и размер символа <code>"0"</code>.</p>
+<p>Эти размеры присутствуют в шрифте всегда, даже если по коду этих символов в шрифте находятся другие значения, а не именно буква <code>"x"</code> и ноль <code>"0"</code>. В этом случае они носят более условный характер.</p>
+<p>Эти единицы используются чрезвычайно редко, так как «размер шрифта» <code>em</code> обычно вполне подходит.</p>
+</div></div>
+<h2><a class="main__anchor" href="#проценты" name="проценты">Проценты %</a></h2><p>Проценты <code>%</code>, как и <code>em</code> – относительные единицы.</p>
+<p>Когда мы говорим «процент», то возникает вопрос – «Процент от чего?»</p>
+<p>Как правило, процент будет от значения свойства родителя с тем же названием, но не всегда.</p>
+<p>Это очень важная особенность процентов, про которую, увы, часто забывают.</p>
+<p>Отличный источник информации по этой теме – стандарт, <a href="http://www.w3.org/TR/CSS2/visudet.html">Visual formatting model details</a>.</p>
+<p>Вот пример с <code>%</code>, он выглядит в точности так же, как с <code>em</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="120" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div style="font-size:150%"&gt;
+  Страусы
+  &lt;div style="font-size:150%"&gt;Живут также в Африке&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-bsf78j" src="about:blank" style="height:120px"></iframe>
+</div>
+</div><p>В примере выше процент берётся от размера шрифта родителя.</p>
+<p>А вот примеры-исключения, в которых <code>%</code> берётся не так:</p>
+<dl>
+<dt><code>margin-left</code></dt>
+<dd>При установке свойства <code>margin-left</code> в <code>%</code>, процент берётся от <em>ширины</em> родительского блока, а вовсе не от его <code>margin-left</code>.</dd>
+<dt><code>line-height</code></dt>
+<dd>При установке свойства <code>line-height</code> в <code>%</code>, процент берётся от текущего <em>размера шрифта</em>, а вовсе не от <code>line-height</code> родителя. Детали по <code>line-height</code> и размеру шрифта вы также можете найти в статье <a href="/font-size-line-height">Свойства "font-size" и "line-height"</a>.</dd>
+<dt><code>width/height</code></dt>
+<dd>Для <code>width/height</code> обычно процент от ширины/высоты родителя, но при <code>position:fixed</code>, процент берётся от ширины/высоты <em>окна</em> (а не родителя и не документа). Кроме того, иногда <code>%</code> требует соблюдения дополнительных условий, за примером – обратитесь к главе <a href="/height-percent">Особенности свойства "height" в %</a>.</dd>
+</dl>
+<h2><a class="main__anchor" href="#единица-rem-смесь-px-и-em" name="единица-rem-смесь-px-и-em">Единица rem: смесь px и em</a></h2><p>Итак, мы рассмотрели:</p>
+<ul>
+<li><code>px</code> – абсолютные, чёткие, понятные, не зависящие ни от чего.</li>
+<li><code>em</code> – относительно размера шрифта.</li>
+<li><code>%</code> – относительно такого же свойства родителя (а может и не родителя, а может и не такого же – см. примеры выше).</li>
+</ul>
+<p>Может быть, пора уже остановиться, может этого достаточно?</p>
+<p>Э-э, нет! Не все вещи делаются удобно.</p>
+<p>Вернёмся к теме шрифтов. Бывают задачи, когда мы хотим сделать на странице большие кнопки «Шрифт больше» и «Шрифт меньше». При нажатии на них будет срабатывать JavaScript, который будет увеличивать или уменьшать шрифт.</p>
+<p>Вообще-то это можно сделать без JavaScript, в браузере обычно есть горячие клавиши для масштабирования вроде <kbd class="shortcut">Ctrl<span class="shortcut__plus">+</span>+</kbd>, но они работают слишком тупо – берут и увеличивают всю страницу, вместе с изображениями и другими элементами, которые масштабировать как раз не надо. А если надо увеличить только шрифт, потому что посетитель хочет комфортнее читать?</p>
+<p>Какую единицу использовать для задания шрифтов? Наверно не <code>px</code>, ведь значения в <code>px</code> абсолютны, если менять, то во всех стилевых правилах. Вполне возможна ситуация, когда мы в одном правиле размер поменяли, а другое забыли.</p>
+<p>Следующие кандидаты – <code>em</code> и <code>%</code>.</p>
+<p>Разницы между ними здесь нет, так как при задании <code>font-size</code> в процентах, эти проценты берутся от <code>font-size</code> родителя, то есть ведут себя так же, как и <code>em</code>.</p>
+<p>Вроде бы, использовать можно, однако есть проблема.</p>
+<p>Попробуем использовать этот подход для <code>&lt;li&gt;</code>.</p>
+<p>Протестируем на таком списке:</p>
+<div class="code-example" data-autorun="true" data-demo-height="150" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;ul&gt;
+&lt;li&gt;Собака
+  &lt;ul&gt;
+  &lt;li&gt;бывает
+    &lt;ul&gt;
+    &lt;li&gt;кусачей
+      &lt;ul&gt;
+      &lt;li&gt;только
+        &lt;ul&gt;
+        &lt;li&gt;от жизни
+          &lt;ul&gt;
+          &lt;li&gt;собачей&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-alqpxq" src="about:blank" style="height:150px"></iframe>
+</div>
+</div><p>Пока это обычный вложенный список.</p>
+<p>Теперь уменьшим размер шрифта до <code>0.8em</code>, вот что получится:</p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  li {
+    font-size: 0.8em;
+  }
+&lt;/style&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Собака
+  &lt;ul&gt;
+  &lt;li&gt;бывает
+    &lt;ul&gt;
+    &lt;li&gt;кусачей
+      &lt;ul&gt;
+      &lt;li&gt;только
+        &lt;ul&gt;
+        &lt;li&gt;от жизни
+          &lt;ul&gt;
+          &lt;li&gt;собачей&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-9r2hpz" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><p>Проблема очевидна. Хотели, как лучше, а получилось… Мелковато. Каждый вложенный <code>&lt;li&gt;</code> получил размер шрифта <code>0.8</code> от родителя, в итоге уменьшившись до нечитаемого состояния. Это не совсем то, чего мы бы здесь хотели.</p>
+<p>Можно уменьшить размер шрифта только на одном «корневом элементе»… Или воспользоваться единицей <code>rem</code>, которая, можно сказать, специально придумана для таких случаев!</p>
+<p><strong>Единица <code>rem</code> задаёт размер относительно размера шрифта элемента <code>&lt;html&gt;</code>.</strong></p>
+<p>Как правило, браузеры ставят этому элементу некоторый «разумный» (reasonable) размер по-умолчанию, который мы, конечно, можем переопределить и использовать <code>rem</code> для задания шрифтов внутри относительно него:</p>
+<div class="code-example" data-autorun="true" data-demo-height="400" data-highlight-block="1-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  html {
+    font-size: 14px;
+  }
+  li {
+    font-size: 0.8rem;
+  }
+&lt;/style&gt;
+
+&lt;div&gt;&lt;button id="up"&gt;Кликните, чтобы увеличить размер шрифта&lt;/button&gt;&lt;/div&gt;
+
+&lt;img src="https://js.cx/clipart/angry_dog.png"&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Собака
+  &lt;ul&gt;
+  &lt;li&gt;бывает
+    &lt;ul&gt;
+    &lt;li&gt;кусачей
+      &lt;ul&gt;
+      &lt;li&gt;только
+        &lt;ul&gt;
+        &lt;li&gt;от жизни
+          &lt;ul&gt;
+          &lt;li&gt;собачей&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script&gt;
+var html = document.documentElement;
+up.onclick = function() {
+  // при помощи JS увеличить размер шрифта html на 2px
+  html.style.fontSize = parseInt(getComputedStyle(html, '').fontSize) + 2 + 'px';
+};
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-3dw6iu" src="about:blank" style="height:400px"></iframe>
+</div>
+</div><p>Получилось удобное масштабирование для шрифтов, не влияющее на другие элементы.</p>
+<p>Элементы, размер которых задан в <code>rem</code>, не зависят друг от друга и от контекста – и этим похожи на <code>px</code>, а с другой стороны они все заданы относительно размера шрифта <code>&lt;html&gt;</code>.</p>
+<p>Единица <code>rem</code> не поддерживается в IE8-.</p>
+<h2><a class="main__anchor" href="#относительно-экрана-vw-vh-vmin-vmax" name="относительно-экрана-vw-vh-vmin-vmax">Относительно экрана: vw, vh, vmin, vmax</a></h2><p>Во всех современных браузерах, исключая IE8-, поддерживаются новые единицы из черновика стандарта <a href="http://dev.w3.org/csswg/css3-values/">CSS Values and Units 3</a>:</p>
+<ul>
+<li><code>vw</code> – 1% ширины окна</li>
+<li><code>vh</code> – 1% высоты окна</li>
+<li><code>vmin</code> – наименьшее из (<code>vw</code>, <code>vh</code>), в IE9 обозначается <code>vm</code></li>
+<li><code>vmax</code> – наибольшее из (<code>vw</code>, <code>vh</code>)</li>
+</ul>
+<p><strong>Эти значения были созданы, в первую очередь, для поддержки мобильных устройств.</strong></p>
+<p>Их основное преимущество – в том, что любые размеры, которые в них заданы, автоматически масштабируются при изменении размеров окна.</p>
+<p style="font-size:5vh">Этот текст написан с размером `5vh`.</p>
+<p>Вы сможете легко увидеть, как работает <code>vh</code>, если поменяете размер окна браузера. Текст выше будет расти/уменьшаться.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Мы рассмотрели единицы измерения:</p>
+<ul>
+<li><code>px</code> – абсолютные пиксели, к которым привязаны и потому не нужны <code>mm</code>, <code>cm</code>, <code>pt</code> и <code>pc</code>. Используется для максимально конкретного и точного задания размеров.</li>
+<li><code>em</code> – задаёт размер относительно шрифта родителя, можно относительно конкретных символов: <code>"x"</code>(<code>ex</code>) и <code>"0"</code>(<code>ch</code>), используется там, где нужно упростить масштабирование компоненты.</li>
+<li><code>rem</code> – задаёт размер относительно шрифта <code>&lt;html&gt;</code>, используется для удобства глобального масштабирования: элементы которые планируется масштабировать, задаются в <code>rem</code>, а JS меняет шрифт у <code>&lt;html&gt;</code>.</li>
+<li><code>%</code> – относительно такого же свойства родителя (как правило, но не всегда), используется для ширин, высот и так далее, без него никуда, но надо знать, относительно чего он считает проценты.</li>
+<li><code>vw</code>, <code>vh</code>, <code>vmin</code>, <code>vmax</code> – относительно размера экрана.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

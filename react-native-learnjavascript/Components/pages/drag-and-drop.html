@@ -1,0 +1,184 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Мышь: Drag'n'Drop" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Drag’n’Drop – это возможность захватить мышью элемент и перенести его. В свое время это было замечательным открытием в области интерфейсов, которое позволило упростить большое количество операций.</p>
+<p>Перенос мышкой может заменить целую последовательность кликов. И, самое главное, он упрощает внешний вид интерфейса: функции, реализуемые через Drag’n’Drop, в ином случае потребовали бы дополнительных полей, виджетов и т.п.</p>
+<cut>
+<h2><a class="main__anchor" href="#отличия-от-html5-drag-n-drop" name="отличия-от-html5-drag-n-drop">Отличия от HTML5 Drag’n’Drop</a></h2><p>В современном стандарте HTML5 есть поддержка Drag’n’Drop при помощи <a href="http://www.html5rocks.com/en/tutorials/dnd/basics/">специальных событий</a>.</p>
+<p>Эти события поддерживаются всеми современными браузерами, и у них есть свои интересные особенности, например, можно перетащить файл в браузер, так что JS получит доступ к его содержимому. Они заслуживают отдельного рассмотрения.</p>
+<p>Но в плане именно Drag’n’Drop у них есть существенные ограничения. Например, нельзя организовать перенос «только по горизонтали» или «только по вертикали». Также нельзя ограничить перенос внутри заданной зоны. Есть и другие интерфейсные задачи, которые такими встроенными событиями нереализуемы.</p>
+<p>Поэтому здесь мы будем рассматривать Drag’n’Drop при помощи событий мыши.</p>
+<p>Рассматриваемые приёмы, вообще говоря, применяются не только в Drag’n’Drop, но и для любых интерфейсных взаимодействий вида «захватить – потянуть – отпустить».</p>
+<h2><a class="main__anchor" href="#алгоритм-drag-n-drop" name="алгоритм-drag-n-drop">Алгоритм Drag’n’Drop</a></h2><p>Основной алгоритм Drag’n’Drop выглядит так:</p>
+<ol>
+<li>Отслеживаем нажатие кнопки мыши на переносимом элементе при помощи события <code>mousedown</code>.</li>
+<li>При нажатии – подготовить элемент к перемещению.</li>
+<li>Далее отслеживаем движение мыши через <code>mousemove</code> и передвигаем переносимый элемент на новые координаты путём смены <code>left/top</code> и <code>position:absolute</code>.</li>
+<li>При отпускании кнопки мыши, то есть наступлении события <code>mouseup</code> – остановить перенос элемента и произвести все действия, связанные с окончанием Drag’n’Drop.</li>
+</ol>
+<p>В следующем примере эти шаги реализованы для переноса мяча:</p>
+<div class="code-example" data-highlight-block="2-2,5-5,20-20,25-25" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var ball = document.getElementById('ball');
+
+ball.onmousedown = function(e) { // 1. отследить нажатие
+
+  // подготовить к перемещению
+  // 2. разместить на том же месте, но в абсолютных координатах
+  ball.style.position = 'absolute';
+  moveAt(e);
+  // переместим в body, чтобы мяч был точно не внутри position:relative
+  document.body.appendChild(ball);
+
+  ball.style.zIndex = 1000; // показывать мяч над другими элементами
+
+  // передвинуть мяч под координаты курсора
+  // и сдвинуть на половину ширины/высоты для центрирования
+  function moveAt(e) {
+    ball.style.left = e.pageX - ball.offsetWidth / 2 + 'px';
+    ball.style.top = e.pageY - ball.offsetHeight / 2 + 'px';
+  }
+
+  // 3, перемещать по экрану
+  document.onmousemove = function(e) {
+    moveAt(e);
+  }
+
+  // 4. отследить окончание переноса
+  ball.onmouseup = function() {
+    document.onmousemove = null;
+    ball.onmouseup = null;
+  }
+}</code></pre>
+</div>
+</div>
+</div><p>Если запустить этот код, то мы заметим нечто странное. При начале переноса мяч «раздваивается» и переносится не сам мяч, а его «клон».</p>
+<p>Это можно увидеть в действии внутри ифрейма:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/drag-and-drop/ball/" style="height:230px"></iframe>
+</div><p>Попробуйте перенести мяч мышкой и вы увидите описанное, довольно-таки странное, поведение.</p>
+<p>Это потому, что браузер имеет свой собственный Drag’n’Drop, который автоматически запускается и вступает в конфликт с нашим. Это происходит именно для картинок и некоторых других элементов.</p>
+<p>Его нужно отключить:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">ball.ondragstart = function() {
+  return false;
+};</code></pre>
+</div>
+</div>
+</div><p>Теперь всё будет в порядке.</p>
+<p>В действии (внутри ифрейма):</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/drag-and-drop/ball2/" style="height:230px"></iframe>
+</div><p>Ещё одна особенность правильного Drag’n’Drop – событие <code>mousemove</code> отслеживается на <code>document</code>, а не на <code>ball</code>.</p>
+<p>С первого взгляда кажется, что мышь всегда над мячом и обработчик <code>mousemove</code> можно повесить на сам мяч, а не на документ.</p>
+<p>Однако, на самом деле мышь во время переноса не всегда над мячом.</p>
+<p>Вспомним, событие <code>mousemove</code> возникает хоть и часто, но не для каждого пикселя. Быстрое движение курсора вызовет <code>mousemove</code> уже не над мячом, а, например, в дальнем конце страницы.</p>
+<p>Вот почему мы должны отслеживать <code>mousemove</code> на всём <code>document</code>.</p>
+<h2><a class="main__anchor" href="#правильное-позиционирование" name="правильное-позиционирование">Правильное позиционирование</a></h2><p>В примерах выше мяч позиционируется в центре под курсором мыши:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">self.style.left = e.pageX - ball.offsetWidth / 2 + 'px';
+self.style.top = e.pageY - ball.offsetHeight / 2 + 'px';</code></pre>
+</div>
+</div>
+</div><p>Если поставить <code>left/top</code> ровно в <code>pageX/pageY</code>, то мячик прилипнет верхним-левым углом к курсору мыши. Будет некрасиво. Поэтому мы сдвигаем его на половину высоты/ширины, чтобы был центром под мышью. Уже лучше.</p>
+<p>Но не идеально. В частности, в самом начале переноса, особенно если мячик «взят» за край – он резко «прыгает» центром под курсор мыши.</p>
+<p><strong>Для правильного переноса необходимо, чтобы изначальный сдвиг курсора относительно элемента сохранялся.</strong></p>
+<p>Где захватили, за ту «часть элемента» и переносим:</p>
+<figure><div class="image" style="width:156px">
+<div class="image__ratio" style="padding-top:83.97435897435898%"></div>
+<img alt="" class="image__image" height="131" src="article/drag-and-drop/ball_shift.png" width="156">
+</img></div></figure><ol>
+<li>
+<p>Когда человек нажимает на мячик <code>mousedown</code> – курсор сдвинут относительно левого-верхнего угла мяча на расстояние, которое мы обозначим <code>shiftX/shiftY</code>. И нужно при переносе сохранить этот сдвиг.</p>
+<p>Получить значения <code>shiftX/shiftY</code> легко: достаточно вычесть из координат курсора <code>pageX/pageY</code> левую-верхнюю границу мячика, полученную при помощи функции <a href="/coordinates-document#getCoords">getCoords</a>.</p>
+<p><strong>При Drag’n’Drop мы везде используем координаты относительно документа, так как они подходят в большем количестве ситуаций.</strong></p>
+<p>Конечно же, не проблема перейти к координатам относительно окна, если это понадобится. Достаточно использовать <code>position:fixed</code>, <code>elem.getBoundingClientRect()</code> для определения координат и <code>e.clientX/Y</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// onmousedown
+shiftX = e.pageX - getCoords(ball).left;
+shiftY = e.pageY - getCoords(ball).top;</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Далее при переносе мяча мы располагаем его <code>left/top</code> с учетом сдвига, то есть вот так:</p>
+<div class="code-example" data-highlight-inline="1:28-34,2:27-33" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// onmousemove
+ball.style.left = e.pageX - shiftX + 'px';
+ball.style.top = e.pageY - shiftY + 'px';</code></pre>
+</div>
+</div>
+</div></li>
+</ol>
+<p>Итоговый код с правильным позиционированием:</p>
+<div class="code-example" data-highlight-block="5-6" data-highlight-inline="15:32-38,16:31-37" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var ball = document.getElementById('ball');
+
+ball.onmousedown = function(e) {
+
+  var coords = getCoords(ball);
+  var shiftX = e.pageX - coords.left;
+  var shiftY = e.pageY - coords.top;
+
+  ball.style.position = 'absolute';
+  document.body.appendChild(ball);
+  moveAt(e);
+
+  ball.style.zIndex = 1000; // над другими элементами
+
+  function moveAt(e) {
+    ball.style.left = e.pageX - shiftX + 'px';
+    ball.style.top = e.pageY - shiftY + 'px';
+  }
+
+  document.onmousemove = function(e) {
+    moveAt(e);
+  };
+
+  ball.onmouseup = function() {
+    document.onmousemove = null;
+    ball.onmouseup = null;
+  };
+
+}
+
+ball.ondragstart = function() {
+  return false;
+};</code></pre>
+</div>
+</div>
+</div><p>В действии (внутри ифрейма):</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/drag-and-drop/ball3/" style="height:230px"></iframe>
+</div><p>Различие особенно заметно, если захватить мяч за правый-нижний угол. В предыдущем примере мячик «прыгнет» серединой под курсор, в этом – будет плавно переноситься с текущей позиции.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Мы рассмотрели «минимальный каркас» <code>Drag'n'Drop</code>.</p>
+<p>Его компоненты:</p>
+<ol>
+<li>События <code>ball.mousedown</code> → <code>document.mousemove</code> → <code>ball.mouseup</code>.</li>
+<li>Передвижение с учётом изначального сдвига <code>shiftX/shiftY</code>.</li>
+<li>Отмена действия браузера по событию <code>dragstart</code>.</li>
+</ol>
+<p>На этой основе можно сделать очень многое.</p>
+<ul>
+<li>При <code>mouseup</code> можно обработать окончание переноса, произвести изменения в данных, если они нужны.</li>
+<li>Во время самого переноса можно подсвечивать элементы, над которыми проходит элемент.</li>
+<li>При обработке событий <code>mousedown</code> и <code>mouseup</code> можно использовать делегирование, так что одного обработчика достаточно для управления переносом в зоне с сотнями элементов.</li>
+</ul>
+<p>Это и многое другое мы рассмотрим в статье про <a href="/drag-and-drop-objects">Drag’n’Drop объектов</a>.</p>
+</cut></div></meta></article></main></div></body></html>

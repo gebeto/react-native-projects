@@ -1,0 +1,109 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Свойства "font-size" и "line-height"' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Здесь мы рассмотрим, как соотносятся размеры шрифта и строки, и как их правильно задавать.</p>
+<h2><a class="main__anchor" href="#font-size-и-line-height" name="font-size-и-line-height">font-size и line-height</a></h2><ul>
+<li><code>font-size</code> – <em>размер шрифта</em>, в частности, определяющий высоту букв.</li>
+<li><code>line-height</code> – <em>высота строки</em>.</li>
+</ul>
+<p>Для наглядности посмотрим пример HTML, в котором шрифт и размер строки одинаковы:</p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-highlight-block="2-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+body {
+    font-size: 30px;
+    font-family: monospace;
+    line-height: 30px;
+  }
+&lt;/style&gt;
+
+&lt;div style="outline: 1px dotted red"&gt;Ёрш р&lt;/div&gt;
+&lt;div style="outline: 1px dotted red"&gt;Ёрш Ё&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-27kc3f" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><p>Размер шрифта <code>font-size</code> – это абстрактное значение, которое привязано к шрифту, и даётся в типографских целях.</p>
+<p>Обычно оно равно расстоянию от самой верхней границы букв до самой нижней, исключая «нижние хвосты» букв, таких как <code>p</code>, <code>g</code>. Как видно из примера выше, при размере строки, равном <code>font-size</code>, строка не будет размером точно «под букву».</p>
+<p>В зависимости от шрифта, «хвосты» букв при этом могут вылезать, правые буквы <code>Ё</code> и <code>р</code> в примере выше пересекаются как раз поэтому.</p>
+<p>В некоторых особо размашистых шрифтах «хвосты букв» могут быть размером с саму букву, а то и больше. Но это, всё же исключение.</p>
+<p>Обычно размер строки делают чуть больше, чем шрифт.</p>
+<p><strong>По умолчанию в браузерах используется специальное значение <code>line-height:normal</code>.</strong></p>
+<p>Оно означает, что браузер может принимать решение о размере строки самостоятельно. Как правило, оно будет в диапазоне <code>1.1 - 1.25</code>, но стандарт не гарантирует этого, он говорит лишь, что оно должно быть «разумным» (дословно – англ. reasonable).</p>
+<h2><a class="main__anchor" href="#множитель-для-line-height" name="множитель-для-line-height">Множитель для line-height</a></h2><p>Значение <code>line-height</code> можно указать при помощи <code>px</code> или <code>em</code>, но гораздо лучше – задать его числом.</p>
+<p>Значение-число интерпретируется как множитель относительно размера шрифта. Например, значение с множителем <code>line-height: 2</code> при <code>font-size: 16px</code> будет аналогично <code>line-height: 32px (=16px*2)</code>.</p>
+<p>Однако, между множителем и точным значением есть одна существенная разница.</p>
+<ul>
+<li>
+<p><strong>Значение, заданное множителем, наследуется и применяется в каждом элементе относительно его размера шрифта.</strong></p>
+<p>То есть, при <code>line-height: 2</code> означает, что высота строки будет равна удвоенному размеру шрифта, не важно какой шрифт.</p>
+</li>
+<li>
+<p><strong>Значение, заданное в единицах измерения, запоминается и наследуется «как есть».</strong></p>
+<p>Это означает, что <code>line-height: 32px</code> будет всегда жёстко задавать высоту строки, даже если шрифт во вложенных элементах станет больше или меньше текущего.</p>
+</li>
+</ul>
+<p>Давайте посмотрим, как это выглядит, на примерах:</p>
+<p>Множитель, <code>line-height:1.25</code></p>
+<div class="code-example" data-autorun="true" data-highlight-inline="0:12-29" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div style="line-height: 1.25"&gt;
+  стандартная строка
+  &lt;div style="font-size:2em"&gt;
+    шрифт в 2 раза больше&lt;br&gt;
+    шрифт в 2 раза больше
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-7ne353" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><p>Конкретное значение, <code>line-height:1.25em</code></p>
+<div class="code-example" data-autorun="true" data-highlight-inline="0:12-31" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div style="line-height: 1.25em"&gt;
+  стандартная строка
+  &lt;div style="font-size:2em"&gt;
+    шрифт в 2 раза больше&lt;br&gt;
+    шрифт в 2 раза больше
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-cgyibq" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><p>Какой вариант выглядит лучше? Наверно, первый. В нём размер строки более-менее соответствует шрифту, поскольку задан через множитель.</p>
+<p>В обычных ситуациях рекомендуется использовать именно множитель, за исключением особых случаев, когда вы действительно знаете что делаете.</p>
+<h2><a class="main__anchor" href="#синтаксис-font-size-height-family" name="синтаксис-font-size-height-family">Синтаксис font: size/height family</a></h2><p>Установить <code>font-size</code> и <code>line-height</code> можно одновременно.</p>
+<p>Соответствующий синтаксис выглядит он так:</p>
+<div class="code-example" data-highlight-inline="0:6-14" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">font: 20px/1.5 Arial,sans-serif;</code></pre>
+</div>
+</div>
+</div><p>При этом нужно обязательно указать сам шрифт, например <code>Arial,sans-serif</code>. Укороченный вариант <code>font: 20px/1.5</code> работать не будет.</p>
+<p>Дополнительно можно задать и свойства <code>font-style</code>, <code>font-weight</code>:</p>
+<div class="code-example" data-highlight-inline="0:6-17" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">font: italic bold 20px/1.5 Arial,sans-serif;</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><dl>
+<dt><code>line-height</code></dt>
+<dd>Размер строки, обычно он больше размера шрифта. При установке множителем рассчитывается каждый раз относительно текущего шрифта, при установке в единицах измерения – фиксируется.</dd>
+<dt><code>font-size</code></dt>
+<dd>Размер шрифта. Если сделать блок такой же высоты, как шрифт, то хвосты букв будут вылезать из-под него.</dd>
+<dt><code>font: 125%/1.5 FontFamily</code></dt>
+<dd>Даёт возможность одновременно задать размер, высоту строки и, собственно, сам шрифт.</dd>
+</dl>
+</div></meta></article></main></div></body></html>

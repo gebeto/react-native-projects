@@ -1,0 +1,222 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Дерево DOM" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Основным инструментом работы и динамических изменений на странице является DOM (Document Object Model) – объектная модель, используемая для XML/HTML-документов.</p>
+<cut>
+<p>Согласно DOM-модели, документ является иерархией, деревом. Каждый HTML-тег образует узел дерева с типом «элемент». Вложенные в него теги становятся дочерними узлами. Для представления текста создаются узлы с типом «текст».</p>
+<p>DOM – это представление документа в виде дерева объектов, доступное для изменения через JavaScript.</p>
+<h2><a class="main__anchor" href="#пример-dom" name="пример-dom">Пример DOM</a></h2><p>Построим, для начала, дерево DOM для следующего документа.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;О лосях&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  Правда о лосях
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div><p>Его вид:</p>
+<div class="domtree"></div>
+<script>
+var node = {"name":"HTML","nodeType":1,"children":[{"name":"HEAD","nodeType":1,"children":[{"name":"#text","nodeType":3,"content":"\n    "},{"name":"TITLE","nodeType":1,"children":[{"name":"#text","nodeType":3,"content":"О лосях"}]},{"name":"#text","nodeType":3,"content":"\n  "}]},{"name":"#text","nodeType":3,"content":"\n  "},{"name":"BODY","nodeType":1,"children":[{"name":"#text","nodeType":3,"content":"\n     Правда о лосях\n   \n\n"}]}]}
+
+drawHtmlTree(node, 'div.domtree', 690, 350);
+</script>
+<p>В этом дереве выделено два типа узлов.</p>
+<ol>
+<li>Теги образуют <em>узлы-элементы</em> (element node). Естественным образом одни узлы вложены в другие. Структура дерева образована исключительно за счет них.</li>
+<li>Текст внутри элементов образует <em>текстовые узлы</em> (text node), обозначенные как <code>#text</code>. Текстовый узел содержит исключительно строку текста и не может иметь потомков, то есть он всегда на самом нижнем уровне.</li>
+</ol>
+<p><strong>На рисунке выше синие узлы-элементы можно кликать, при этом их дети будут скрываться-раскрываться.</strong></p>
+<p>Обратите внимание на специальные символы в текстовых узлах:</p>
+<ul>
+<li>перевод строки: <code>↵</code></li>
+<li>пробел: <code>␣</code></li>
+</ul>
+<p><strong>Пробелы и переводы строки – это тоже текст, полноправные символы, которые учитываются в DOM.</strong></p>
+<p>В частности, в примере выше тег <code>&lt;html&gt;</code> содержит не только узлы-элементы <code>&lt;head&gt;</code> и <code>&lt;body&gt;</code>, но и <code>#text</code> (пробелы, переводы строки) между ними.</p>
+<p>Впрочем, как раз на самом верхнем уровне из этого правила есть исключения: пробелы до <code>&lt;head&gt;</code> по стандарту игнорируются, а любое содержимое после <code>&lt;/body&gt;</code> не создаёт узла, браузер переносит его внутрь, в конец <code>body</code>.</p>
+<p>В остальных случаях всё честно – если пробелы есть в документе, то они есть и в DOM, а если их убрать, то и в DOM их не будет, получится так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;&lt;head&gt;&lt;title&gt;О лосях&lt;/title&gt;&lt;/head&gt;&lt;body&gt;Правда о лосях&lt;/body&gt;&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div><div class="domtree"></div>
+<script>
+var node = {"name":"HTML","nodeType":1,"children":[{"name":"HEAD","nodeType":1,"children":[{"name":"TITLE","nodeType":1,"children":[{"name":"#text","nodeType":3,"content":"О лосях"}]}]},{"name":"BODY","nodeType":1,"children":[{"name":"#text","nodeType":3,"content":"Правда о лосях\n"}]}]}
+
+drawHtmlTree(node, 'div.domtree', 690, 300);
+</script>
+<h2><a class="main__anchor" href="#автоисправление" name="автоисправление">Автоисправление</a></h2><p>При чтении неверного HTML браузер автоматически корректирует его для показа и при построении DOM.</p>
+<p>В частности, всегда будет верхний тег <code>&lt;html&gt;</code>. Даже если в тексте нет – в DOM он будет, браузер создаст его самостоятельно.</p>
+<p>То же самое касается и тега <code>&lt;body&gt;</code>.</p>
+<p>Например, если файл состоит из одного слова <code>"Привет"</code>, то браузер автоматически обернёт его в <code>&lt;html&gt;</code> и <code>&lt;body&gt;</code>.</p>
+<p><strong>При генерации DOM браузер самостоятельно обрабатывает ошибки в документе, закрывает теги и так далее.</strong></p>
+<p>Такой документ:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;p&gt;Привет
+&lt;li&gt;Мама
+&lt;li&gt;и
+&lt;li&gt;Папа</code></pre>
+</div>
+</div>
+</div><p>…Превратится вот во вполне респектабельный DOM, браузер сам закроет теги:</p>
+<div class="domtree"></div>
+<script>
+var node = {"name":"HTML","nodeType":1,"children":[{"name":"HEAD","nodeType":1,"children":[]},{"name":"BODY","nodeType":1,"children":[{"name":"P","nodeType":1,"children":[{"name":"#text","nodeType":3,"content":"Привет\n"}]},{"name":"LI","nodeType":1,"children":[{"name":"#text","nodeType":3,"content":"Мама\n"}]},{"name":"LI","nodeType":1,"children":[{"name":"#text","nodeType":3,"content":"и\n"}]},{"name":"LI","nodeType":1,"children":[{"name":"#text","nodeType":3,"content":"Папа\n"}]}]}]}
+
+drawHtmlTree(node, 'div.domtree', 690, 400);
+</script>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Таблицы всегда содержат <code>&lt;tbody&gt;</code></span></div>
+<div class="important__content"><p>Важный «особый случай» при работе с DOM – таблицы. По стандарту DOM они обязаны иметь <code>&lt;tbody&gt;</code>, однако в HTML их можно написать без него. В этом случае браузер добавляет <code>&lt;tbody&gt;</code> самостоятельно.</p>
+<p>Например, для такого HTML:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;table id="table"&gt;
+  &lt;tr&gt;&lt;td&gt;1&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+</div>
+</div>
+</div><p>DOM-структура будет такой:</p>
+<div class="domtree"></div>
+<script>
+var node = {"name":"TABLE","nodeType":1,"children":[{"name":"TBODY","nodeType":1,"children":[{"name":"TR","nodeType":1,"children":[{"name":"TD","nodeType":1,"children":[{"name":"#text","nodeType":3,"content":"1"}]},{"name":"#text","nodeType":3,"content":"\n"}]}]}]};
+
+drawHtmlTree(node,  'div.domtree', 600, 200);
+</script>
+<p>Вы видите? Появился <code>&lt;tbody&gt;</code>, как будто документ был таким:</p>
+<div class="code-example" data-highlight-block="1-1,3-3" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;table&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;&lt;td&gt;1&lt;/td&gt;&lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+</div>
+</div>
+</div><p>Важно знать об этом, иначе при работе с таблицами возможны сюрпризы.</p>
+</div></div>
+<h2><a class="main__anchor" href="#другие-типы-узлов" name="другие-типы-узлов">Другие типы узлов</a></h2><p>Дополним страницу новыми тегами и комментарием:</p>
+<div class="code-example" data-highlight-block="7-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;body&gt;
+  Правда о лосях
+  &lt;ol&gt;
+    &lt;li&gt;Лось — животное хитрое&lt;/li&gt;
+    &lt;!-- комментарий --&gt;
+    &lt;li&gt;...и коварное!&lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div><div class="domtree"></div>
+<script>
+var node = {"name":"HTML","nodeType":1,"children":[{"name":"HEAD","nodeType":1,"children":[]},{"name":"BODY","nodeType":1,"children":[{"name":"#text","nodeType":3,"content":"\n    Правда о лосях\n    "},{"name":"OL","nodeType":1,"children":[{"name":"#text","nodeType":3,"content":"\n      "},{"name":"LI","nodeType":1,"children":[{"name":"#text","nodeType":3,"content":"Лось — животное хитрое"}]},{"name":"#text","nodeType":3,"content":"\n      "},{"name":"#comment","nodeType":8,"content":" комментарий "},{"name":"#text","nodeType":3,"content":"\n      "},{"name":"LI","nodeType":1,"children":[{"name":"#text","nodeType":3,"content":"...и коварное!"}]},{"name":"#text","nodeType":3,"content":"\n    "}]},{"name":"#text","nodeType":3,"content":"\n  \n\n"}]}]};
+
+drawHtmlTree(node, 'div.domtree', 690, 550);
+</script>
+<p><strong>В этом примере тегов уже больше, и даже появился узел нового типа – <em>комментарий</em>.</strong></p>
+<p>Казалось бы, зачем комментарий в DOM? На отображение-то он всё равно не влияет. Но так как он есть в HTML – обязан присутствовать в DOM-дереве.</p>
+<p><strong>Всё, что есть в HTML, находится и в DOM.</strong></p>
+<p>Даже директива <code>&lt;!DOCTYPE...&gt;</code>, которую мы ставим в начале HTML, тоже является DOM-узлом, и находится в дереве DOM непосредственно перед <code>&lt;html&gt;</code>. На иллюстрациях выше этот факт скрыт, поскольку мы с этим узлом работать не будем, он никогда не нужен.</p>
+<p>Даже сам объект <code>document</code>, формально, является DOM-узлом, самым-самым корневым.</p>
+<p>Всего различают 12 типов узлов, но на практике мы работаем с четырьмя из них:</p>
+<ol>
+<li>Документ – точка входа в DOM.</li>
+<li>Элементы – основные строительные блоки.</li>
+<li>Текстовые узлы – содержат, собственно, текст.</li>
+<li>Комментарии – иногда в них можно включить информацию, которая не будет показана, но доступна из JS.</li>
+</ol>
+<h2><a class="main__anchor" href="#возможности-которые-дает-dom" name="возможности-которые-дает-dom">Возможности, которые дает DOM</a></h2><p>Зачем, кроме красивых рисунков, нужна иерархическая модель DOM?</p>
+<p><strong>DOM нужен для того, чтобы манипулировать страницей – читать информацию из HTML, создавать и изменять элементы.</strong></p>
+<p>Узел <code>HTML</code>  можно получить как <code>document.documentElement</code>, а <code>BODY</code> – как <code>document.body</code>.</p>
+<p>Получив узел, мы можем что-то сделать с ним.</p>
+<p>Например, можно поменять цвет <code>BODY</code> и вернуть обратно:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">document.body.style.backgroundColor = 'red';
+alert( 'Поменяли цвет BODY' );
+
+document.body.style.backgroundColor = '';
+alert( 'Сбросили цвет BODY' );</code></pre>
+</div>
+</div>
+</div><p>DOM предоставляет возможность делать со страницей всё, что угодно.</p>
+<p>Позже мы более подробно рассмотрим различные свойства и методы DOM-узлов.</p>
+<h2><a class="main__anchor" href="#особенности-ie8" name="особенности-ie8">Особенности IE8-</a></h2><p>IE8- не генерирует текстовые узлы, если они состоят только из пробелов.</p>
+<p>То есть, такие два документа дадут идентичный DOM:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;&lt;head&gt;&lt;title&gt;О лосях&lt;/title&gt;&lt;/head&gt;&lt;body&gt;Правда о лосях&lt;/body&gt;&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div><p>И такой:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;title&gt;О лосях&lt;/title&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+  Правда о лосях
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div><p>Эта, с позволения сказать, «оптимизация» не соответствует стандарту и IE9+ уже работает как нужно, то есть как описано ранее.</p>
+<p>Но, по большому счёту, для нас это отличие должно быть без разницы, ведь при работе с DOM/HTML мы в любом случае не должны быть завязаны на то, есть пробел между тегами или его нет. Мало ли, сегодня он есть, а завтра решили переформатировать HTML и его не стало.</p>
+<p>К счастью, свойства и методы DOM, которые мы пройдём далее, вполне позволяют писать код, который будет работать корректно во всех версиях браузеров. Так что знать об этом отличии надо, если вы хотите поддерживать старые IE, но проблем оно нам создавать не будет.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>DOM-модель – это внутреннее представление HTML-страницы в виде дерева.</li>
+<li>Все элементы страницы, включая теги, текст, комментарии, являются узлами DOM.</li>
+<li>У элементов DOM есть свойства и методы, которые позволяют изменять их.</li>
+<li>IE8- не генерирует пробельные узлы.</li>
+</ul>
+<p>Кстати, DOM-модель используется не только в JavaScript, это известный способ представления XML-документов.</p>
+<p>В следующих главах мы познакомимся с DOM более плотно.</p>
+</cut></div></meta></article></main></div></body></html>

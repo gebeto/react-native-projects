@@ -1,0 +1,378 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Деструктуризация" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p><em>Деструктуризация</em> (destructuring assignment) – это особый синтаксис присваивания, при котором можно присвоить массив или объект сразу нескольким переменным, разбив его на части.</p>
+<h2><a class="main__anchor" href="#массив" name="массив">Массив</a></h2><p>Пример деструктуризации массива:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let [firstName, lastName] = ["Илья", "Кантор"];
+
+alert(firstName); // Илья
+alert(lastName);  // Кантор</code></pre>
+</div>
+</div>
+</div><p>При таком присвоении первое значение массива пойдёт в переменную <code>firstName</code>, второе – в <code>lastName</code>, а последующие (если есть) – будут отброшены.</p>
+<p>Ненужные элементы массива также можно отбросить, поставив лишнюю запятую:</p>
+<div class="code-example" data-highlight-block="2-3" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+// первый и второй элементы не нужны
+let [, , title] = "Юлий Цезарь Император Рима".split(" ");
+
+alert(title); // Император</code></pre>
+</div>
+</div>
+</div><p>В коде выше первый и второй элементы массива никуда не записались, они были отброшены. Как, впрочем, и все элементы после третьего.</p>
+<h3><a class="main__anchor" href="#оператор-spread" name="оператор-spread">Оператор «spread»</a></h3><p>Если мы хотим получить и последующие значения массива, но не уверены в их числе – можно добавить ещё один параметр, который получит «всё остальное», при помощи оператора <code>"..."</code> («spread», троеточие):</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let [firstName, lastName, ...rest] = "Юлий Цезарь Император Рима".split(" ");
+
+alert(firstName); // Юлий
+alert(lastName);  // Цезарь
+alert(rest);      // Император,Рима (массив из 2х элементов)</code></pre>
+</div>
+</div>
+</div><p>Значением <code>rest</code> будет массив из оставшихся элементов массива. Вместо <code>rest</code> можно использовать и другое имя переменной, оператор здесь – троеточие. Оно должно стоять только последним элементом в списке слева.</p>
+<h3><a class="main__anchor" href="#значения-по-умолчанию" name="значения-по-умолчанию">Значения по умолчанию</a></h3><p>Если значений в массиве меньше, чем переменных – ошибки не будет, просто присвоится <code>undefined</code>:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let [firstName, lastName] = [];
+
+alert(firstName); // undefined</code></pre>
+</div>
+</div>
+</div><p>Впрочем, как правило, в таких случаях задают значение по умолчанию. Для этого нужно после переменной использовать символ <code>=</code> со значением, например:</p>
+<div class="code-example" data-highlight-block="2-3" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+// значения по умолчанию
+let [firstName="Гость", lastName="Анонимный"] = [];
+
+alert(firstName); // Гость
+alert(lastName);  // Анонимный</code></pre>
+</div>
+</div>
+</div><p>В качестве значений по умолчанию можно использовать не только примитивы, но и выражения, даже включающие в себя вызовы функций:</p>
+<div class="code-example" data-highlight-block="6-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+function defaultLastName() {
+  return Date.now() + '-visitor';
+}
+
+// lastName получит значение, соответствующее текущей дате:
+let [firstName, lastName=defaultLastName()] = ["Вася"];
+
+alert(firstName); // Вася
+alert(lastName);  // 1436...-visitor</code></pre>
+</div>
+</div>
+</div><p>Заметим, что вызов функции <code>defaultLastName()</code> для генерации значения по умолчанию будет осуществлён только при необходимости, то есть если значения нет в массиве.</p>
+<h2><a class="main__anchor" href="#деструктуризация-объекта" name="деструктуризация-объекта">Деструктуризация объекта</a></h2><p>Деструктуризацию можно использовать и с объектами. При этом мы указываем, какие свойства в какие переменные должны «идти».</p>
+<p>Базовый синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">let {var1, var2} = {var1:…, var2…}</code></pre>
+</div>
+</div>
+</div><p>Объект справа – уже существующий, который мы хотим разбить на переменные. А слева – список переменных, в которые нужно соответствующие свойства записать.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="8-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let options = {
+  title: "Меню",
+  width: 100,
+  height: 200
+};
+
+let {title, width, height} = options;
+
+alert(title);  // Меню
+alert(width);  // 100
+alert(height); // 200</code></pre>
+</div>
+</div>
+</div><p>Как видно, свойства <code>options.title</code>, <code>options.width</code> и <code>options.height</code> автоматически присвоились соответствующим переменным.</p>
+<p>Если хочется присвоить свойство объекта в переменную с другим именем, например, чтобы свойство <code>options.width</code> пошло в переменную <code>w</code>, то можно указать соответствие через двоеточие, вот так:</p>
+<div class="code-example" data-highlight-block="8-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let options = {
+  title: "Меню",
+  width: 100,
+  height: 200
+};
+
+let {width: w, height: h, title} = options;
+
+alert(title);  // Меню
+alert(w);      // 100
+alert(h);      // 200</code></pre>
+</div>
+</div>
+</div><p>В примере выше свойство <code>width</code> отправилось в переменную <code>w</code>, свойство <code>height</code> – в переменную <code>h</code>, а <code>title</code> – в переменную с тем же названием.</p>
+<p>Если каких-то свойств в объекте нет, можно указать значение по умолчанию через знак равенства <code>=</code>, вот так;</p>
+<div class="code-example" data-highlight-block="6-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let options = {
+  title: "Меню"
+};
+
+let {width=100, height=200, title} = options;
+
+alert(title);  // Меню
+alert(width);  // 100
+alert(height); // 200</code></pre>
+</div>
+</div>
+</div><p>Можно и сочетать одновременно двоеточие и равенство:</p>
+<div class="code-example" data-highlight-block="6-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let options = {
+  title: "Меню"
+};
+
+let {width:w=100, height:h=200, title} = options;
+
+alert(title);  // Меню
+alert(w);      // 100
+alert(h);      // 200</code></pre>
+</div>
+</div>
+</div><p>А что, если в объекте больше значений, чем переменных? Можно ли куда-то присвоить «остаток», аналогично массивам?</p>
+<p>Такой возможности в текущем стандарте нет. Она планируется в будущем стандарте, и выглядеть она будет примерно так:</p>
+<div class="code-example" data-highlight-block="8-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let options = {
+  title: "Меню",
+  width: 100,
+  height: 200
+};
+
+let {title, ...size} = options;
+
+// title = "Меню"
+// size = { width: 100, height: 200} (остаток)</code></pre>
+</div>
+</div>
+</div><p>Этот код будет работать, например, при использовании Babel со включёнными экспериментальными возможностями, но ещё раз заметим, что в текущий стандарт такая возможность не вошла.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Деструктуризация без объявления</span></div>
+<div class="important__content"><p>В примерах выше переменные объявлялись прямо перед присваиванием: <code>let {…} = {…}</code>. Конечно, можно и без <code>let</code>, использовать уже существующие переменные.</p>
+<p>Однако, здесь есть небольшой «подвох». В JavaScript, если в основном потоке кода (не внутри другого выражения) встречается <code>{...}</code>, то это воспринимается как блок.</p>
+<p>Например, можно использовать такой блок для ограничения видимости переменных:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+{
+  // вспомогательные переменные, локальные для блока
+  let a = 5;
+  // поработали с ними
+  alert(a); // 5
+  // больше эти переменные не нужны
+}
+alert(a); // ошибка нет такой переменной</code></pre>
+</div>
+</div>
+</div><p>Конечно, это бывает удобно, но в данном случае это создаст проблему при деструктуризации:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">let a, b;
+{a, b} = {a:5, b:6}; // будет ошибка, оно посчитает, что {a,b} - блок</code></pre>
+</div>
+</div>
+</div><p>Чтобы избежать интерпретации <code>{a, b}</code> как блока, нужно обернуть всё присваивание в скобки:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">let a, b;
+({a, b} = {a:5, b:6}); // внутри выражения это уже не блок</code></pre>
+</div>
+</div>
+</div></div></div>
+<h2><a class="main__anchor" href="#вложенные-деструктуризации" name="вложенные-деструктуризации">Вложенные деструктуризации</a></h2><p>Если объект или массив содержат другие объекты или массивы, и их тоже хочется разбить на переменные – не проблема.</p>
+<p>Деструктуризации можно как угодно сочетать и вкладывать друг в друга.</p>
+<p>В коде ниже <code>options</code> содержит подобъект и подмассив. В деструктуризации ниже сохраняется та же структура:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let options = {
+  size: {
+    width: 100,
+    height: 200
+  },
+  items: ["Пончик", "Пирожное"]
+}
+
+let { title="Меню", size: {width, height}, items: [item1, item2] } = options;
+
+// Меню 100 200 Пончик Пирожное
+alert(title);  // Меню
+alert(width);  // 100
+alert(height); // 200
+alert(item1);  // Пончик
+alert(item2);  // Пирожное</code></pre>
+</div>
+</div>
+</div><p>Как видно, весь объект <code>options</code> корректно разбит на переменные.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>
+<p>Деструктуризация позволяет разбивать объект или массив на переменные при присвоении.</p>
+</li>
+<li>
+<p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">let {prop : varName = default, ...} = object</code></pre>
+</div>
+</div>
+</div><p>Здесь двоеточие <code>:</code> задаёт отображение свойства <code>prop</code> в переменную <code>varName</code>, а равенство <code>=default</code> задаёт выражение, которое будет использовано, если значение отсутствует (не указано или <code>undefined</code>).</p>
+<p>Для массивов имеет значение порядок, поэтому нельзя использовать <code>:</code>, но значение по умолчанию – можно:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">let [var1 = default, var2, ...rest] = array</code></pre>
+</div>
+</div>
+</div><p>Объявление переменной в начале конструкции не обязательно. Можно использовать и существующие переменные. Однако при деструктуризации объекта может потребоваться обернуть выражение в скобки.</p>
+</li>
+<li>
+<p>Вложенные объекты и массивы тоже работают, при деструктуризации нужно лишь сохранить ту же структуру, что и исходный объект/массив.</p>
+</li>
+</ul>
+<p>Как мы увидим далее, деструктуризации особенно удобны при чтении объектных параметров функций.</p>
+</div></meta></article></main></div></body></html>

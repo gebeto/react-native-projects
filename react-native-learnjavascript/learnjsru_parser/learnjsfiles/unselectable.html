@@ -1,0 +1,176 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Мышь: отмена выделения, невыделяемые элементы" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>У кликов мыши есть неприятная особенность.</p>
+<p>Двойной клик или нажатие с движением курсора как правило инициируют выделение текста.</p>
+<p>Если мы хотим обрабатывать эти события сами, то такое выделение – некрасиво и неудобно. В этой главе мы рассмотрим основные способы, как делать элемент невыделяемым.</p>
+<p>Для полноты картины, среди них будут и такие, которые применимы не только к событиям мыши.</p>
+<cut>
+<h2><a class="main__anchor" href="#способ-1-отмена-mousedown-selectstart" name="способ-1-отмена-mousedown-selectstart">Способ 1: отмена mousedown/selectstart</a></h2><p>Проблема: браузер выделяет текст при движении мышью с зажатой левой кнопкой , а также при двойном клике на элемент. Даже там, где это не нужно.</p>
+<p>Если сделать двойной клик на таком элементе, то обработчик сработает. Но побочным эффектом является <em>выделение текста браузером</em>.</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;span ondblclick="alert('двойной клик!')"&gt;Текст&lt;/span&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-cvcjec" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><p>Чтобы избежать выделения, мы должны предотвратить действие браузера по умолчанию для события <a href="http://msdn.microsoft.com/en-us/library/ms536969%28VS.85%29.aspx">selectstart</a> в IE и <code>mousedown</code> в других браузерах.</p>
+<p>Полный код элемента, который обрабатывает двойной клик без выделения:</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-highlight-inline="0:32-87" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div ondblclick="alert('Тест')" onselectstart="return false" onmousedown="return false"&gt;
+  Двойной клик сюда выведет "Тест", без выделения
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-2uthd5" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><p>При установке на родителя – все его потомки станут невыделяемыми:</p>
+<div class="code-example" data-autorun="true" data-demo-height="140" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">Элементы списка не выделяются при клике:
+&lt;ul onmousedown="return false" onselectstart="return false"&gt;
+  &lt;li&gt;Винни-Пух&lt;/li&gt;
+  &lt;li&gt;Ослик Иа&lt;/li&gt;
+  &lt;li&gt;Мудрая Сова&lt;/li&gt;
+  &lt;li&gt;Кролик. Просто кролик.&lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-3o0gqn" src="about:blank" style="height:140px"></iframe>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">Выделение, всё же, возможно</span></div>
+<div class="important__content"><p>Отмена действия браузера при <code>mousedown/selectstart</code> отменяет выделение при клике, но не запрещает его полностью.</p>
+<p>Если пользователь всё же хочет выделить текстовое содержимое элемента, то он может сделать это.</p>
+<p>Достаточно начать выделение (зажать кнопку мыши) не на самом элементе, а рядом с ним. Ведь там отмены не произойдёт, выделение начнётся, и дальше можно передвинуть мышь уже на элемент.</p>
+</div></div>
+<h2><a class="main__anchor" href="#способ-2-снятие-выделения-пост-фактум" name="способ-2-снятие-выделения-пост-фактум">Способ 2: снятие выделения пост-фактум</a></h2><p>Вместо <em>предотвращения</em> выделения, можно его снять в обработчике события, <em>после</em> того, как оно уже произошло.</p>
+<p>Для этого мы используем методы работы с выделением, которые описаны в отдельной главе <a href="/range-textrange-selection">Выделение: Range, TextRange и Selection</a>. Здесь нам понадобится всего лишь одна функция <code>clearSelection</code>, которая будет снимать выделение.</p>
+<p>Пример со снятием выделения при двойном клике на элемент списка:</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;ul&gt;
+  &lt;li ondblclick="clearSelection()"&gt;Выделение отменяется при двойном клике.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script&gt;
+  function clearSelection() {
+    if (window.getSelection) {
+      window.getSelection().removeAllRanges();
+    } else { // старый IE
+      document.selection.empty();
+    }
+  }
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-7u7d3i" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><p>У этого подхода есть две особенности, на которые стоит обратить внимание:</p>
+<ul>
+<li>Выделение всё же производится, но тут же снимается. Это выглядит как мигание и не очень красиво.</li>
+<li>Выделение при помощи передвижения зажатой мыши всё еще работает, так что посетитель имеет возможность выделить содержимое элемента.</li>
+</ul>
+<h2><a class="main__anchor" href="#способ-3-свойство-user-select" name="способ-3-свойство-user-select">Способ 3: свойство user-select</a></h2><p>Существует нестандартное CSS-свойство <code>user-select</code>, которое делает элемент невыделяемым.</p>
+<p>Оно когда-то планировалось в стандарте CSS3, потом от него отказались, но поддержка в браузерах уже была сделана и потому осталась.</p>
+<p>Это свойство работает (с префиксом) везде, кроме IE9-:</p>
+<div class="code-example" data-autorun="true" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  b {
+    -webkit-user-select: none;
+    /* user-select -- это нестандартное свойство */
+
+    -moz-user-select: none;
+    /* поэтому нужны префиксы */
+
+    -ms-user-select: none;
+  }
+&lt;/style&gt;
+
+Строка до..
+&lt;div ondblclick="alert('Тест')"&gt;
+  &lt;b&gt;Этот текст нельзя выделить (кроме IE9-)&lt;/b&gt;
+&lt;/div&gt;
+.. Строка после</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-clslvz" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><p>Читайте на эту тему также <a href="http://blogs.msdn.com/b/ie/archive/2012/01/11/controlling-selection-with-css-user-select.aspx">Controlling Selection with CSS user-select</a>.</p>
+<h3><a class="main__anchor" href="#ie9-атрибут-unselectable-on" name="ie9-атрибут-unselectable-on">IE9-: атрибут unselectable=«on»</a></h3><p>В IE9- нет <code>user-select</code>, но есть атрибут <a href="http://msdn.microsoft.com/en-us/library/ms534706%28v=vs.85%29.aspx">unselectable</a>.</p>
+<p>Он отменяет выделение, но у него есть особенности:</p>
+<ol>
+<li>Во-первых, невыделяемость не наследуется. То есть, невыделяемость родителя не делает невыделяемыми детей.</li>
+<li>Во-вторых, текст, в отличие от <code>user-select</code>, всё равно можно выделить, если начать выделение не на самом элементе, а рядом с ним.</li>
+</ol>
+<div class="code-example" data-highlight-inline="0:32-49" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div ondblclick="alert('Тест')" unselectable="on" style="border:1px solid black"&gt;
+  Этот текст невыделяем в IE, &lt;em&gt;кроме дочерних элементов&lt;/em&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</div><p>Левая часть текста в IE не выделяется при двойном клике. Правую часть (<code>em</code>) можно выделить, т.к. на ней нет атрибута <code>unselectable</code>.</p>
+<p>В действии:</p>
+<div ondblclick="alert('Тест')" style="border:1px solid black" unselectable="on">
+  Этот текст невыделяем в IE, <em>кроме дочерних элементов</em>
+</div>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Для отмены выделения есть несколько способов:</p>
+<ol>
+<li>
+<p>CSS-свойство <code>user-select</code> – везде кроме IE9- (нужен префикс, нестандарт).</p>
+</li>
+<li>
+<p>Атрибут <code>unselectable="on"</code> – работает для любых IE (должен быть у всех потомков)</p>
+</li>
+<li>
+<p>Отмена действий на <code>mousedown</code> и <code>selectstart</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">elem.onmousedown = elem.onselectstart = function() {
+  return false;
+};</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Отмена выделения пост-фактум через функцию <code>clearSelection()</code>, описанную выше.</p>
+</li>
+</ol>
+<p>Какой же способ выбирать?</p>
+<p>Это зависит от задач и вашего удобства, а также конкретного случая. Все описанные способы работают.</p>
+<p>Недостаток <code>user-select</code> – в том, что посетитель теряет возможность скопировать текст. А что, если он захочет именно это сделать?</p>
+<p>В любом случае эти способы не предназначены для защиты от выделения-и-копирования.</p>
+<p>Если уж хочется запретить копирование – можно использовать событие <code>oncopy</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="80" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div oncopy="alert('Копирование запрещено');return false"&gt;
+  Уважаемый копирователь,
+  почему-то автор хочет заставить вас покопаться в исходном коде этой страницы.
+  Если вы знаете JS или HTML, то скопировать текст не составит для вас проблемы,
+  ну а если нет, то увы...
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-abbwn3" src="about:blank" style="height:80px"></iframe>
+</div>
+</div></cut></div></meta></article></main></div></body></html>

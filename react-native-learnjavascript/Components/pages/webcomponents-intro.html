@@ -1,0 +1,65 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="С высоты орбитального полёта" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Этот раздел посвящён набору современных браузерных стандартов, описывающих создание «веб-компонент» (web components).</p>
+<p>На текущий момент эти стандарты – в разработке, браузеры по-разному поспевают за их развитием. Статьи можно читать в любом браузере, но для тестирования я бы рекомендовал использовать Chrome Canary, поскольку главной «движущей силой» этих стандартов являются сотрудники Google и, как правило, этот браузер реализует последний вариант спецификации.</p>
+<p>Понимание этих стандартов важно потому, что это «взгляд в будущее», в то, какой станет интернет-разработка. Сейчас уже существуют некоторые полифиллы, частично реализующие их.</p>
+<p>Идеи веб-компонент взяты не с пустого места. Они эксплуатируются в более «приземлённых», текущих подходах к разработке.</p>
+<h2><a class="main__anchor" href="#что-общего-между" name="что-общего-между">Что общего, между…</a></h2><p>Прежде, чем мы перейдём к веб-компонентам, посмотрим на одну очень классную штуку:</p>
+<figure><div class="image" style="width:680px">
+<div class="image__ratio" style="padding-top:80%"></div>
+<img alt="" class="image__image" height="544" src="article/webcomponents-intro/satellite.jpg" style="border-radius:5px" width="680">
+</img></div></figure><p>Да, это Международная Космическая Станция (МКС).</p>
+<p>И вот, как она, приблизительно, устроена:</p>
+<figure><div class="image" style="width:680px">
+<div class="image__ratio" style="padding-top:68.97058823529412%"></div>
+<img alt="" class="image__image" height="469" src="article/webcomponents-intro/satellite-expanded.jpg" style="border-radius:5px" width="680">
+</img></div></figure><p>МКС:</p>
+<ul>
+<li>Состоит из множества компонентов.</li>
+<li>Каждый компонент – в свою очередь состоит из множества деталей внутри.</li>
+<li>Эти компоненты очень сложны, они гораздо сложнее, чем большинство сайтов.</li>
+<li>Их разрабатывают команды из разных стран, разговаривающие на разных языках.</li>
+</ul>
+<p>…И эта штука летает!</p>
+<p>За счёт чего строятся настолько сложные вещи?</p>
+<p>Что мы могли бы позаимствовать, чтобы наша разработка была столь же надёжной и масштабируемой? Ну, или по крайней мере, близко к этому…</p>
+<h2><a class="main__anchor" href="#компонентная-архитектура" name="компонентная-архитектура">Компонентная архитектура</a></h2><p>Ключевое правило при разработке сложных вещей: «Никогда не делайте сложные вещи».</p>
+<p>Если что-то становится сложным – разбиваем это на части попроще и связываем их наиболее очевидным способом.</p>
+<p><strong>Хороший архитектор – это как раз тот, кто умеет делать сложное простым.</strong></p>
+<p>Любой сложный интерфейс мы делим на компоненты – сущности, для которых мы можем максимально чётко и понятно указать, что это такое и что оно умеет делать.</p>
+<p>Посмотрим на какой-нибудь более-менее сложный сайт, например на <a href="https://twitter.com">Twitter</a>.</p>
+<p>Он естественным образом распадается на компоненты:
+<img alt="" height="546" src="article/webcomponents-intro/twitter-components.png" width="675"/></p>
+<p>Для наглядности они обведены <span style="border: 2px dashed red">красной рамкой:</span></p>
+<ol>
+<li>«Главное Меню»</li>
+<li>«Об Авторе»</li>
+<li>«Близкие по духу»</li>
+<li>«Твиты»</li>
+</ol>
+<p>Как мы решаем, что именно выделять в компонент? Это нам подсказывает опыт и здравый смысл.</p>
+<p>В случае с твиттером разбиение на компоненты особенно очевидно. Страница «сама распадается» на чётко очерченные блоки, каждый из которых выполняет свою роль.</p>
+<p>Если представить каждый компонент HTML-тегом, то страница будет выглядеть примерно так (выделены нестандартные теги):</p>
+<div class="code-example" data-highlight-block="1-1,4-5,8-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;header&gt;
+  &lt;top-menu/&gt;
+&lt;/header&gt;
+&lt;aside&gt;
+  &lt;author-info/&gt;
+  &lt;congenial-info/&gt;
+&lt;/aside&gt;
+&lt;main&gt;
+  &lt;tweets-list/&gt;
+&lt;/main&gt;</code></pre>
+</div>
+</div>
+</div><p>До недавнего времени, чтобы так описать страницу, требовались специальные JavaScript-фреймворки. Такой фреймворк позволял описывать «свои» теги, которые, после обработки фреймворком, становились JavaScript-объектами.</p>
+<p>Веб-компоненты (Web Components) – это не один стандарт, а целая платформа, комплекс стандартов, которые вместе добавляют в браузер технологии для удобной реализации компонент.</p>
+<p>Если глядеть «сверху», то веб-компоненты – это возможность добавлять свои элементы в браузер, например <code>document.createElement("tweets-list")</code>, которые описываются с помощью классов JavaScript, могут иметь свои методы и свойства.</p>
+<p>Также «под капотом» кроются расширенные возможности по инкапсуляции поддерева DOM и стилей, по генерации событий и многое другое, что мы рассмотрим далее.</p>
+</div></meta></article></main></div></body></html>

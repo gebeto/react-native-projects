@@ -1,0 +1,216 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Структура кода" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В этой главе мы рассмотрим общую структуру кода, команды и их разделение.</p>
+<cut>
+<h2><a class="main__anchor" href="#команды" name="команды">Команды</a></h2><p>Раньше мы уже видели пример команды: <code>alert('Привет, мир!')</code> выводит сообщение.</p>
+<p>Для того, чтобы добавить в код ещё одну команду – можно поставить её после точки с запятой.</p>
+<p>Например, вместо одного вызова <code>alert</code> сделаем два:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert('Привет'); alert('Мир');</code></pre>
+</div>
+</div>
+</div><p>Как правило, каждая команда пишется на отдельной строке – так код лучше читается:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert('Привет');
+alert('Мир');</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#semicolon" name="semicolon">Точка с запятой</a></h2><p>Точку с запятой <em>во многих случаях</em> можно не ставить, если есть переход на новую строку.</p>
+<p>Так тоже будет работать:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert('Привет')
+alert('Мир')</code></pre>
+</div>
+</div>
+</div><p>В этом случае JavaScript интерпретирует переход на новую строчку как разделитель команд и автоматически вставляет «виртуальную» точку с запятой между ними.</p>
+<p><strong>Однако, важно то, что «во многих случаях» не означает «всегда»!</strong></p>
+<p>Например, запустите этот код:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert(3 +
+1
++ 2);</code></pre>
+</div>
+</div>
+</div><p>Выведет 6.</p>
+<p>То есть, точка с запятой не ставится. Почему? Интуитивно понятно, что здесь дело в «незавершённом выражении», конца которого JavaScript ждёт с первой строки и поэтому не ставит точку с запятой. И здесь это, пожалуй, хорошо и приятно.</p>
+<p><strong>Но в некоторых важных ситуациях JavaScript «забывает» вставить точку с запятой там, где она нужна.</strong></p>
+<p>Таких ситуаций не так много, но ошибки, которые при этом появляются, достаточно сложно обнаруживать и исправлять.</p>
+<p>Чтобы не быть голословным, вот небольшой пример.</p>
+<p>Такой код работает:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">[1, 2].forEach(alert)</code></pre>
+</div>
+</div>
+</div><p>Он выводит по очереди <code>1</code>, <code>2</code>. Почему он работает – сейчас не важно, позже разберёмся.</p>
+<p>Важно, что вот такой код уже работать не будет:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert("Сейчас будет ошибка")
+[1, 2].forEach(alert)</code></pre>
+</div>
+</div>
+</div><p>Выведется только первый <code>alert</code>, а дальше – ошибка. Потому что перед квадратной скобкой JavaScript точку с запятой не ставит, а как раз здесь она нужна (упс!).</p>
+<p>Если её поставить, то всё будет в порядке:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "Сейчас будет ошибка" );
+[1, 2].forEach(alert)</code></pre>
+</div>
+</div>
+</div><p><strong>Поэтому в JavaScript рекомендуется точки с запятой ставить. Сейчас это, фактически, стандарт, которому следуют все большие проекты.</strong></p>
+<h2><a class="main__anchor" href="#комментарии" name="комментарии">Комментарии</a></h2><p>Со временем программа становится большой и сложной. Появляется необходимость добавить <em>комментарии</em>, которые объясняют, что происходит и почему.</p>
+<p>Комментарии могут находиться в любом месте программы и никак не влияют на её выполнение. Интерпретатор JavaScript попросту игнорирует их.</p>
+<p><em>Однострочные комментарии</em> начинаются с двойного слэша <code>//</code>. Текст считается комментарием до конца строки:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// Команда ниже говорит "Привет"
+alert( 'Привет' );
+
+alert( 'Мир' ); // Второе сообщение выводим отдельно</code></pre>
+</div>
+</div>
+</div><p><em>Многострочные комментарии</em> начинаются слешем-звездочкой <code>«/*»</code> и заканчиваются звездочкой-слэшем <code>«*/»</code>, вот так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/* Пример с двумя сообщениями.
+Это - многострочный комментарий.
+*/
+alert( 'Привет' );
+alert( 'Мир' );</code></pre>
+</div>
+</div>
+</div><p>Всё содержимое комментария игнорируется. Если поместить код внутрь <code>/* … */</code> или после <code>//</code> – он не выполнится.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/* Закомментировали код
+alert( 'Привет' );
+*/
+alert( 'Мир' );</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">Используйте горячие клавиши!</span></div>
+<div class="important__content"><p>В большинстве редакторов комментарий можно поставить горячей клавишей, обычно это <kbd class="shortcut">Ctrl<span class="shortcut__plus">+</span>/</kbd> для однострочных и что-то вроде <kbd class="shortcut">Ctrl<span class="shortcut__plus">+</span>Shift<span class="shortcut__plus">+</span>/</kbd> – для многострочных комментариев (нужно выделить блок и нажать сочетание клавиш). Детали смотрите в руководстве по редактору.</p>
+</div></div>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Вложенные комментарии не поддерживаются!</span></div>
+<div class="important__content"><p>В этом коде будет ошибка:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/*
+  /* вложенный комментарий ?!? */
+*/
+alert('Мир');</code></pre>
+</div>
+</div>
+</div></div></div>
+<p>Не бойтесь комментариев. Чем больше кода в проекте – тем они важнее. Что же касается увеличения размера кода – это не страшно, т.к. существуют инструменты сжатия JavaScript, которые при публикации кода легко их удалят.</p>
+<p>На следующих занятиях мы поговорим о переменных, блоках и других структурных элементах программы на JavaScript.</p>
+</cut></div></meta></article></main></div></body></html>

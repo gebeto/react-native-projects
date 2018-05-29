@@ -1,0 +1,97 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Приём проектирования "поведение"' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Шаблон проектирования «поведение» (behavior) позволяет задавать хитрые обработчики на элементе <em>декларативно</em>, установкой специальных HTML-атрибутов и классов.</p>
+<cut>
+<h2><a class="main__anchor" href="#описание" name="описание">Описание</a></h2><p>Приём проектирования «поведение» состоит из двух частей:</p>
+<ol>
+<li>Элементу ставится атрибут, описывающий его поведение.</li>
+<li>При помощи делегирования ставится обработчик на документ, который ловит все клики и, если элемент имеет нужный атрибут, производит нужное действие.</li>
+</ol>
+<h2><a class="main__anchor" href="#пример" name="пример">Пример</a></h2><p>Например, добавим «поведение», которое всем элементам, у которых стоит атрибут <code>data-counter</code>, будет при клике увеличивать значение на <code>1</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">Счётчик:
+&lt;button data-counter&gt;1&lt;/button&gt;
+Ещё счётчик:
+&lt;button data-counter&gt;2&lt;/button&gt;
+
+&lt;script&gt;
+  document.onclick = function(event) {
+    if (!event.target.hasAttribute('data-counter')) return;
+
+    var counter = event.target;
+
+    counter.innerHTML++;
+  };
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-cxmz3o" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><p>Если запустить HTML-код выше, то при клике на каждую кнопку – её значение будет увеличиваться.</p>
+<p>Конечно, нам важны не счётчики, а общий подход, который они демонстрируют.</p>
+<p>Элементов <code>data-counter</code> может быть сколько угодно. Новые могут добавляться в HTML в любой момент. При помощи делегирования мы, фактически, добавили новый «псевдо-стандартный» атрибут в HTML, который добавляет элементу новую возможность («поведение»).</p>
+<h2><a class="main__anchor" href="#ещё-пример" name="ещё-пример">Ещё пример</a></h2><p>Добавим ещё поведение.</p>
+<p>Сделаем так, что при клике на элемент с атрибутом <code>data-toggle-id</code> будет скрываться/показываться элемент с заданным <code>id</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-highlight-block="9-18" data-highlight-inline="0:8-39" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;button data-toggle-id="subscribe-mail"&gt;
+  Показать форму подписки
+&lt;/button&gt;
+
+&lt;form id="subscribe-mail" hidden&gt;
+  Ваша почта: &lt;input type="email"&gt;
+&lt;/form&gt;
+
+&lt;script&gt;
+  document.onclick = function(event) {
+    var target = event.target;
+
+    var id = target.getAttribute('data-toggle-id');
+    if (!id) return;
+
+    var elem = document.getElementById(id);
+
+    elem.hidden = !elem.hidden;
+  };
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-70hl5j" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><p>Ещё раз заметим, что мы сделали. Теперь для того, чтобы добавить скрытие-раскрытие любому элементу – даже не надо знать JavaScript, можно просто написать атрибут <code>data-toggle-id</code>.</p>
+<p>Это бывает очень удобно – не нужно писать JavaScript-код для каждого элемента, который должен служить такой кнопкой. Просто используем поведение.</p>
+<p>Обратите внимание: обработчик поставлен на <code>document</code>, клик на любом элементе страницы пройдёт через него, так что поведение определено глобально.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Не только атрибут</span></div>
+<div class="important__content"><p>Для своих целей мы можем использовать в HTML любые атрибуты, но стандарт рекомендует для своих целей называть атрибуты <code>data-*</code>.</p>
+<p>В обработчике <code>document.onclick</code> мы могли бы проверять не атрибут, а класс или что-то ещё, но с атрибутом – проще и понятнее всего.</p>
+<p>Также для добавления обработчиков на <code>document</code> рекомендуется использовать <code>addEventListener</code>, чтобы можно было добавить более одного обработчика для типа события.</p>
+</div></div>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Шаблон «поведение» удобен тем, что сколь угодно сложное JavaScript-поведение можно «навесить» на элемент одним лишь атрибутом. А можно – несколькими атрибутами на связанных элементах.</p>
+<p>Здесь мы рассмотрели базовый пример, который можно как угодно модифицировать и масштабировать. Важно не переусердствовать.</p>
+<p>Приём разработки «поведение» рекомендуется использовать для расширения возможностей разметки, как альтернативу мини-фрагментам JavaScript.</p>
+</cut></div></meta></article></main></div></body></html>

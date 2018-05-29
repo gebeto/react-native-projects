@@ -1,0 +1,320 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Управление памятью в JavaScript" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Управление памятью в JavaScript обычно происходит незаметно. Мы создаём примитивы, объекты, функции… Всё это занимает память.</p>
+<p>Что происходит с объектом, когда он становится «не нужен»? Возможно ли «переполнение» памяти? Для ответа на эти вопросы – залезем «под капот» интерпретатора.</p>
+<cut>
+<h2><a class="main__anchor" href="#управление-памятью-в-javascript" name="управление-памятью-в-javascript">Управление памятью в JavaScript</a></h2><p>Главной концепцией управления памятью в JavaScript является принцип  <em>достижимости</em> (англ. reachability).</p>
+<ol>
+<li>Определённое множество значений считается достижимым изначально, в частности:</li>
+</ol>
+<ul>
+<li>
+<p>Значения, ссылки на которые содержатся в стеке вызова, то есть – все локальные переменные и параметры функций, которые в настоящий момент выполняются или находятся в ожидании окончания вложенного вызова.</p>
+</li>
+<li>
+<p>Все глобальные переменные.</p>
+<p>Эти значения гарантированно хранятся в памяти. Мы будем называть их <em>корнями</em>.</p>
+</li>
+</ul>
+<ol start="2">
+<li><strong>Любое другое значение сохраняется в памяти лишь до тех пор, пока доступно из корня по ссылке или цепочке ссылок.</strong></li>
+</ol>
+<p>Для очистки памяти от недостижимых значений в браузерах используется автоматический <a href="https://en.wikipedia.org/wiki/Garbage_collection_(computer_science)">Сборщик мусора</a> (англ. Garbage collection, GC), встроенный в интерпретатор, который наблюдает за объектами и время от времени удаляет недостижимые.</p>
+<p>Самая простая ситуация здесь с примитивами. При присвоении они копируются целиком, ссылок на них не создаётся, так что если в переменной была одна строка, а её заменили на другую, то предыдущую можно смело выбросить.</p>
+<p>Именно объекты требуют специального «сборщика мусора», который наблюдает за ссылками, так как на один объект может быть много ссылок из разных переменных и, при перезаписи одной из них, объект может быть всё ещё доступен из другой.</p>
+<p>Далее мы посмотрим ряд примеров, которые помогут в этом разобраться.</p>
+<h3><a class="main__anchor" href="#достижимость-и-наличие-ссылок" name="достижимость-и-наличие-ссылок">Достижимость и наличие ссылок</a></h3><p>Есть одно упрощение для работы с памятью: «значение остаётся в памяти, пока на него есть хотя бы одна ссылка».</p>
+<p>Но такое упрощение будет верным лишь в одну сторону.</p>
+<ul>
+<li>
+<p><strong>Верно – в том плане, что если ссылок на значение нет, то память из-под него очищается.</strong></p>
+<p>Например, была создана ссылка в переменной, и эту переменную тут же перезаписали:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  name: "Вася"
+};
+user = null;</code></pre>
+</div>
+</div>
+</div><p>Теперь объект <code>{ name: "Вася" }</code> более недоступен. Память будет освобождена.</p>
+</li>
+<li>
+<p><strong>Неверно – в другую сторону: наличие ссылки не гарантирует, что значение останется в памяти.</strong></p>
+<p>Такая ситуация возникает с объектами, которые ссылаются друг на друга:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var vasya = {};
+var petya = {};
+vasya.friend = petya;
+petya.friend = vasya;
+
+vasya = petya = null;</code></pre>
+</div>
+</div>
+</div><p>Несмотря на то, что на объекты <code>vasya</code>, <code>petya</code> ссылаются друг на друга через ссылку <code>friend</code>, то есть можно сказать, что на каждый из них есть ссылка, последняя строка делает эти объекты в совокупности недостижимыми.</p>
+<p>Поэтому они будут удалены из памяти.</p>
+<p>Здесь как раз и играет роль «достижимость» – оба этих объекта становятся недостижимы из корней, в первую очередь, из глобальной области, стека.</p>
+</li>
+</ul>
+<p><a href="https://ru.wikipedia.org/wiki/%D0%A1%D0%B1%D0%BE%D1%80%D0%BA%D0%B0_%D0%BC%D1%83%D1%81%D0%BE%D1%80%D0%B0_(%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5)">Сборщик мусора</a> отслеживает такие ситуации и очищает память.</p>
+<h2><a class="main__anchor" href="#алгоритм-сборки-мусора" name="алгоритм-сборки-мусора">Алгоритм сборки мусора</a></h2><p>Сборщик мусора идёт от корня по ссылкам и запоминает все найденные объекты. По окончанию – он смотрит, какие объекты в нём отсутствуют и удаляет их.</p>
+<p>Например, рассмотрим пример объекта «семья»:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function marry(man, woman) {
+  woman.husband = man;
+  man.wife = woman;
+
+  return {
+    father: man,
+    mother: woman
+  }
+}
+
+var family = marry({
+  name: "Василий"
+}, {
+  name: "Мария"
+});</code></pre>
+</div>
+</div>
+</div><p>Функция <code>marry</code> принимает два объекта, даёт им ссылки друг на друга и возвращает третий, содержащий ссылки на оба.</p>
+<p>Получившийся объект <code>family</code> можно изобразить так:</p>
+<figure><div class="image" style="width:337px">
+<div class="image__ratio" style="padding-top:63.798219584569736%"></div>
+<img alt="" class="image__image" height="215" src="article/memory-management/family.png" width="337">
+</img></div></figure><p>Здесь стрелочками показаны ссылки, а вот свойство <code>name</code> ссылкой не является, там хранится примитив, поэтому оно внутри самого объекта.</p>
+<p>Чтобы запустить сборщик мусора, удалим две ссылки:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">delete family.father;
+delete family.mother.husband;</code></pre>
+</div>
+</div>
+</div><p>Обратим внимание, удаление только одной из этих ссылок ни к чему бы не привело. Пока до объекта можно добраться из корня <code>window</code>, объект остаётся жив.</p>
+<p>А если две, то получается, что от бывшего <code>family.father</code> ссылки выходят, но в него – ни одна не идёт:</p>
+<figure><div class="image" style="width:399px">
+<div class="image__ratio" style="padding-top:60.6516290726817%"></div>
+<img alt="" class="image__image" height="242" src="article/memory-management/family-no-father.png" width="399">
+</img></div></figure><p><strong>Совершенно неважно, что из объекта выходят какие-то ссылки, они не влияют на достижимость этого объекта.</strong></p>
+<p>Бывший <code>family.father</code> стал недостижимым и будет удалён вместе со своими данными, которые также более недоступны из программы.</p>
+<figure><div class="image" style="width:144px">
+<div class="image__ratio" style="padding-top:156.25%"></div>
+<img alt="" class="image__image" height="225" src="article/memory-management/family-no-father-2.png" width="144">
+</img></div></figure><p>А теперь – рассмотрим более сложный случай. Что будет, если удалить главную ссылку <code>family</code>?</p>
+<p>Исходный объект – тот же, что и в начале, а затем:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">window.family = null;</code></pre>
+</div>
+</div>
+</div><p>Результат:</p>
+<figure><div class="image" style="width:420px">
+<div class="image__ratio" style="padding-top:66.42857142857143%"></div>
+<img alt="" class="image__image" height="279" src="article/memory-management/family-no-family.png" width="420">
+</img></div></figure><p>Как видим, объекты в конструкции всё ещё связаны между собой. Однако, поиск от корня их не находит, они не достижимы, и значит сборщик мусора удалит их из памяти.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Оптимизации</span></div>
+<div class="important__content"><p>Проблема описанного алгоритма – в больших задержках. Если объектов много, то на поиск всех достижимых  уйдёт довольно много времени. А ведь выполнение скрипта при этом должно быть остановлено, уже просканированные объекты не должны поменяться до окончания процесса. Получаются небольшие, но неприятные паузы-зависания в работе скрипта.</p>
+<p>Поэтому современные интерпретаторы применяют различные оптимизации.</p>
+<p>Самая частая – это деление объектов на два вида «старые» и «новые». Для каждого типа выделяется своя область памяти. Каждый объект создаётся в «новой» области и, если прожил достаточно долго, мигрирует в старую. «Новая» область обычно небольшая. Она очищается часто. «Старая» – редко.</p>
+<p>На практике получается эффективно, обычно большинство объектов создаются и умирают почти сразу, к примеру, служа локальными переменными функции:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showTime() {
+  alert( new Date() ); // этот объект будет создан и умрёт сразу
+}</code></pre>
+</div>
+</div>
+</div><p>Если вы знаете низкоуровневые языки программирования, то более подробно об организации сборки мусора в V8 можно почитать, например, в статье <a href="http://jayconrod.com/posts/55/a-tour-of-v8-garbage-collection">A tour of V8: Garbage Collection</a>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#замыкания" name="замыкания">Замыкания</a></h2><p>Объекты переменных, о которых шла речь ранее, в главе про замыкания, также подвержены сборке мусора. Они следуют тем же правилам, что и обычные объекты.</p>
+<p>Объект переменных внешней функции существует в памяти до тех пор, пока существует хоть одна внутренняя функция, ссылающаяся на него через свойство <code>[[Scope]]</code>.</p>
+<p>Например:</p>
+<ul>
+<li>
+<p>Обычно объект переменных удаляется по завершении работы функции. Даже если в нём есть объявление внутренней функции:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f() {
+  var value = 123;
+
+  function g() {} // g видна только изнутри
+}
+
+f();</code></pre>
+</div>
+</div>
+</div><p>В коде выше <code>value</code> и <code>g</code> являются свойствами объекта переменных. Во время выполнения <code>f()</code> её объект переменных находится в текущем стеке выполнения, поэтому жив. По окончанию, он станет недостижимым и будет убран из памяти вместе с остальными локальными переменными.</p>
+</li>
+<li>
+<p>…А вот в этом случае лексическое окружение, включая переменную <code>value</code>, будет сохранено:</p>
+<div class="code-example" data-highlight-block="5-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f() {
+  var value = 123;
+
+  function g() {}
+
+  return g;
+}
+
+var g = f(); // функция g будет жить и сохранит ссылку на объект переменных</code></pre>
+</div>
+</div>
+</div><p>В скрытом свойстве <code>g.[[Scope]]</code> находится ссылка на объект переменных, в котором была создана <code>g</code>. Поэтому этот объект переменных останется в памяти, а в нём – и <code>value</code>.</p>
+</li>
+<li>
+<p>Если <code>f()</code> будет вызываться много раз, а полученные функции будут сохраняться, например, складываться в массив, то будут сохраняться и объекты <code>LexicalEnvironment</code> с соответствующими значениями  <code>value</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f() {
+  var value = Math.random();
+
+  return function() {};
+}
+
+// 3 функции, каждая ссылается на свой объект переменных,
+// каждый со своим значением value
+var arr = [f(), f(), f()];</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Объект <code>LexicalEnvironment</code> живёт ровно до тех пор, пока на него существуют ссылки. В коде ниже после удаления ссылки на <code>g</code> умирает:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f() {
+  var value = 123;
+
+  function g() {}
+
+  return g;
+}
+
+var g = f(); // функция g жива
+// а значит в памяти остается соответствующий объект переменных f()
+
+g = null; // ..а вот теперь память будет очищена</code></pre>
+</div>
+</div>
+</div></li>
+</ul>
+<h3><a class="main__anchor" href="#оптимизация-в-v8-и-её-последствия" name="оптимизация-в-v8-и-её-последствия">Оптимизация в V8 и её последствия</a></h3><p>Современные JS-движки делают оптимизации замыканий по памяти. Они анализируют использование переменных и в случае, когда переменная из замыкания абсолютно точно не используется, удаляют её.</p>
+<p>В коде выше переменная <code>value</code> никак не используется. Поэтому она будет удалена из памяти.</p>
+<p><strong>Важный побочный эффект в V8 (Chrome, Opera) состоит в том, что удалённая переменная станет недоступна и при отладке!</strong></p>
+<p>Попробуйте запустить пример ниже с открытой консолью Chrome. Когда он остановится, в консоли наберите <code>alert(value)</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f() {
+  var value = Math.random();
+
+  function g() {
+    debugger; // выполните в консоли alert( value ); Нет такой переменной!
+  }
+
+  return g;
+}
+
+var g = f();
+g();</code></pre>
+</div>
+</div>
+</div><p>Как вы могли увидеть – нет такой переменной! Недоступна она изнутри <code>g</code>. Интерпретатор решил, что она нам не понадобится и удалил.</p>
+<p>Это может привести к забавным казусам при отладке, вплоть до того что вместо этой переменной будет другая, внешняя:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var value = "Сюрприз";
+
+function f() {
+  var value = "самое близкое значение";
+
+  function g() {
+    debugger; // выполните в консоли alert( value ); Сюрприз!
+  }
+
+  return g;
+}
+
+var g = f();
+g();</code></pre>
+</div>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Ещё увидимся</span></div>
+<div class="important__content"><p>Об этой особенности важно знать. Если вы отлаживаете под Chrome/Opera, то наверняка рано или поздно с ней встретитесь!</p>
+<p>Это не глюк отладчика, а особенность работы V8, которая, возможно, будет когда-нибудь изменена. Вы всегда сможете проверить, не изменилось ли чего, запустив примеры на этой странице.</p>
+</div></div>
+<h2><a class="main__anchor" href="#влияние-управления-памятью-на-скорость" name="влияние-управления-памятью-на-скорость">Влияние управления памятью на скорость</a></h2><p>На создание новых объектов и их удаление тратится время. Это важно иметь в виду в случае, когда важна производительность.</p>
+<p>В качестве примера рассмотрим рекурсию. При вложенных вызовах каждый раз создаётся новый объект с переменными и помещается в стек. Потом память из-под него нужно очистить. Поэтому рекурсивный код будет всегда медленнее использующего цикл, но насколько?</p>
+<p>Пример ниже тестирует сложение чисел до данного через рекурсию по сравнению с обычным циклом:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sumTo(n) { // обычный цикл 1+2+...+n
+  var result = 0;
+  for (var i = 1; i &lt;= n; i++) {
+    result += i;
+  }
+  return result;
+}
+
+function sumToRec(n) { // рекурсия sumToRec(n) = n+SumToRec(n-1)
+  return n == 1 ? 1 : n + sumToRec(n - 1);
+}
+
+var timeLoop = performance.now();
+for (var i = 1; i &lt; 1000; i++) sumTo(1000); // цикл
+timeLoop = performance.now() - timeLoop;
+
+var timeRecursion = performance.now();
+for (var i = 1; i &lt; 1000; i++) sumToRec(1000); // рекурсия
+timeRecursion = performance.now() - timeRecursion;
+
+alert( "Разница в " + (timeRecursion / timeLoop) + " раз" );</code></pre>
+</div>
+</div>
+</div><p>Различие в скорости на таком примере может составлять, в зависимости от интерпретатора, 2-10 раз.</p>
+<p>Вообще, этот пример – не показателен. Ещё раз обращаю ваше внимание на то, что такие искусственные «микротесты» часто врут. Правильно их делать – отдельная наука, которая выходит за рамки этой главы. Но и на практике ускорение в 2-10 раз оптимизацией по количеству объектов (и вообще, любых значений) – отнюдь не миф, а вполне достижимо.</p>
+<p>В реальной жизни в большинстве ситуаций такая оптимизация несущественна, просто потому что «JavaScript и так достаточно быстр». Но она может быть эффективной для «узких мест» кода.</p>
+</cut></div></meta></article></main></div></body></html>

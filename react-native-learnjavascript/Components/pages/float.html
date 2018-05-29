@@ -1,0 +1,645 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Свойство "float"' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Свойство <code>float</code> в CSS занимает особенное место. До его появления расположить два блока один слева от другого можно было лишь при помощи таблиц. Но в его работе есть ряд особенностей. Поэтому его иногда не любят, но при их понимании <code>float</code> станет вашим верным другом и помощником.</p>
+<p>Далее мы рассмотрим, как работает <code>float</code>, разберём решения сопутствующих проблем, а также ряд полезных рецептов.</p>
+<cut>
+<h2><a class="main__anchor" href="#float-algorithm" name="float-algorithm">Как работает float</a></h2><p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">float: left | right | none | inherit;</code></pre>
+</div>
+</div>
+</div><p>При применении этого свойства происходит следующее:</p>
+<ol>
+<li>Элемент позиционируется как обычно, а затем <em>вынимается из <strike>документа</strike> потока</em> и сдвигается влево (для <code>left</code>) или вправо (для <code>right</code>) до того как коснётся либо границы родителя, либо другого элемента с <code>float</code>.</li>
+<li>Если пространства по горизонтали не хватает для того, чтобы вместить элемент, то он сдвигается вниз до тех пор, пока не начнёт помещаться.</li>
+<li>Другие непозиционированные блочные элементы без <code>float</code> ведут себя так, как будто элемента с <code>float</code> нет, так как он убран из потока.</li>
+<li>Строки (inline-элементы), напротив, «знают» о <code>float</code> и обтекают элемент по сторонам.</li>
+</ol>
+<p>Ещё детали:</p>
+<ol>
+<li>
+<p>Элемент при наличии <code>float</code> получает <code>display:block</code>.</p>
+<p>То есть, указав элементу, у которого <code>display:inline</code> свойство <code>float: left/right</code>, мы автоматически сделаем его блочным. В частности, для него будут работать  <code>width/height</code>.</p>
+<p>Исключением являются некоторые редкие <code>display</code> наподобие <code>inline-table</code> и <code>run-in</code> (см. <a href="http://www.w3.org/TR/CSS2/visuren.html#dis-pos-flo">Relationships between „display“, „position“, and „float“</a>)</p>
+</li>
+<li>
+<p>Ширина <code>float</code>-блока определяется по содержимому. (<a href="http://www.w3.org/TR/CSS2/visudet.html#float-width">«CSS 2.1, 10.3.5»</a>).</p>
+</li>
+<li>
+<p>Вертикальные отступы <code>margin</code> элементов с <code>float</code> не сливаются с отступами соседей, в отличие от обычных блочных элементов.</p>
+</li>
+</ol>
+<p>Это пока только теория. Далее мы рассмотрим происходящее на примере.</p>
+<h3><a class="main__anchor" href="#текст-с-картинками" name="текст-с-картинками">Текст с картинками</a></h3><p>Одно из первых применений <code>float</code>, для которого это свойство когда-то было придумано – это вёрстка текста с картинками, отжатыми влево или вправо.</p>
+<p>Например, вот страница о Винни-Пухе с картинками, которым поставлено свойство <code>float</code>:</p>
+<figure><div class="image" style="width:668px">
+<div class="image__ratio" style="padding-top:83.08383233532935%"></div>
+<img alt="" class="image__image" height="555" src="article/float/text.png" width="668">
+</img></div></figure><p><a href="http://plnkr.co/edit/Q4lKcbLcDdIypTaGNobx?p=preview">Её HTML-код</a> выглядит примерно так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;img src="1.jpg" style="float:right"&gt;
+&lt;p&gt;Текст...&lt;/p&gt;
+&lt;p&gt;Текст...&lt;/p&gt;
+
+&lt;img src="2.jpg" style="float:left"&gt;
+&lt;p&gt;Текст...&lt;/p&gt;
+
+&lt;img src="3.jpg" style="float:right"&gt;
+&lt;p&gt;Текст...&lt;/p&gt;</code></pre>
+</div>
+</div>
+</div><p>Каждая картинка, у которой есть <code>float</code>, обрабатывается в точности <a href="#float-algorithm">по алгоритму</a>, указанному выше.</p>
+<p>Посмотрим, например, как выглядело бы начало текста без float:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/float/winnie-nofloat/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="2imc87T0UAXIQX6uR8Oa" href="http://plnkr.co/edit/2imc87T0UAXIQX6uR8Oa?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/float/winnie-nofloat/" style="height:300px"></iframe>
+</div><ol>
+<li>Элемент <code>IMG</code> вынимается из <strike>документа</strike> потока. Иначе говоря, последующие блоки начинают вести себя так, как будто его нет, и заполняют освободившееся место (изображение для наглядности полупрозрачно):</li>
+</ol>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/float/winnie-nofloat-1/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="R5tk87XckoDq3t10OD4t" href="http://plnkr.co/edit/R5tk87XckoDq3t10OD4t?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/float/winnie-nofloat-1/" style="height:250px"></iframe>
+</div><ol start="2">
+<li>Элемент <code>IMG</code> сдвигается максимально вправо(при <code>float:right</code>):</li>
+</ol>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/float/winnie-nofloat-2/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="kYFi5fCRaykuGyPVMCbO" href="http://plnkr.co/edit/kYFi5fCRaykuGyPVMCbO?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/float/winnie-nofloat-2/" style="height:250px"></iframe>
+</div><ol start="3">
+<li>Строки, в отличие от блочных элементов, «чувствуют» <code>float</code> и уступают ему место, обтекая картинку слева:</li>
+</ol>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/float/winnie-nofloat-3/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="fjXHSJJf0PxyxFKkaLJd" href="http://plnkr.co/edit/fjXHSJJf0PxyxFKkaLJd?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/float/winnie-nofloat-3/" style="height:250px"></iframe>
+</div><p>При <code>float:left</code> – всё то же самое, только <code>IMG</code> смещается влево (или не смещается, если он и так у левого края), а строки – обтекают справа</p>
+<p><strong>Строки и инлайн-элементы смещаются, чтобы уступить место <code>float</code>. Обычные блоки – ведут себя так, как будто элемента нет.</strong></p>
+<p>Чтобы это увидеть, добавим параграфам фон и рамку, а также сделаем изображение немного прозрачным:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/float/winnie-block-bg/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="oLIY6MySIhiWQEW75jTu" href="http://plnkr.co/edit/oLIY6MySIhiWQEW75jTu?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/float/winnie-block-bg/" style="height:300px"></iframe>
+</div><p>Как видно из рисунка, параграфы проходят «за» <code>float</code>. При этом строки в них о <code>float'ах</code> знают и обтекают их, поэтому соответствующая часть параграфа пуста.</p>
+<h3><a class="main__anchor" href="#блок-с-float" name="блок-с-float">Блок с float</a></h3><p>Свойство <code>float</code> можно поставить любому элементу, не обязательно картинке. При этом элемент станет блочным.</p>
+<p>Посмотрим, как это работает, на конкретной задаче – сделать рамку с названием вокруг картинки с Винни.</p>
+<p>HTML будет такой:</p>
+<div class="code-example" data-highlight-block="2-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;h2&gt;Винни-Пух&lt;/h2&gt;
+
+&lt;div class="left-picture"&gt;
+  &lt;img src="winnie-mult.jpg" width="200" height="150"&gt;
+  &lt;div&gt;Кадр из советского мультфильма&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Текст...&lt;/p&gt;</code></pre>
+</div>
+</div>
+</div><p>…То есть, <code>div.left-picture</code> включает в себя картинку и заголовок к ней. Добавим стиль с <code>float</code>:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+.left-picture {
+  float: left;
+
+  /* рамочка и отступ для красоты (не обязательно) */
+  margin: 0 10px 5px 0;
+  text-align: center;
+  border: 1px solid black;
+}</code></pre>
+</div>
+</div>
+</div><p>Результат:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/float/winnie-block/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="yddttXuwciGCk2zmT1MQ" href="http://plnkr.co/edit/yddttXuwciGCk2zmT1MQ?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/float/winnie-block/" style="height:300px"></iframe>
+</div><p>Заметим, что блок <code>div.left-picture</code> «обернул» картинку и текст под ней, а не растянулся на всю ширину. Это следствие того, что ширина блока с <code>float</code> определяется по содержимому.</p>
+<h2><a class="main__anchor" href="#очистка-под-float" name="очистка-под-float">Очистка под float</a></h2><p>Разберём еще одну особенность использования свойства <code>float</code>.</p>
+<p>Для этого выведем персонажей из мультфильма «Винни-Пух». Цель:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/float/winnie-clear-3/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="7DgsMevW4KsVznwWHmKj" href="http://plnkr.co/edit/7DgsMevW4KsVznwWHmKj?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/float/winnie-clear-3/" style="height:600px"></iframe>
+</div><p>Реализуем её, шаг за шагом.</p>
+<h3><a class="main__anchor" href="#шаг-1-добавляем-информацию" name="шаг-1-добавляем-информацию">Шаг 1. Добавляем информацию</a></h3><p>Попробуем просто добавить Сову после Винни-Пуха:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;h2&gt;Винни-Пух&lt;/h2&gt;
+&lt;div class="left"&gt;Картинка&lt;/div&gt;
+&lt;p&gt;..Текст о Винни..&lt;/p&gt;
+
+&lt;h2&gt;Сова&lt;/h2&gt;
+&lt;div class="left"&gt;Картинка&lt;/div&gt;
+&lt;p&gt;..Текст о Сове..&lt;/p&gt;</code></pre>
+</div>
+</div>
+</div><p>Результат <a href="http://plnkr.co/edit/ScXvPJNgAAix4dof5jVK?p=preview">такого кода</a> будет странным, но предсказуемым:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/float/winnie-clear-1/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="ScXvPJNgAAix4dof5jVK" href="http://plnkr.co/edit/ScXvPJNgAAix4dof5jVK?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/float/winnie-clear-1/" style="height:500px"></iframe>
+</div><p>Произошло следующее:</p>
+<ul>
+<li><strong>Заголовок <code>&lt;h2&gt;Сова&lt;/h2&gt;</code> не заметил <code>float</code></strong> (он же блочный элемент) и расположился сразу после предыдущего параграфа <code>&lt;p&gt;..Текст о Винни..&lt;/p&gt;</code>.</li>
+<li>После него идёт <code>float</code>-элемент – картинка «Сова». Он был сдвинут влево. Согласно <a href="#float-algorithm">алгоритму</a>, он двигается до левой границы или до касания с другим <code>float</code>-элементом, что и произошло (картинка «Винни-Пух»).</li>
+<li>Так как у совы <code>float:left</code>, то <strong>последующий текст обтекает её справа</strong>.</li>
+</ul>
+<h3><a class="main__anchor" href="#шаг-2-свойство-clear" name="шаг-2-свойство-clear">Шаг 2. Свойство clear</a></h3><p>Мы, конечно же, хотели бы расположить заголовок «Сова» и остальную информацию ниже Винни-Пуха.</p>
+<p>Для решения возникшей проблемы придумано свойство <code>clear</code>.</p>
+<p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">clear: left | right | both;</code></pre>
+</div>
+</div>
+</div><p>Применение этого свойства сдвигает элемент вниз до тех пор, пока не закончатся  <code>float'ы</code> слева/справа/с обеих сторон.</p>
+<p>Применим его к заголовку <code>H2</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">h2 {
+  clear: left;
+}</code></pre>
+</div>
+</div>
+</div><p>Результат <a href="http://plnkr.co/edit/u2V9DdBC4HYfCcxiSPrT?p=preview">получившегося кода</a> будет ближе к цели, но всё еще не идеален:</p>
+<figure><div class="image" style="width:655px">
+<div class="image__ratio" style="padding-top:81.06870229007633%"></div>
+<img alt="" class="image__image" height="531" src="article/float/float-small-margin.png" width="655">
+</img></div></figure><p>Элементы теперь в нужном порядке. Но куда пропал отступ <code>margin-top</code> у заголовка «Сова»?</p>
+<p>Теперь заголовок «Сова» прилегает снизу почти вплотную к картинке, с учётом её <code>margin-bottom</code>, но без своего большого отступа <code>margin-top</code>.</p>
+<p>Таково поведение свойства <code>clear</code>. Оно сдвинуло элемент <code>h2</code> вниз ровно настолько, чтобы элементов <code>float</code> не было <em>сбоку от его верхней границы</em>.</p>
+<p>Если посмотреть на элемент заголовка внимательно в инструментах разработчика, то можно заметить отступ <code>margin-top</code> у заголовка по-прежнему есть, но он располагается «за» элементом <code>float</code> и не учитывается при работе в <code>clear</code>.</p>
+<p>Чтобы исправить ситуацию, можно добавить перед заголовком пустой промежуточный элемент без отступов, с единственным свойством <code>clear:both</code>. Тогда уже под ним отступ заголовка будет работать нормально:</p>
+<div class="code-example" data-highlight-block="4-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;h2&gt;Винни-Пух&lt;/h2&gt;
+&lt;div class="left"&gt;Картинка&lt;/div&gt;
+&lt;p&gt;Текст&lt;/p&gt;
+
+&lt;div style="clear:both"&gt;&lt;/div&gt;
+
+&lt;h2&gt;Сова&lt;/h2&gt;
+&lt;div class="left"&gt;Картинка&lt;/div&gt;
+&lt;p&gt;Текст&lt;/p&gt;</code></pre>
+</div>
+</div>
+</div><p>Результат <a href="http://plnkr.co/edit/7DgsMevW4KsVznwWHmKj?p=preview">получившегося кода</a>:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/float/winnie-clear-3/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="7DgsMevW4KsVznwWHmKj" href="http://plnkr.co/edit/7DgsMevW4KsVznwWHmKj?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/float/winnie-clear-3/" style="height:600px"></iframe>
+</div><ul>
+<li>Свойство <code>clear</code> гарантировало, что <code>&lt;div style="clear:both"&gt;</code> будет под картинкой с <code>float</code>.</li>
+<li>Заголовок <code>&lt;h2&gt;Сова&lt;/h2&gt;</code> идёт после этого <code>&lt;div&gt;</code>. Так что его отступ учитывается.</li>
+</ul>
+<h2><a class="main__anchor" href="#заполнение-блока-родителя" name="заполнение-блока-родителя">Заполнение блока-родителя</a></h2><p>Итак, мы научились располагать другие элементы <em>под</em> <code>float</code>. Теперь рассмотрим следующую особенность.</p>
+<p><strong>Из-за того, что блок с <code>float</code> удалён из потока, родитель не выделяет под него места.</strong></p>
+<p>Например, выделим для информации о Винни-Пухе красивый элемент-контейнер <code>&lt;div class="hero"&gt;</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div class="hero"&gt;
+
+  &lt;h2&gt;Винни-Пух&lt;/h2&gt;
+
+  &lt;div class="left"&gt;Картинка&lt;/div&gt;
+
+  &lt;p&gt;Текст.&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</div><p>Стиль контейнера:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">.hero {
+  background: #D2B48C;
+  border: 1px solid red;
+}</code></pre>
+</div>
+</div>
+</div><p>Результат <a href="http://plnkr.co/edit/yjCFbyE8xtbzK8iKQfE1?p=preview">получившегося кода</a>:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/float/winnie-clear-4/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="yjCFbyE8xtbzK8iKQfE1" href="http://plnkr.co/edit/yjCFbyE8xtbzK8iKQfE1?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/float/winnie-clear-4/" style="height:300px"></iframe>
+</div><p>Элемент с <code>float</code> оказался выпавшим за границу родителя <code>.hero</code>.</p>
+<p>Чтобы этого не происходило, используют одну из следующих техник.</p>
+<h3><a class="main__anchor" href="#поставить-родителю-float" name="поставить-родителю-float">Поставить родителю float</a></h3><p>Элемент с <code>float</code> обязан расшириться, чтобы вместить вложенные <code>float</code>.</p>
+<p>Поэтому, если это допустимо, то установка <code>float</code> контейнеру всё исправит:</p>
+<div class="code-example" data-highlight-block="4-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+.hero {
+  background: #D2B48C;
+  border: 1px solid red;
+  float: left;
+}</code></pre>
+</div>
+</div>
+</div><div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/float/winnie-clearfill-float/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="pYXQw5ffogMS7OJb8zaP" href="http://plnkr.co/edit/pYXQw5ffogMS7OJb8zaP?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/float/winnie-clearfill-float/" style="height:300px"></iframe>
+</div><p>Разумеется, не всегда можно поставить родителю <code>float</code>, так что смотрим дальше.</p>
+<h3><a class="main__anchor" href="#добавить-в-родителя-элемент-с-clear" name="добавить-в-родителя-элемент-с-clear">Добавить в родителя элемент с clear</a></h3><p>Добавим элемент <code>div style="clear:both"</code> в самый конец контейнера <code>.hero</code>.</p>
+<p>Он с одной стороны будет «нормальным» элементом, в потоке, и контейнер будет обязан выделить под него пространство, с другой – он знает о <code>float</code> и сместится вниз.</p>
+<p>Соответственно, и контейнер вырастет в размере:</p>
+<div class="code-example" data-highlight-block="8-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div class="hero"&gt;
+
+  &lt;h2&gt;Винни-Пух&lt;/h2&gt;
+
+  &lt;div class="left"&gt;Картинка&lt;/div&gt;
+
+  &lt;p&gt;Текст.&lt;/p&gt;
+
+  &lt;div style="clear:both"&gt;&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</div><p>Результат – правильное отображение, как и в примере выше. <a href="http://plnkr.co/edit/lbxyIlgTApYTeDtyT5I3?p=preview">Открыть код</a>.</p>
+<p>Единственный недостаток этого метода – лишний HTML-элемент в разметке.</p>
+<h3><a class="main__anchor" href="#универсальный-класс-clearfix" name="универсальный-класс-clearfix">Универсальный класс clearfix</a></h3><p>Чтобы не добавлять в HTML-код лишний элемент, можно задать его через <code>:after</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+.clearfix:after {
+  content: "."; /* добавить содержимое: "." */
+  display: block;  /* сделать блоком, т.к. inline не может иметь clear */
+  clear: both;  /* с обеих сторон clear */
+  visibility: hidden; /* сделать невидимым, зачем нам точка внизу? */
+  height: 0;  /* сделать высоту 0, чтобы не занимал место */
+}</code></pre>
+</div>
+</div>
+</div><p>Добавив этот класс к родителю, получим тот же результат, что и выше. <a href="http://plnkr.co/edit/qXYHkzDFIjJ7SEHtMMeF?p=preview">Открыть код</a>.</p>
+<h3><a class="main__anchor" href="#overflow-auto-hidden" name="overflow-auto-hidden">overflow:auto/hidden</a></h3><p>Если добавить родителю <code>overflow: hidden</code> или <code>overflow: auto</code>, то всё станет хорошо.</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+.hero {
+  overflow: auto;
+}</code></pre>
+</div>
+</div>
+</div><p>Этот метод работает во всех браузерах, <a href="http://plnkr.co/edit/kcjBkE01NkgaV2a0vwt3?p=preview">полный код в песочнице</a>.</p>
+<p>Несмотря на внешнюю странность, этот способ не является «хаком». Такое поведение прописано в спецификации CSS.</p>
+<p>Однако, установка <code>overflow</code> может привести к появлению полосы прокрутки, способ с псевдоэлементом <code>:after</code> более безопасен.</p>
+<h2><a class="main__anchor" href="#float-вместо-display-inline-block" name="float-вместо-display-inline-block">float вместо display:inline-block</a></h2><p>При помощи <code>float</code> можно размещать блочные элементы в строке, похоже на <code>display: inline-block</code>:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/float/gallery-float/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/1ccQeTqlV19pFZabRMum?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:550px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/float/gallery-float/"></iframe></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;style&gt;
+    .gallery li {
+      float: left;
+      width: 130px;
+      list-style: none;
+      /* красивости */
+
+      border: 1px solid black;
+      text-align: center;
+      margin: 5px;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;ul class="gallery"&gt;
+    &lt;li&gt;
+      &lt;img src="https://js.cx/carousel/1.png" width="130" height="130"&gt;
+      &lt;div&gt;Картинка 1&lt;/div&gt;
+    &lt;/li&gt;
+
+    &lt;li&gt;
+      &lt;img src="https://js.cx/carousel/2.png" width="130" height="130"&gt;
+      &lt;div&gt;Картинка 2&lt;/div&gt;
+    &lt;/li&gt;
+
+    &lt;li&gt;
+      &lt;img src="https://js.cx/carousel/3.png" width="130" height="130"&gt;
+      &lt;div&gt;Картинка 3&lt;/div&gt;
+    &lt;/li&gt;
+
+    &lt;li&gt;
+      &lt;img src="https://js.cx/carousel/4.png" width="130" height="130"&gt;
+      &lt;div&gt;Картинка 4&lt;/div&gt;
+    &lt;/li&gt;
+
+    &lt;li&gt;
+      &lt;img src="https://js.cx/carousel/5.png" width="130" height="130"&gt;
+      &lt;div&gt;Картинка 5&lt;/div&gt;
+    &lt;/li&gt;
+
+    &lt;li&gt;
+      &lt;img src="https://js.cx/carousel/6.png" width="130" height="130"&gt;
+      &lt;div&gt;Картинка 6&lt;/div&gt;
+    &lt;/li&gt;
+
+    &lt;li&gt;
+      &lt;img src="https://js.cx/carousel/7.png" width="130" height="130"&gt;
+      &lt;div&gt;Картинка 7&lt;/div&gt;
+    &lt;/li&gt;
+
+    &lt;li&gt;
+      &lt;img src="https://js.cx/carousel/8.png" width="130" height="130"&gt;
+      &lt;div&gt;Картинка 8&lt;/div&gt;
+    &lt;/li&gt;
+
+    &lt;li&gt;
+      &lt;img src="https://js.cx/carousel/9.png" width="130" height="130"&gt;
+      &lt;div&gt;Картинка 9&lt;/div&gt;
+    &lt;/li&gt;
+
+  &lt;/ul&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>Стиль здесь:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">.gallery li {
+  float: left;
+  width: 130px;
+  list-style: none;
+}</code></pre>
+</div>
+</div>
+</div><p>Элементы <code>float:left</code> двигаются влево, а если это невозможно, то вниз, автоматически адаптируясь под ширину контейнера, получается эффект, аналогичный <code>display: inline-block</code>, но с особенностями <code>float</code>.</p>
+<h2><a class="main__anchor" href="#вёрстка-в-несколько-колонок" name="вёрстка-в-несколько-колонок">Вёрстка в несколько колонок</a></h2><p>Свойство <code>float</code> позволяет делать несколько вертикальных колонок.</p>
+<h3><a class="main__anchor" href="#float-left-float-right" name="float-left-float-right">float:left + float:right</a></h3><p>Например, для вёрстки в две колонки можно сделать два <code>&lt;div&gt;</code>. Первому указать <code>float:left</code> (левая колонка), а второму – <code>float:right</code> (правая колонка).</p>
+<p>Чтобы они не ссорились, каждой колонке нужно дополнительно указать ширину:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div&gt;Шапка&lt;/div&gt;
+&lt;div class="column-left"&gt;Левая колонка&lt;/div&gt;
+&lt;div class="column-right"&gt;Правая колонка&lt;/div&gt;
+&lt;div class="footer"&gt;Низ&lt;/div&gt;</code></pre>
+</div>
+</div>
+</div><p>Стили:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">.column-left {
+  float: left;
+  width: 30%;
+}
+
+.column-right {
+  float: left;
+  width: 70%;
+}
+
+.footer {
+  clear: both;
+}</code></pre>
+</div>
+</div>
+</div><p>Результат (добавлены краски):</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/float/two-columns/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/V2oMnXhgns7vhzGryBdB?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:440px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/float/two-columns/"></iframe></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;style&gt;
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+    }
+
+    .column-left {
+      float: left;
+      width: 30%;
+    }
+
+    .column-right {
+      float: left;
+      width: 70%;
+      overflow: auto;
+      /* расшириться вниз захватить float'ы */
+    }
+
+    .footer {
+      clear: both;
+    }
+
+    .inner {
+      margin: 1em;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;div style="background:yellow"&gt;Шапка&lt;/div&gt;
+
+  &lt;div class="column-left" style="background:#aef"&gt;
+    &lt;div class="inner"&gt;
+      &lt;!-- див для отступа внутри ширины родителя --&gt;
+      &lt;h3&gt;Персонажи:&lt;/h3&gt;
+      &lt;ul&gt;
+        &lt;li&gt;Винни-Пух&lt;/li&gt;
+        &lt;li&gt;Ослик Иа&lt;/li&gt;
+        &lt;li&gt;Сова&lt;/li&gt;
+        &lt;li&gt;Кролик&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class="column-right" style="background:tan"&gt;
+    &lt;div class="inner"&gt;
+      &lt;h3&gt;Винни-Пух&lt;/h3&gt;
+
+      &lt;img src="https://js.cx/clipart/winnie-mult.jpg" style="float:left; margin: 0 1em .5em 0"&gt;
+
+      &lt;p&gt;Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге). Один из самых известных героев детской литературы XX века.&lt;/p&gt;
+
+      &lt;p&gt;В 1960-е—1970-е годы, благодаря пересказу Бориса Заходера «Винни-Пух и все-все-все», а затем и фильмам студии «Союзмультфильм», где мишку озвучивал Евгений Леонов, Винни-Пух стал очень популярен и в Советском Союзе.&lt;/p&gt;
+
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class="footer" style="background:yellow"&gt;Низ&lt;/div&gt;
+
+
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>В эту структуру легко добавить больше колонок с разной шириной. Правой колонке можно было бы указать и <code>float:right</code>.</p>
+<h3><a class="main__anchor" href="#float-margin" name="float-margin">float + margin</a></h3><p>Ещё вариант – сделать <code>float</code> для левой колонки, а правую оставить в потоке, но с отбивкой через <code>margin</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">.column-left {
+  float: left;
+  width: 30%;
+}
+
+.column-right {
+  margin-left: 30%;
+}
+
+.footer {
+  clear: both;
+}</code></pre>
+</div>
+</div>
+</div><p>Результат (добавлены краски):</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/float/two-columns-2/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/K0MHf656vzs2MxTEgWwI?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:440px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/float/two-columns-2/"></iframe></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;style&gt;
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+    }
+
+    .column-left {
+      float: left;
+      width: 30%;
+    }
+
+    .column-right {
+      margin-left: 30%;
+      width: 70%;
+      overflow: auto;
+      /* расшириться вниз захватить float'ы */
+    }
+
+    .footer {
+      clear: both;
+    }
+
+    .inner {
+      margin: 1em;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;div style="background:yellow"&gt;Шапка&lt;/div&gt;
+
+  &lt;div class="column-left" style="background:#aef"&gt;
+    &lt;div class="inner"&gt;
+      &lt;!-- див для отступа внутри ширины родителя --&gt;
+      &lt;h3&gt;Персонажи:&lt;/h3&gt;
+      &lt;ul&gt;
+        &lt;li&gt;Винни-Пух&lt;/li&gt;
+        &lt;li&gt;Ослик Иа&lt;/li&gt;
+        &lt;li&gt;Сова&lt;/li&gt;
+        &lt;li&gt;Кролик&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="column-right" style="background:tan"&gt;
+    &lt;div class="inner"&gt;
+
+      &lt;h3&gt;Винни-Пух&lt;/h3&gt;
+
+      &lt;img src="https://js.cx/clipart/winnie-mult.jpg" style="float:left; margin: 0 1em .5em 0"&gt;
+
+      &lt;p&gt;Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге). Один из самых известных героев детской литературы XX века.&lt;/p&gt;
+
+      &lt;p&gt;В 1960-е—1970-е годы, благодаря пересказу Бориса Заходера «Винни-Пух и все-все-все», а затем и фильмам студии «Союзмультфильм», где мишку озвучивал Евгений Леонов, Винни-Пух стал очень популярен и в Советском Союзе.&lt;/p&gt;
+
+
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class="footer" style="background:yellow"&gt;Низ&lt;/div&gt;
+
+
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>В примере выше – показана небольшая проблема. Колонки не растягиваются до одинаковой высоты. Конечно, это не имеет значения, если фон одинаковый, но что, если он разный?</p>
+<p>В современных браузерах (кроме IE10-) эту же задачу лучше решает flexbox.</p>
+<p>Для старых есть различные обходы и трюки, которые позволяют обойти проблему в ряде ситуаций, но они выходят за рамки нашего обсуждения. Если интересно – посмотрите, например, <a href="http://goodline.spb.ru/III-05-002.html">Faux Columns</a>.</p>
+</cut></div></meta></article></main></div></body></html>

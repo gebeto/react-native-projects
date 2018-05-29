@@ -1,0 +1,113 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Паттерны и флаги" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Регулярные выражения – мощное средство поиска и замены в строке.</p>
+<p>В JavaScript регулярные выражения реализованы отдельным объектом <code>RegExp</code> и интегрированы в методы строк.</p>
+<cut>
+<h2><a class="main__anchor" href="#регэкспы" name="регэкспы">Регэкспы</a></h2><p>Регулярное выражение (оно же «регэксп», «регулярка» или просто «рег»), состоит из <em>паттерна</em> (он же «шаблон») и необязательных <em>флагов</em>.</p>
+<p>Синтаксис создания регулярного выражения:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var regexp = new RegExp("шаблон", "флаги");</code></pre>
+</div>
+</div>
+</div><p>Как правило, используют более короткую запись (шаблон внутри слешей <code>"/"</code>):</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var regexp = /шаблон/; // без флагов
+var regexp = /шаблон/gmi; // с флагами gmi (изучим их дальше)</code></pre>
+</div>
+</div>
+</div><p>Слеши <code>"/"</code> говорят JavaScript о том, что это регулярное выражение. Они играют здесь ту же роль, что и кавычки для обозначения строк.</p>
+<h2><a class="main__anchor" href="#использование" name="использование">Использование</a></h2><p>Основа регулярного выражения – паттерн. Это строка, которую можно расширить специальными символами, которые делают поиск намного мощнее.</p>
+<p>В простейшем случае, если флагов и специальных символов нет, поиск по паттерну – то же самое, что и обычный поиск подстроки:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "Я люблю JavaScript!"; // будем искать в этой строке
+
+var regexp = /лю/;
+alert( str.search(regexp) ); // 2</code></pre>
+</div>
+</div>
+</div><p>Сравните с обычным поиском:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "Я люблю JavaScript!";
+
+var substr = "лю";
+alert( str.indexOf(substr) ); // 2</code></pre>
+</div>
+</div>
+</div><p>Как видим, то же самое, разве что для регэкспа использован метод <a href="https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/String/search">search</a> – он как раз работает с регулярными выражениями, а для подстроки – <a href="https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/String/indexOf">indexOf</a>.</p>
+<p>Но это соответствие лишь кажущееся. Очень скоро мы усложним регулярные выражения, и тогда увидим, что они гораздо мощнее.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Цветовые обозначения</span></div>
+<div class="important__content"><p>Здесь и далее в тексте используется следующая цветовая схема:</p>
+<ul>
+<li>регэксп (регулярное выражение) – <code class="pattern">красный</code></li>
+<li>строка – <code class="subject">синий</code></li>
+<li>результат – <code class="match">зеленый</code></li>
+</ul>
+</div></div>
+<h2><a class="main__anchor" href="#флаги" name="флаги">Флаги</a></h2><p>Регулярные выражения могут иметь флаги, которые влияют на поиск.</p>
+<p>В JavaScript их всего три:</p>
+<dl>
+<dt><code>i</code></dt>
+<dd>Если этот флаг есть, то регэксп ищет независимо от регистра, то есть не различает между <code>А</code> и <code>а</code>.</dd>
+<dt><code>g</code></dt>
+<dd>Если этот флаг есть, то регэксп ищет все совпадения, иначе – только первое.</dd>
+<dt><code>m</code></dt>
+<dd>Многострочный режим.</dd>
+</dl>
+<p>Самый простой для понимания из этих флагов – безусловно, <code>i</code>.</p>
+<p>Пример его использования:</p>
+<div class="code-example" data-highlight-inline="2:19-23,3:19-24" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "Я люблю JavaScript!"; // будем искать в этой строке
+
+alert( str.search( /ЛЮ/ ) ); // -1
+alert( str.search( /ЛЮ/i ) ); // 2</code></pre>
+</div>
+</div>
+</div><ol>
+<li>С регом <code class="pattern">/ЛЮ/</code> вызов вернул <code>-1</code>, что означает «не найдено» (как и в <code>indexOf</code>),</li>
+<li>С регом <code class="pattern">/ЛЮ/i</code> вызов нашёл совпадение на позиции 2, так как стоит флаг <code>i</code>, а значит «лю» тоже подходит.</li>
+</ol>
+<p>Другие флаги мы рассмотрим в последующих главах.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Регулярное выражение состоит из шаблона и необязательных флагов <code>g</code>, <code>i</code> и <code>m</code>.</li>
+<li>Поиск по регулярному выражению без флагов и спец. символов, которые мы изучим далее – это то же самое, что и обычный поиск подстроки в строке. Но флаги и спец. символы, как мы увидим далее, могут сделать его гораздо мощнее.</li>
+<li>Метод строки <code>str.search(regexp)</code> возвращает индекс, на котором найдено совпадение.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

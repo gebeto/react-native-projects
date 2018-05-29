@@ -1,0 +1,79 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Обратные ссылки: \n и $n" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Скобочные группы можно не только получать в результате.</p>
+<p>Движок регулярных выражений запоминает их содержимое, и затем его можно использовать как в самом паттерне, так и в строке замены.</p>
+<cut>
+<h2><a class="main__anchor" href="#группа-в-строке-замены" name="группа-в-строке-замены">Группа в строке замены</a></h2><p>Ссылки в строке замены имеют вид <code>$n</code>, где <code>n</code> – это номер скобочной группы.</p>
+<p>Вместо <code>$n</code> подставляется содержимое соответствующей скобки:</p>
+<div class="code-example" data-highlight-inline="2:44-52" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var name = "Александр Пушкин";
+
+name = name.replace(/([а-яё]+) ([а-яё]+)/i, "$2, $1");
+alert( name ); // Пушкин, Александр</code></pre>
+</div>
+</div>
+</div><p>В примере выше вместо <code class="pattern">$2</code> подставляется второе найденное слово, а вместо <code class="pattern">$1</code> – первое.</p>
+<h2><a class="main__anchor" href="#группа-в-шаблоне" name="группа-в-шаблоне">Группа в шаблоне</a></h2><p>Выше был пример использования содержимого групп в строке замены. Это удобно, когда нужно реорганизовать содержимое или создать новое с использованием старого.</p>
+<p>Но к скобочной группе можно также обратиться в самом поисковом шаблоне, ссылкой вида <code>\номер</code>.</p>
+<p>Чтобы было яснее, рассмотрим это на реальной задаче – необходимо найти в тексте строку в кавычках. Причём кавычки могут быть одинарными <code class="subject">'...'</code> или двойными <code class="subject">"..."</code> – и то и другое должно искаться корректно.</p>
+<p>Как такие строки искать?</p>
+<p>Можно в регэкспе предусмотреть произвольные кавычки: <code class="pattern">['"](.*?)['"]</code>. Такой регэксп найдёт строки вида <code class="match">"..."</code>, <code class="match">'...'</code>, но он даст неверный ответ в случае, если одна кавычка ненароком оказалась внутри другой, как например в строке <code class="subject">"She's the one!"</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "He said: \"She's the one!\".";
+
+var reg = /['"](.*?)['"]/g;
+
+// Результат не соответствует замыслу
+alert( str.match(reg) ); // "She'</code></pre>
+</div>
+</div>
+</div><p>Как видно, регэксп нашёл открывающую кавычку <code class="match">"</code>, затем текст, вплоть до новой кавычки <code class="match">'</code>, которая закрывает соответствие.</p>
+<p>Для того, чтобы попросить регэксп искать закрывающую кавычку – такую же, как открывающую, мы обернём её в скобочную группу и используем обратную ссылку на неё:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "He said: \"She's the one!\".";
+
+var reg = /(['"])(.*?)\1/g;
+
+alert( str.match(reg) ); // "She's the one!"</code></pre>
+</div>
+</div>
+</div><p>Теперь работает верно! Движок регулярных выражений, найдя первое скобочное выражение – кавычку <code class="pattern">(['"])</code>, запоминает его и далее <code class="pattern">\1</code> означает «найти то же самое, что в первой скобочной группе».</p>
+<p>Обратим внимание на два нюанса:</p>
+<ul>
+<li>Чтобы использовать скобочную группу в строке замены – нужно использовать ссылку вида <code>$1</code>, а в шаблоне – обратный слэш: <code>\1</code>.</li>
+<li>Чтобы в принципе иметь возможность обратиться к скобочной группе – не важно откуда, она не должна быть исключена из запоминаемых при помощи <code>?:</code>. Скобочные группы вида <code>(?:...)</code> не участвуют в нумерации.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

@@ -1,0 +1,164 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Шесть типов данных, typeof" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В JavaScript существует несколько основных типов данных.</p>
+<p>В этой главе мы получим о них общее представление, а позже, в соответствующих главах подробно познакомимся с использованием каждого типа в отдельности.</p>
+<cut>
+<h2><a class="main__anchor" href="#число-number" name="число-number">Число «number»</a></h2><div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var n = 123;
+n = 12.345;</code></pre>
+</div>
+</div>
+</div><p>Единый тип <em>число</em> используется как для целых, так и для дробных чисел.</p>
+<p>Существуют специальные числовые значения <code>Infinity</code> (бесконечность) и <code>NaN</code> (ошибка вычислений).</p>
+<p>Например, бесконечность <code>Infinity</code> получается при делении на ноль:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 1 / 0 ); // Infinity</code></pre>
+</div>
+</div>
+</div><p>Ошибка вычислений <code>NaN</code> будет результатом некорректной математической операции, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "нечисло" * 2 ); // NaN, ошибка</code></pre>
+</div>
+</div>
+</div><p>Эти значения формально принадлежат типу «число», хотя, конечно, числами в их обычном понимании не являются.</p>
+<p>Особенности работы с числами в JavaScript разобраны в главе <a href="/number">Числа</a>.</p>
+<h2><a class="main__anchor" href="#строка-string" name="строка-string">Строка «string»</a></h2><div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "Мама мыла раму";
+str = 'Одинарные кавычки тоже подойдут';</code></pre>
+</div>
+</div>
+</div><p><strong>В JavaScript одинарные и двойные кавычки равноправны.</strong> Можно использовать или те или другие.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Тип <em>символ</em> не существует, есть только <em>строка</em>.</span></div>
+<div class="important__content"><p>В некоторых языках программирования есть специальный тип данных для одного символа. Например, в языке С это <code>char</code>. В JavaScript есть только тип «строка» <code>string</code>. Что, надо сказать, вполне удобно.</p>
+</div></div>
+<p>Более подробно со строками мы познакомимся в главе <a href="/string">Строки</a>.</p>
+<h2><a class="main__anchor" href="#булевый-логический-тип-boolean" name="булевый-логический-тип-boolean">Булевый (логический) тип «boolean»</a></h2><p>У него всего два значения: <code>true</code> (истина) и <code>false</code> (ложь).</p>
+<p>Как правило, такой тип используется для хранения значения типа да/нет, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var checked = true; // поле формы помечено галочкой
+checked = false;    // поле формы не содержит галочки</code></pre>
+</div>
+</div>
+</div><p>О нём мы поговорим более подробно, когда будем обсуждать логические вычисления и условные операторы.</p>
+<h2><a class="main__anchor" href="#специальное-значение-null" name="специальное-значение-null">Специальное значение «null»</a></h2><p>Значение <code>null</code> не относится ни к одному из типов выше, а образует свой отдельный тип, состоящий из единственного значения <code>null</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var age = null;</code></pre>
+</div>
+</div>
+</div><p>В JavaScript <code>null</code> не является «ссылкой на несуществующий объект» или «нулевым указателем», как в некоторых других языках. Это просто специальное значение, которое имеет смысл «ничего» или «значение неизвестно».</p>
+<p>В частности, код выше говорит о том, что возраст <code>age</code> неизвестен.</p>
+<h2><a class="main__anchor" href="#специальное-значение-undefined" name="специальное-значение-undefined">Специальное значение «undefined»</a></h2><p>Значение <code>undefined</code>, как и <code>null</code>, образует свой собственный тип, состоящий из одного этого значения. Оно имеет смысл «значение не присвоено».</p>
+<p>Если переменная объявлена, но в неё ничего не записано, то её значение как раз и есть <code>undefined</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var x;
+alert( x ); // выведет "undefined"</code></pre>
+</div>
+</div>
+</div><p>Можно присвоить <code>undefined</code> и в явном виде, хотя это делается редко:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var x = 123;
+x = undefined;
+
+alert( x ); // "undefined"</code></pre>
+</div>
+</div>
+</div><p>В явном виде <code>undefined</code> обычно не присваивают, так как это противоречит его смыслу. Для записи в переменную «пустого» или «неизвестного» значения используется <code>null</code>.</p>
+<h2><a class="main__anchor" href="#объекты-object" name="объекты-object">Объекты «object»</a></h2><p>Первые 5 типов называют <em>«примитивными»</em>.</p>
+<p>Особняком стоит шестой тип: <em>«объекты»</em>.</p>
+<p>Он используется для коллекций данных и для объявления более сложных сущностей.</p>
+<p>Объявляются объекты при помощи фигурных скобок <code>{...}</code>, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = { name: "Вася" };</code></pre>
+</div>
+</div>
+</div><p>Мы подробно разберём способы объявления объектов и, вообще, работу с объектами, позже, в главе <a href="/object">Объекты как ассоциативные массивы</a>.</p>
+<h2><a class="main__anchor" href="#type-typeof" name="type-typeof">Оператор typeof</a></h2><p>Оператор <code>typeof</code> возвращает тип аргумента.</p>
+<p>У него есть два синтаксиса: со скобками и без:</p>
+<ol>
+<li>Синтаксис оператора: <code>typeof x</code>.</li>
+<li>Синтаксис функции: <code>typeof(x)</code>.</li>
+</ol>
+<p>Работают они одинаково, но первый синтаксис короче.</p>
+<p><strong>Результатом <code>typeof</code> является строка, содержащая тип:</strong></p>
+<div class="code-example" data-highlight-block="10-10,12-12" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">typeof undefined // "undefined"
+
+typeof 0 // "number"
+
+typeof true // "boolean"
+
+typeof "foo" // "string"
+
+typeof {} // "object"
+
+typeof null // "object"  (1)
+
+typeof function(){} // "function"  (2)</code></pre>
+</div>
+</div>
+</div><p>Последние две строки помечены, потому что <code>typeof</code> ведет себя в них по-особому.</p>
+<ol>
+<li>Результат <code>typeof null == "object"</code> – это официально признанная ошибка в языке, которая сохраняется для совместимости. На самом деле <code>null</code> – это не объект, а отдельный тип данных.</li>
+<li>Функции мы пройдём чуть позже. Пока лишь заметим, что функции не являются отдельным базовым типом в JavaScript, а подвидом объектов. Но <code>typeof</code> выделяет функции отдельно, возвращая для них <code>"function"</code>. На практике это весьма удобно, так как позволяет легко определить функцию.</li>
+</ol>
+<p>К работе с типами мы также вернёмся более подробно в будущем, после изучения основных структур данных.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Есть 5 «примитивных» типов: <code>number</code>, <code>string</code>, <code>boolean</code>, <code>null</code>, <code>undefined</code> и 6-й тип – объекты <code>object</code>.</p>
+<p>Очень скоро мы изучим их во всех деталях.</p>
+<p>Оператор <code>typeof x</code> позволяет выяснить, какой тип находится в <code>x</code>, возвращая его в виде строки.</p>
+</cut></div></meta></article></main></div></body></html>

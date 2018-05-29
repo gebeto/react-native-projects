@@ -1,0 +1,93 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Проверка класса: "instanceof"' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Оператор <code>instanceof</code> позволяет проверить, какому классу принадлежит объект, с учетом прототипного наследования.</p>
+<cut>
+<h2><a class="main__anchor" href="#ref-instanceof" name="ref-instanceof">Алгоритм работы instanceof</a></h2><p>Вызов <code>obj instanceof Constructor</code> возвращает <code>true</code>, если объект принадлежит классу <code>Constructor</code> или классу, наследующему от него.</p>
+<p>Пример использования:</p>
+<div class="code-example" data-highlight-block="2-2,6-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Rabbit() {}
+
+// создаём объект
+var rabbit = new Rabbit();
+
+// проверяем -- этот объект создан Rabbit?
+alert( rabbit instanceof Rabbit ); // true, верно</code></pre>
+</div>
+</div>
+</div><p>Массив <code>arr</code> принадлежит классу <code>Array</code>, но также и является объектом <code>Object</code>. Это верно, так как массивы наследуют от объектов:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arr = [];
+alert( arr instanceof Array ); // true
+alert( arr instanceof Object ); // true</code></pre>
+</div>
+</div>
+</div><p>Как это часто бывает в JavaScript, здесь есть ряд тонкостей. Проверка происходит через сравнение прототипов, поэтому в некоторых ситуациях может даже ошибаться!</p>
+<p><strong>Алгоритм проверки <code>obj instanceof Constructor</code>:</strong></p>
+<ol>
+<li>Получить <code>obj.__proto__</code></li>
+<li>Сравнить <code>obj.__proto__</code> с <code>Constructor.prototype</code></li>
+<li>Если не совпадает, тогда заменить <code>obj</code> на <code>obj.__proto__</code> и повторить проверку на шаге 2 до тех пор, пока либо не найдется совпадение (результат <code>true</code>), либо цепочка прототипов не закончится (результат <code>false</code>).</li>
+</ol>
+<p>В проверке <code>rabbit instanceof Rabbit</code> совпадение происходит на первом же шаге этого алгоритма, так как: <code>rabbit.__proto__ == Rabbit.prototype</code>.</p>
+<p>А если рассмотреть <code>arr instanceof Object</code>, то совпадение будет найдено на следующем шаге, так как <code>arr.__proto__.__proto__ == Object.prototype</code>.</p>
+<p>Забавно, что сама функция-конструктор не участвует в процессе проверки! Важна только цепочка прототипов для проверяемого объекта.</p>
+<p>Это может приводить к забавному результату и даже ошибкам в проверке при изменении <code>prototype</code>, например:</p>
+<div class="code-example" data-highlight-block="8-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// Создаём объект rabbit, как обычно
+function Rabbit() {}
+var rabbit = new Rabbit();
+
+// изменили prototype...
+Rabbit.prototype = {};
+
+// ...instanceof перестал работать!
+alert( rabbit instanceof Rabbit ); // false</code></pre>
+</div>
+</div>
+</div><p>Стоит ли говорить, что это один из доводов для того, чтобы никогда не менять <code>prototype</code>? Так сказать, во избежание.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Не друзья: <code>instanceof</code> и фреймы</span></div>
+<div class="important__content"><p>Оператор <code>instanceof</code> не срабатывает, когда значение приходит из другого окна или фрейма.</p>
+<p>Например, массив, который создан в ифрейме и передан родительскому окну – будет массивом <em>в том ифрейме</em>, но не в родительском окне. Проверка <code>instanceof Array</code> в родительском окне вернёт <code>false</code>.</p>
+<p>Вообще, у каждого окна и фрейма – своя иерархия объектов и свой <code>window</code> .</p>
+<p>Как правило, эта проблема возникает со встроенными объектами, в этом случае используется проверка внутреннего свойства <code>[[Class]]</code>, которое подробнее описано в главе <a href="/class-instanceof">Типы данных: [[Class]], instanceof и утки</a>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Оператор <code>obj instanceof Func</code> проверяет тот факт, что <code>obj</code> является результатом вызова <code>new Func</code>. Он учитывает цепочку <code>__proto__</code>, поэтому наследование поддерживается.</li>
+<li>Оператор <code>instanceof</code> не сможет проверить тип значения, если объект создан в одном окне/фрейме, а проверяется в другом. Это потому, что в каждом окне – своя иерархия объектов. Для точной проверки типов встроенных объектов можно использовать свойство <code>[[Class]]</code>.</li>
+</ul>
+<p>Оператор <code>instanceof</code> особенно востребован в случаях, когда мы работаем с иерархиями классов. Это наилучший способ проверить принадлежность тому или иному классу с учётом наследования.</p>
+</cut></div></meta></article></main></div></body></html>

@@ -1,0 +1,503 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Как работают сжиматели JavaScript" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Перед выкладыванием JavaScript на «боевую» машину – пропускаем его через минификатор (также говорят «сжиматель»), который удаляет пробелы и по-всякому оптимизирует код, уменьшая его размер.</p>
+<p>В этой статье мы посмотрим, как работают современные минификаторы, за счёт чего они укорачивают код и какие с ними возможны проблемы.</p>
+<cut>
+<h2><a class="main__anchor" href="#современные-сжиматели" name="современные-сжиматели">Современные сжиматели</a></h2><p>Рассматриваемые в этой статье алгоритмы и подходы относятся к минификаторам последнего поколения.</p>
+<p>Вот их список:</p>
+<ul>
+<li><a href="https://developers.google.com/closure/compiler/">Google Closure Compiler</a></li>
+<li><a href="https://github.com/mishoo/UglifyJS">UglifyJS</a></li>
+<li><a href="http://ajaxmin.codeplex.com/">Microsoft AJAX Minifier</a></li>
+</ul>
+<p>Самые широко используемые – первые два, поэтому будем рассматривать в первую очередь их.</p>
+<p>Наша цель – понять, как они работают, и что интересного с их помощью можно сотворить.</p>
+<h2><a class="main__anchor" href="#с-чего-начать" name="с-чего-начать">С чего начать?</a></h2><p>Для GCC:</p>
+<ol>
+<li>Убедиться, что стоит <a href="http://java.oracle.com">Java</a></li>
+<li>Скачать и распаковать <a href="http://closure-compiler.googlecode.com/files/compiler-latest.zip">http://closure-compiler.googlecode.com/files/compiler-latest.zip</a>, нам нужен файл <code>compiler.jar</code>.</li>
+<li>Сжать файл <code>my.js</code>: <code>java -jar compiler.jar --charset UTF-8 --js my.js --js_output_file my.min.js</code></li>
+</ol>
+<p>Обратите внимание на флаг <code>--charset</code> для GCC. Без него русские буквы будут закодированы во что-то типа <code>\u1234</code>.</p>
+<p>Google Closure Compiler также содержит <a href="http://closure-compiler.appspot.com/home">песочницу</a> для тестирования сжатия и <a href="https://developers.google.com/closure/compiler/docs/gettingstarted_api?hl=ru">веб-сервис</a>, на который код можно отправлять для сжатия. Но скачать файл обычно гораздо проще, поэтому его редко где используют.</p>
+<p>Для UglifyJS:</p>
+<ol>
+<li>Убедиться, что стоит <a href="http://nodejs.org">Node.js</a></li>
+<li>Поставить <code>npm install -g uglify-js</code>.</li>
+<li>Сжать файл <code>my.js</code>: <code>uglifyjs my.js -o my.min.js</code></li>
+</ol>
+<h2><a class="main__anchor" href="#что-делает-минификатор" name="что-делает-минификатор">Что делает минификатор?</a></h2><p>Все современные минификаторы работают следующим образом:</p>
+<ol>
+<li>
+<p>Разбирают JavaScript-код в синтаксическое дерево.</p>
+<p>Также поступает любой интерпретатор JavaScript перед тем, как его выполнять. Но затем, вместо исполнения кода…</p>
+</li>
+<li>
+<p>Бегают по этому дереву, анализируют и оптимизируют его.</p>
+</li>
+<li>
+<p>Записывают из синтаксического дерева получившийся код.</p>
+</li>
+</ol>
+<h2><a class="main__anchor" href="#как-выглядит-дерево" name="как-выглядит-дерево">Как выглядит дерево?</a></h2><p>Посмотреть синтаксическое дерево можно, запустив компилятор со специальным флагом.</p>
+<p>Для GCC есть даже способ вывести его:</p>
+<ol>
+<li>
+<p>Сначала сгенерируем дерево в формате <a href="http://en.wikipedia.org/wiki/DOT_language">DOT</a>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">java -jar compiler.jar --js my.js --use_only_custom_externs --print_tree &gt;my.dot</code></pre>
+</div>
+</div>
+</div><p>Здесь флаг <code>--print_tree</code> выводит дерево, а <code>--use_only_custom_externs</code> убирает лишнюю служебную информацию.</p>
+</li>
+<li>
+<p>Файл в этом формате используется в различных программах для графопостроения.</p>
+<p>Чтобы превратить его в обычную картинку, подойдёт утилита <code>dot</code> из пакета <a href="http://www.graphviz.org/">Graphviz</a>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">// конвертировать в формат png
+dot -Tpng my.dot -o my.png
+
+// конвертировать в формат svg
+dot -Tsvg my.dot -o my.svg</code></pre>
+</div>
+</div>
+</div></li>
+</ol>
+<p>Пример кода <code>my.js</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function User(name) {
+
+  this.sayHi = function() {
+    alert( name );
+  };
+
+}</code></pre>
+</div>
+</div>
+</div><p>Результат, получившееся из <code>my.js</code> дерево:</p>
+<figure><div class="image" style="width:569px">
+<div class="image__ratio" style="padding-top:129.701230228471%"></div>
+<img alt="" class="image__image" height="738" src="article/minification/my.png" width="569">
+</img></div></figure><p>В узлах-эллипсах на иллюстрации выше стоит тип, например <code>FUNCTION</code> (функция) или <code>NAME</code> (имя переменной). Комментарии к ним на русском языке добавлены мной вручную.</p>
+<p>Кроме него к каждому узлу привязаны конкретные данные. Сжиматель умеет ходить по этому дереву и менять его, как пожелает.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Комментарии JSDoc</span></div>
+<div class="important__content"><p>Обычно когда код превращается в дерево – из него естественным образом исчезают комментарии и пробелы. Они не имеют значения при выполнении, поэтому игнорируются.</p>
+<p>Но Google Closure Compiler добавляет в дерево информацию из <em>комментариев JSDoc</em>, т.е. комментариев вида <code>/** ... */</code>, например:</p>
+<div class="code-example" data-highlight-block="0-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/**
+ * Номер минимальной поддерживаемой версии IE
+ * @const
+ * @type {number}
+ */
+var minIEVersion = 8;</code></pre>
+</div>
+</div>
+</div><p>Такие комментарии не создают новых узлов дерева, а добавляются в качестве информации к существующем. В данном случае – к переменной <code>minIEVersion</code>.</p>
+<p>В них может содержаться информация о типе переменной (<code>number</code>) и другая, которая поможет сжимателю лучше оптимизировать код (<code>const</code> – константа).</p>
+</div></div>
+<h2><a class="main__anchor" href="#оптимизации" name="оптимизации">Оптимизации</a></h2><p>Сжиматель бегает по дереву, ищет «паттерны» – известные ему структуры, которые он знает, как оптимизировать, и обновляет дерево.</p>
+<p>В разных минификаторах реализован разный набор оптимизаций, сами оптимизации применяются в разном порядке, поэтому результаты работы могут отличаться. В примерах ниже даётся результат работы GCC.</p>
+<dl>
+<dt>Объединение и сжатие констант</dt>
+<dd>
+<p>До оптимизации:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function test(a, b) {
+  run(a, 'my' + 'string', 600 * 600 * 5, 1 &amp;&amp; 0, b &amp;&amp; 0)
+}</code></pre>
+</div>
+</div>
+</div><p>После:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function test(a,b){run(a,"mystring",18E5,0,b&amp;&amp;0)};</code></pre>
+</div>
+</div>
+</div></dd>
+</dl>
+<ul>
+<li><code>'my' + 'string'</code> → <code>"mystring"</code>.</li>
+<li><code>600 * 600 * 5</code> → <code>18E5</code> (научная форма числа, для краткости).</li>
+<li><code>1 &amp;&amp; 0</code> → <code>0</code>.</li>
+<li><code>b &amp;&amp; 0</code> → без изменений, т.к. результат зависит от <code>b</code>.</li>
+</ul>
+<dl>
+<dt>Укорачивание локальных переменных</dt>
+<dd>
+<p>До оптимизации:</p>
+<div class="code-example" data-highlight-inline="0:15-19,0:21-28" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sayHi(name, message) {
+  alert(name +" сказал: " + message);
+}</code></pre>
+</div>
+</div>
+</div><p>После оптимизации:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sayHi(a,b){alert(a+" сказал: "+b)};</code></pre>
+</div>
+</div>
+</div></dd>
+</dl>
+<ul>
+<li>Локальная переменная заведомо доступна только внутри функции, поэтому обычно её переименование безопасно (необычные случаи рассмотрим далее).</li>
+<li>Также переименовываются локальные функции.</li>
+<li>Вложенные функции обрабатываются корректно.</li>
+</ul>
+<dl>
+<dt>Объединение и удаление локальных переменных</dt>
+<dd>
+<p>До оптимизации:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function test(nodeId) {
+  var elem = document.getElementsById(nodeId);
+  var parent = elem.parentNode;
+  alert( parent );
+}</code></pre>
+</div>
+</div>
+</div><p>После оптимизации GCC:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function test(a){a=document.getElementsById(a).parentNode;alert(a)};</code></pre>
+</div>
+</div>
+</div></dd>
+</dl>
+<ul>
+<li>Локальные переменные были переименованы.</li>
+<li>Лишние переменные убраны. Для этого сжиматель создаёт вспомогательную внутреннюю структуру данных, в которой хранятся сведения о «пути использования» каждой переменной. Если одна переменная заканчивает свой путь и начинает другая, то вполне можно дать им одно имя.</li>
+<li>Кроме того, операции <code>elem = getElementsById</code> и <code>elem.parentNode</code> объединены, но это уже другая оптимизация.</li>
+</ul>
+<dl>
+<dt>Уничтожение недостижимого кода, разворачивание <code>if</code>-веток</dt>
+<dd>
+<p>До оптимизации:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function test(node) {
+  var parent = node.parentNode;
+
+  if (0) {
+    alert( "Привет с параллельной планеты" );
+  } else {
+    alert( "Останется только один" );
+  }
+
+  return;
+
+  alert( 1 );
+}</code></pre>
+</div>
+</div>
+</div><p>После оптимизации:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function test(){alert("Останется только один")}</code></pre>
+</div>
+</div>
+</div></dd>
+</dl>
+<ul>
+<li>
+<p>Если переменная присваивается, но не используется, она может быть удалена. В примере выше эта оптимизация была применена к переменной <code>parent</code>, а затем и к параметру <code>node</code>.</p>
+</li>
+<li>
+<p>Заведомо ложная ветка <code>if(0) { .. }</code> убрана, заведомо истинная – оставлена.</p>
+<p>То же самое будет с условиями в других конструкциях, например <code>a = true ? c : d</code> превратится в <code>a = c</code>.</p>
+</li>
+<li>
+<p>Код после <code>return</code> удалён как недостижимый.</p>
+</li>
+</ul>
+<dl>
+<dt>Переписывание синтаксических конструкций</dt>
+<dd>
+<p>До оптимизации:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var i = 0;
+while (i++ &lt; 10) {
+  alert( i );
+}
+
+if (i) {
+  alert( i );
+}
+
+if (i == '1') {
+  alert( 1 );
+} else if (i == '2') {
+  alert( 2 );
+} else {
+  alert( i );
+}</code></pre>
+</div>
+</div>
+</div><p>После оптимизации:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">for(var i=0;10&gt;i++;)alert(i);i&amp;&amp;alert(i);"1"==i?alert(1):"2"==i?alert(2):alert(i);</code></pre>
+</div>
+</div>
+</div></dd>
+</dl>
+<ul>
+<li>Конструкция <code>while</code> переписана в <code>for</code>.</li>
+<li>Конструкция <code>if (i) ...</code> переписана в <code>i&amp;&amp;...</code>.</li>
+<li>Конструкция <code>if (cond) ... else ...</code> была переписана в <code>cond ? ... : ...</code>.</li>
+</ul>
+<dl>
+<dt>Инлайнинг функций</dt>
+<dd>
+<p><em>Инлайнинг функции</em> – приём оптимизации, при котором функция заменяется на своё тело.</p>
+<p>До оптимизации:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sayHi(message) {
+
+  var elem = createMessage('div', message);
+  showElement(elem);
+
+  function createMessage(tagName, message) {
+    var el = document.createElement(tagName);
+    el.innerHTML = message;
+    return el;
+  }
+
+  function showElement(elem) {
+    document.body.appendChild(elem);
+  }
+}</code></pre>
+</div>
+</div>
+</div><p>После оптимизации (переводы строк также будут убраны):</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sayHi(b) {
+  var a = document.createElement("div");
+  a.innerHTML = b;
+  document.body.appendChild(a)
+};</code></pre>
+</div>
+</div>
+</div></dd>
+</dl>
+<ul>
+<li>Вызовы функций <code>createMessage</code> и <code>showElement</code> заменены на тело функций. В данном случае это возможно, так как функции используются всего по разу.</li>
+<li>Эта оптимизация применяется не всегда. Если бы каждая функция использовалась много раз, то с точки зрения размера выгоднее оставить их «как есть».</li>
+</ul>
+<dl>
+<dt>Инлайнинг переменных</dt>
+<dd>
+<p>Переменные заменяются на значение, если оно заведомо известно.</p>
+<p>До оптимизации:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">(function() {
+  var isVisible = true;
+  var hi = "Привет вам из JavaScript";
+
+  window.sayHi = function() {
+    if (isVisible) {
+      alert( hi );
+      alert( hi );
+      alert( hi );
+      alert( hi );
+      alert( hi );
+      alert( hi );
+      alert( hi );
+      alert( hi );
+      alert( hi );
+      alert( hi );
+      alert( hi );
+      alert( hi );
+    }
+  }
+
+})();</code></pre>
+</div>
+</div>
+</div><p>После оптимизации:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">(function() {
+    window.sayHi = function() {
+      alert( "Привет вам из JavaScript" );
+      alert( "Привет вам из JavaScript" );
+      alert( "Привет вам из JavaScript" );
+      alert( "Привет вам из JavaScript" );
+      alert( "Привет вам из JavaScript" );
+      alert( "Привет вам из JavaScript" );
+      alert( "Привет вам из JavaScript" );
+      alert( "Привет вам из JavaScript" );
+      alert( "Привет вам из JavaScript" );
+      alert( "Привет вам из JavaScript" );
+      alert( "Привет вам из JavaScript" );
+      alert( "Привет вам из JavaScript" );
+    };
+  }
+})();</code></pre>
+</div>
+</div>
+</div><ul>
+<li>
+<p>Переменная <code>isVisible</code> заменена на <code>true</code>, после чего <code>if</code> стало возможным убрать.</p>
+</li>
+<li>
+<p>Переменная <code>hi</code> заменена на строку.</p>
+<p>Казалось бы – зачем менять <code>hi</code> на строку? Ведь код стал ощутимо длиннее!</p>
+<p>…Но всё дело в том, что минификатор знает, что дальше код будет сжиматься при помощи gzip. Во всяком случае, все правильно настроенные сервера так делают.</p>
+</li>
+</ul>
+</dd>
+</dl>
+<p><a href="http://www.gzip.org/algorithm.txt">Алгоритм работы gzip</a> заключается в том, что он ищет повторы в данных и выносит их в специальный «словарь», заменяя на более короткий идентификатор. Архив как раз и состоит из словаря и данных, в которых дубликаты заменены на идентификаторы.</p>
+<pre><code>Если вынести строку обратно в переменную, то получится как раз частный случай такого сжатия -- взяли `"Привет вам из JavaScript"` и заменили на идентификатор `hi`. Но gzip справляется с этим лучше, поэтому эффективнее будет оставить именно строку. Gzip сам найдёт дубликаты и сожмёт их.
+
+Плюс такого подхода станет очевиден, если сжать gzip оба кода -- до и после минификации. Минифицированный gzip-сжатый код в итоге даст меньший размер.
+</code></pre>
+<dl>
+<dt>Разные мелкие оптимизации</dt>
+<dd>Кроме основных оптимизаций, описанных выше, есть ещё много мелких:</dd>
+</dl>
+<ul>
+<li>
+<p>Убираются лишние кавычки у ключей</p>
+<pre><code>  ```js no-beautify
+  {"prop" : "val" }   =&gt;  {prop:"val"}
+  ```
+</code></pre>
+</li>
+<li>
+<p>Упрощаются простые вызовы <code>Array/Object</code></p>
+<pre><code>  ```js no-beautify
+  a = new Array()   =&gt;  a = []
+  o = new Object()  =&gt; o = {}
+  ```
+</code></pre>
+<p>Эта оптимизация предполагает, что <code>Array</code> и <code>Object</code> не переопределены программистом. Для включения её в UglifyJS нужен флаг <code>--unsafe</code>.</p>
+</li>
+<li>
+<p>…И еще некоторые другие мелкие изменения кода…</p>
+</li>
+</ul>
+<h2><a class="main__anchor" href="#подводные-камни" name="подводные-камни">Подводные камни</a></h2><p>Описанные оптимизации, в целом, безопасны, но есть ряд подводных камней.</p>
+<h3><a class="main__anchor" href="#конструкция-with" name="конструкция-with">Конструкция with</a></h3><p>Рассмотрим код:</p>
+<div class="code-example" data-highlight-block="3-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function changePosition(style) {
+  var position, test;
+
+  with (style) {
+    position = 'absolute';
+  }
+}</code></pre>
+</div>
+</div>
+</div><p>Куда будет присвоено значение <code>position = 'absolute'</code>?</p>
+<p>Это неизвестно до момента выполнения: если свойство <code>position</code> есть в <code>style</code> – то туда, а если нет – то в локальную переменную.</p>
+<p>Можно ли в такой ситуации заменить локальную переменную на более короткую? Очевидно, нет:</p>
+<div class="code-example" data-highlight-block="3-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function changePosition(style) {
+  var a, b;
+
+  with (style) {          // а что, если в style нет такого свойства?
+    position = 'absolute';// куда будет осуществлена запись? в window.position?
+  }
+}</code></pre>
+</div>
+</div>
+</div><p>Такая же опасность для сжатия кроется в использованном <code>eval</code>. Ведь <code>eval</code> может обращаться к локальным переменным:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f(code) {
+  var myVar;
+
+  eval(code); // а что, если будет присвоение eval("myVar = ...") ?
+
+  alert(myVar);</code></pre>
+</div>
+</div>
+</div><p>Получается, что при наличии <code>eval</code> мы не имеем права переименовывать локальные переменные. Причём (!), если функция является вложенной, то и во внешних функциях тоже.</p>
+<p>А ведь сжатие переменных – очень важная оптимизация. Как правило, она уменьшает размер сильнее всего.</p>
+<p>Что делать? Разные минификаторы поступают по-разному.</p>
+<ul>
+<li>UglifyJS – не будет переименовывать переменные. Так что наличие <code>with/eval</code> сильно повлияет на степень сжатие кода.</li>
+<li>GCC – всё равно сожмёт локальные переменные. Это, конечно же, может привести к ошибкам, причём в сжатом коде, отлаживать который не очень-то удобно. Поэтому он выдаст предупреждение о наличии опасной конструкции.</li>
+</ul>
+<p>Ни тот ни другой вариант нас, по большому счёту, не устраивают.</p>
+<p><strong>Для того, чтобы код сжимался хорошо и работал правильно, не используем <code>with</code> и <code>eval</code>.</strong></p>
+<p>Либо, если уж очень надо использовать – делаем это с оглядкой на поведение минификатора, чтобы не было проблем.</p>
+<h3><a class="main__anchor" href="#условная-компиляция-ie10" name="условная-компиляция-ie10">Условная компиляция IE10-</a></h3><p>В IE10- поддерживалось <a href="http://msdn.microsoft.com/en-us/library/121hztk3.aspx">условное выполнение JavaScript</a>.</p>
+<p>Синтаксис: <code>/*@cc_on код */</code>.</p>
+<p>Такой код выполнится в IE10-, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var isIE /*@cc_on =true@*/ ;
+
+alert( isIE ); // true в IE10-</code></pre>
+</div>
+</div>
+</div><p>Можно хитро сделать, чтобы комментарий остался, например так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var isIE = new Function('', '/*@cc_on return true@*/')();
+
+alert( isIE ); // true в IE.</code></pre>
+</div>
+</div>
+</div><p>…Однако, с учётом того, что в современных IE11+ эта компиляция не работает в любом случае, лучше избавиться от неё вообще.</p>
+<p>В следующих главах мы посмотрим, какие продвинутые возможности есть в минификаторах, как сделать сжатие более эффективным.</p>
+</cut></div></meta></article></main></div></body></html>

@@ -1,0 +1,324 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Наследование классов в JavaScript" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Наследование на уровне объектов в JavaScript, как мы видели, реализуется через ссылку <code>__proto__</code>.</p>
+<p>Теперь поговорим о наследовании на уровне классов, то есть когда объекты, создаваемые, к примеру, через <code>new Admin</code>, должны иметь все методы, которые есть у объектов, создаваемых через <code>new User</code>, и ещё какие-то свои.</p>
+<cut>
+<h2><a class="main__anchor" href="#наследование-array-от-object" name="наследование-array-от-object">Наследование Array от Object</a></h2><p>Для реализации наследования в наших классах мы будем использовать тот же подход, который принят внутри JavaScript.</p>
+<p>Взглянем на него ещё раз на примере <code>Array</code>, который наследует от <code>Object</code>:</p>
+<figure><div class="image" style="width:223px">
+<div class="image__ratio" style="padding-top:141.70403587443948%"></div>
+<img alt="" class="image__image" height="316" src="article/class-inheritance/class-inheritance-array-object.png" width="223">
+</img></div></figure><ul>
+<li>Методы массивов <code>Array</code> хранятся в <code>Array.prototype</code>.</li>
+<li><code>Array.prototype</code> имеет прототипом <code>Object.prototype</code>.</li>
+</ul>
+<p>Поэтому когда экземпляры класса <code>Array</code> хотят получить метод массива – они берут его из своего прототипа, например <code>Array.prototype.slice</code>.</p>
+<p>Если же нужен метод объекта, например, <code>hasOwnProperty</code>, то его в <code>Array.prototype</code> нет, и он берётся из <code>Object.prototype</code>.</p>
+<p>Отличный способ «потрогать это руками» – запустить в консоли команду <code>console.dir([1,2,3])</code>.</p>
+<p>Вывод в Chrome будет примерно таким:</p>
+<figure><div class="image" style="width:567px">
+<div class="image__ratio" style="padding-top:51.49911816578483%"></div>
+<img alt="" class="image__image" height="292" src="article/class-inheritance/console_dir_array.png" width="567">
+</img></div></figure><p>Здесь отчётливо видно, что сами данные и <code>length</code> находятся в массиве, дальше в <code>__proto__</code> идут методы для массивов <code>concat</code>, то есть <code>Array.prototype</code>, а далее – <code>Object.prototype</code>.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type"><code>console.dir</code> для доступа к свойствам</span></div>
+<div class="important__content"><p>Обратите внимание, я использовал именно <code>console.dir</code>, а не <code>console.log</code>, поскольку <code>log</code> зачастую выводит объект в виде строки, без доступа к свойствам.</p>
+</div></div>
+<h2><a class="main__anchor" href="#наследование-в-наших-классах" name="наследование-в-наших-классах">Наследование в наших классах</a></h2><p>Применим тот же подход для наших классов: объявим класс <code>Rabbit</code>, который будет наследовать от <code>Animal</code>.</p>
+<p>Вначале создадим два этих класса по отдельности, они пока что будут совершенно независимы.</p>
+<p><code>Animal</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Animal(name) {
+  this.name = name;
+  this.speed = 0;
+}
+
+Animal.prototype.run = function(speed) {
+  this.speed += speed;
+  alert( this.name + ' бежит, скорость ' + this.speed );
+};
+
+Animal.prototype.stop = function() {
+  this.speed = 0;
+  alert( this.name + ' стоит' );
+};</code></pre>
+</div>
+</div>
+</div><p><code>Rabbit</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Rabbit(name) {
+  this.name = name;
+  this.speed = 0;
+}
+
+Rabbit.prototype.jump = function() {
+  this.speed++;
+  alert( this.name + ' прыгает' );
+};
+
+var rabbit = new Rabbit('Кроль');</code></pre>
+</div>
+</div>
+</div><p>Для того, чтобы наследование работало, объект <code>rabbit = new Rabbit</code> должен использовать свойства и методы из своего прототипа <code>Rabbit.prototype</code>, а если их там нет, то – свойства и метода родителя, которые хранятся в <code>Animal.prototype</code>.</p>
+<p>Если ещё короче – порядок поиска свойств и методов должен быть таким: <code>rabbit -&gt; Rabbit.prototype -&gt; Animal.prototype</code>, по аналогии с тем, как это сделано для объектов и массивов.</p>
+<p>Для этого можно поставить ссылку <code>__proto__</code> с <code>Rabbit.prototype</code> на <code>Animal.prototype</code>.</p>
+<p>Можно сделать это так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">Rabbit.prototype.__proto__ = Animal.prototype;</code></pre>
+</div>
+</div>
+</div><p>Однако, прямой доступ к <code>__proto__</code> не поддерживается в IE10-, поэтому для поддержки этих браузеров мы используем функцию <code>Object.create</code>. Она либо встроена либо легко эмулируется во всех браузерах.</p>
+<p>Класс <code>Animal</code> остаётся без изменений, а <code>Rabbit.prototype</code> мы будем создавать с нужным прототипом, используя <code>Object.create</code>:</p>
+<div class="code-example" data-highlight-block="5-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Rabbit(name) {
+  this.name = name;
+  this.speed = 0;
+}
+
+// задаём наследование
+Rabbit.prototype = Object.create(Animal.prototype);
+
+// и добавим свой метод (или методы...)
+Rabbit.prototype.jump = function() { ... };</code></pre>
+</div>
+</div>
+</div><p>Теперь выглядеть иерархия будет так:</p>
+<figure><div class="image" style="width:226px">
+<div class="image__ratio" style="padding-top:143.36283185840708%"></div>
+<img alt="" class="image__image" height="324" src="article/class-inheritance/class-inheritance-rabbit-animal.png" width="226">
+</img></div></figure><p>В <code>prototype</code> по умолчанию всегда находится свойство <code>constructor</code>, указывающее на функцию-конструктор. В частности, <code>Rabbit.prototype.constructor == Rabbit</code>. Если мы рассчитываем использовать это свойство, то при замене <code>prototype</code> через <code>Object.create</code> нужно его явно сохранить:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">Rabbit.prototype = Object.create(Animal.prototype);
+Rabbit.prototype.constructor = Rabbit;</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#полный-код-наследования" name="полный-код-наследования">Полный код наследования</a></h2><p>Для наглядности – вот итоговый код с двумя классами <code>Animal</code> и <code>Rabbit</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// 1. Конструктор Animal
+function Animal(name) {
+  this.name = name;
+  this.speed = 0;
+}
+
+// 1.1. Методы -- в прототип
+
+Animal.prototype.stop = function() {
+  this.speed = 0;
+  alert( this.name + ' стоит' );
+}
+
+Animal.prototype.run = function(speed) {
+  this.speed += speed;
+  alert( this.name + ' бежит, скорость ' + this.speed );
+};
+
+// 2. Конструктор Rabbit
+function Rabbit(name) {
+  this.name = name;
+  this.speed = 0;
+}
+
+// 2.1. Наследование
+Rabbit.prototype = Object.create(Animal.prototype);
+Rabbit.prototype.constructor = Rabbit;
+
+// 2.2. Методы Rabbit
+Rabbit.prototype.jump = function() {
+  this.speed++;
+  alert( this.name + ' прыгает, скорость ' + this.speed );
+}</code></pre>
+</div>
+</div>
+</div><p>Как видно, наследование задаётся всего одной строчкой, поставленной в правильном месте.</p>
+<p>Обратим внимание: <code>Rabbit.prototype = Object.create(Animal.prototype)</code> присваивается сразу после объявления конструктора, иначе он перезатрёт уже записанные в прототип методы.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Неправильный вариант: <code>Rabbit.prototype = new Animal</code></span></div>
+<div class="important__content"><p>В некоторых устаревших руководствах предлагают вместо <code>Object.create(Animal.prototype)</code> записывать в прототип <code>new Animal</code>, вот так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// вместо Rabbit.prototype = Object.create(Animal.prototype)
+Rabbit.prototype = new Animal();</code></pre>
+</div>
+</div>
+</div><p>Частично, он рабочий, поскольку иерархия прототипов будет такая же, ведь <code>new Animal</code> – это объект с прототипом <code>Animal.prototype</code>, как и <code>Object.create(Animal.prototype)</code>. Они в этом плане идентичны.</p>
+<p>Но у этого подхода важный недостаток. Как правило мы не хотим создавать <code>Animal</code>, а хотим только унаследовать его методы!</p>
+<p>Более того, на практике создание объекта может требовать обязательных аргументов, влиять на страницу в браузере, делать запросы к серверу и что-то ещё, чего мы хотели бы избежать. Поэтому рекомендуется использовать вариант с <code>Object.create</code>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#вызов-конструктора-родителя" name="вызов-конструктора-родителя">Вызов конструктора родителя</a></h2><p>Посмотрим внимательно на конструкторы <code>Animal</code> и <code>Rabbit</code> из примеров выше:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Animal(name) {
+  this.name = name;
+  this.speed = 0;
+}
+
+function Rabbit(name) {
+  this.name = name;
+  this.speed = 0;
+}</code></pre>
+</div>
+</div>
+</div><p>Как видно, объект <code>Rabbit</code> не добавляет никакой особенной логики при создании, которой не было в <code>Animal</code>.</p>
+<p>Чтобы упростить поддержку кода, имеет смысл не дублировать код конструктора <code>Animal</code>, а напрямую вызвать его:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Rabbit(name) {
+  Animal.apply(this, arguments);
+}</code></pre>
+</div>
+</div>
+</div><p>Такой вызов запустит функцию <code>Animal</code> в контексте текущего объекта, со всеми аргументами, она выполнится и запишет в <code>this</code> всё, что нужно.</p>
+<p>Здесь можно было бы использовать и <code>Animal.call(this, name)</code>, но <code>apply</code> надёжнее, так как работает с любым количеством аргументов.</p>
+<h2><a class="main__anchor" href="#переопределение-метода" name="переопределение-метода">Переопределение метода</a></h2><p>Итак, <code>Rabbit</code> наследует <code>Animal</code>. Теперь если какого-то метода нет в <code>Rabbit.prototype</code> – он будет взят из <code>Animal.prototype</code>.</p>
+<p>В <code>Rabbit</code> может понадобиться задать какие-то методы, которые у родителя уже есть. Например, кролики бегают не так, как остальные животные, поэтому переопределим метод <code>run()</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">Rabbit.prototype.run = function(speed) {
+  this.speed++;
+  this.jump();
+};</code></pre>
+</div>
+</div>
+</div><p>Вызов <code>rabbit.run()</code> теперь будет брать <code>run</code> из своего прототипа:</p>
+<figure><div class="image" style="width:225px">
+<div class="image__ratio" style="padding-top:147.11111111111111%"></div>
+<img alt="" class="image__image" height="331" src="article/class-inheritance/class-inheritance-rabbit-run-animal.png" width="225">
+</img></div></figure><h3><a class="main__anchor" href="#вызов-метода-родителя-внутри-своего" name="вызов-метода-родителя-внутри-своего">Вызов метода родителя внутри своего</a></h3><p>Более частая ситуация – когда мы хотим не просто заменить метод на свой, а взять метод родителя и расширить его. Скажем, кролик бежит так же, как и другие звери, но время от времени подпрыгивает.</p>
+<p>Для вызова метода родителя можно обратиться к нему напрямую, взяв из прототипа:</p>
+<div class="code-example" data-highlight-block="1-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript"> Rabbit.prototype.run = function() {
+   // вызвать метод родителя, передав ему текущие аргументы
+   Animal.prototype.run.apply(this, arguments);
+   this.jump();
+ }</code></pre>
+</div>
+</div>
+</div><p>Обратите внимание на вызов через <code>apply</code> и явное указание контекста.</p>
+<p>Если вызвать просто <code>Animal.prototype.run()</code>, то в качестве <code>this</code> функция <code>run</code> получит <code>Animal.prototype</code>, а это неверно, нужен текущий объект.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>
+<p>Для наследования нужно, чтобы «склад методов потомка» (<code>Child.prototype</code>) наследовал от «склада метода родителей» (<code>Parent.prototype</code>).</p>
+<p>Это можно сделать при помощи <code>Object.create</code>:</p>
+<p>Код:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">Rabbit.prototype = Object.create(Animal.prototype);</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Для того, чтобы наследник создавался так же, как и родитель, он вызывает конструктор родителя в своём контексте, используя <code>apply(this, arguments)</code>, вот так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Rabbit(...) {
+  Animal.apply(this, arguments);
+}</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>При переопределении метода родителя в потомке, к исходному методу можно обратиться, взяв его напрямую из прототипа:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">Rabbit.prototype.run = function() {
+  var result = Animal.prototype.run.apply(this, ...);
+  // result -- результат вызова метода родителя
+}</code></pre>
+</div>
+</div>
+</div></li>
+</ul>
+<p>Структура наследования полностью:</p>
+<div class="code-example" data-highlight-block="0-0,12-12,19-19" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// --------- Класс-Родитель ------------
+// Конструктор родителя пишет свойства конкретного объекта
+function Animal(name) {
+  this.name = name;
+  this.speed = 0;
+}
+
+// Методы хранятся в прототипе
+Animal.prototype.run = function() {
+  alert(this.name + " бежит!")
+}
+
+// --------- Класс-потомок -----------
+// Конструктор потомка
+function Rabbit(name) {
+  Animal.apply(this, arguments);
+}
+
+// Унаследовать
+Rabbit.prototype = Object.create(Animal.prototype);
+
+// Желательно и constructor сохранить
+Rabbit.prototype.constructor = Rabbit;
+
+// Методы потомка
+Rabbit.prototype.run = function() {
+  // Вызов метода родителя внутри своего
+  Animal.prototype.run.apply(this);
+  alert( this.name + " подпрыгивает!" );
+};
+
+// Готово, можно создавать объекты
+var rabbit = new Rabbit('Кроль');
+rabbit.run();</code></pre>
+</div>
+</div>
+</div><p>Такое наследование лучше функционального стиля, так как не дублирует методы в каждом объекте.</p>
+<p>Кроме того, есть ещё неявное, но очень важное архитектурное отличие.</p>
+<p>Зачастую вызов конструктора имеет какие-то побочные эффекты, например влияет на документ. Если конструктор родителя имеет какое-то поведение, которое нужно переопределить в потомке, то в функциональном стиле это невозможно.</p>
+<p>Иначе говоря, в функциональном стиле в процессе создания <code>Rabbit</code> нужно обязательно вызывать <code>Animal.apply(this, arguments)</code>, чтобы получить методы родителя – и если этот <code>Animal.apply</code> кроме добавления методов говорит: «Му-у-у!», то это проблема:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Animal() {
+  this.walk = function() {
+    alert('walk')
+  };
+  alert( 'Му-у-у!' );
+}
+
+function Rabbit() {
+  Animal.apply(this, arguments); // как избавиться от мычания, но получить walk?
+}</code></pre>
+</div>
+</div>
+</div><p>…Которой нет в прототипном подходе, потому что в процессе создания <code>new Rabbit</code> мы вовсе не обязаны вызывать конструктор родителя. Ведь методы находятся в прототипе.</p>
+<p>Поэтому прототипный подход стоит предпочитать функциональному как более быстрый и универсальный. А что касается красоты синтаксиса – она сильно лучше в новом стандарте ES6, которым можно пользоваться уже сейчас, если взять транслятор <a href="https://babeljs.io/">babeljs</a>.</p>
+</cut></div></meta></article></main></div></body></html>

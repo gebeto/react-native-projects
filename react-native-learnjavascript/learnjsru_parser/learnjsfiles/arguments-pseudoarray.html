@@ -1,0 +1,455 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Псевдомассив аргументов "arguments"' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В JavaScript любая функция может быть вызвана с произвольным количеством аргументов.</p>
+<cut>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function go(a,b) {
+  alert("a="+a+", b="+b);
+}
+
+go(1);     // a=1, b=undefined
+go(1,2);   // a=1, b=2
+go(1,2,3); // a=1, b=2, третий аргумент не вызовет ошибку</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">В JavaScript нет «перегрузки» функций</span></div>
+<div class="important__content"><p>В некоторых языках программист может создать две функции с одинаковым именем, но разным набором аргументов, а при вызове интерпретатор сам выберет нужную:</p>
+<div class="code-example" data-highlight-block="8-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function log(a) {
+  ...
+}
+
+function log(a, b, c) {
+  ...
+}
+
+log(a); // вызовется первая функция
+log(a, b, c); // вызовется вторая функция</code></pre>
+</div>
+</div>
+</div><p>Это называется «полиморфизмом функций» или «перегрузкой функций». В JavaScript ничего подобного нет.</p>
+<p><strong>Может быть только одна функция с именем <code>log</code>, которая вызывается с любыми аргументами.</strong></p>
+<p>А уже внутри она может посмотреть, с чем вызвана и по-разному отработать.</p>
+<p>В примере выше второе объявление <code>log</code> просто переопределит первое.</p>
+</div></div>
+<h2><a class="main__anchor" href="#доступ-к-лишним-аргументам" name="доступ-к-лишним-аргументам">Доступ к «лишним» аргументам</a></h2><p>Как получить значения аргументов, которых нет в списке параметров?</p>
+<p>Доступ к ним осуществляется через «псевдо-массив» <a href="https://developer.mozilla.org/en/JavaScript/Reference/functions_and_function_scope/arguments">arguments</a>.</p>
+<p>Он содержит список аргументов по номерам: <code>arguments[0]</code>, <code>arguments[1]</code>…, а также свойство <code>length</code>.</p>
+<p>Например, выведем список всех аргументов:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sayHi() {
+  for (var i = 0; i &lt; arguments.length; i++) {
+    alert( "Привет, " + arguments[i] );
+  }
+}
+
+sayHi("Винни", "Пятачок"); // 'Привет, Винни', 'Привет, Пятачок'</code></pre>
+</div>
+</div>
+</div><p>Все параметры находятся в <code>arguments</code>, даже если они есть в списке. Код выше сработал бы также, будь функция объявлена <code>sayHi(a,b,c)</code>.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Связь между <code>arguments</code> и параметрами</span></div>
+<div class="important__content"><p><strong>В старом стандарте JavaScript псевдо-массив <code>arguments</code> и переменные-параметры ссылаются на одни и те же значения.</strong></p>
+<p>В результате изменения <code>arguments</code> влияют на параметры и наоборот.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f(x) {
+  arguments[0] = 5; // меняет переменную x
+  alert( x ); // 5
+}
+
+f(1);</code></pre>
+</div>
+</div>
+</div><p>Наоборот:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f(x) {
+  x = 5;
+  alert( arguments[0] ); // 5, обновленный x
+}
+
+f(1);</code></pre>
+</div>
+</div>
+</div><p>В современной редакции стандарта это поведение изменено. Аргументы отделены от локальных переменных:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f(x) {
+  "use strict"; // для браузеров с поддержкой строгого режима
+
+  arguments[0] = 5;
+  alert( x ); // не 5, а 1! Переменная "отвязана" от arguments
+}
+
+f(1);</code></pre>
+</div>
+</div>
+</div><p><strong>Если вы не используете строгий режим, то чтобы переменные не менялись «неожиданно», рекомендуется никогда не изменять <code>arguments</code>.</strong></p>
+</div></div>
+<h3><a class="main__anchor" href="#arguments-это-не-массив" name="arguments-это-не-массив">arguments – это не массив</a></h3><p>Частая ошибка новичков – попытка применить методы <code>Array</code> к <code>arguments</code>. Это невозможно:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sayHi() {
+  var a = arguments.shift(); // ошибка! нет такого метода!
+}
+
+sayHi(1);</code></pre>
+</div>
+</div>
+</div><p>Дело в том, что <code>arguments</code> – это не массив <code>Array</code>.</p>
+<p>В действительности, это обычный объект, просто ключи числовые и есть <code>length</code>. На этом сходство заканчивается. Никаких особых методов у него нет, и методы массивов он тоже не поддерживает.</p>
+<p>Впрочем, никто не мешает сделать обычный массив из <code>arguments</code>, например так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var args = [];
+for (var i = 0; i &lt; arguments.length; i++) {
+  args[i] = arguments[i];
+}</code></pre>
+</div>
+</div>
+</div><p>Такие объекты иногда называют <em>«коллекциями»</em> или <em>«псевдомассивами»</em>.</p>
+<h2><a class="main__anchor" href="#copy" name="copy">Пример: копирование свойств copy(dst, src1, src2...)</a></h2><p>Иногда встаёт задача – скопировать в существующий объект свойства из одного или нескольких других.</p>
+<p>Напишем для этого функцию <code>copy</code>. Она будет работать с любым числом аргументов, благодаря использованию <code>arguments</code>.</p>
+<p>Синтаксис:</p>
+<dl>
+<dt>copy(dst, src1, src2…)</dt>
+<dd>Копирует свойства из объектов <code>src1, src2,...</code> в объект <code>dst</code>. Возвращает получившийся объект.</dd>
+</dl>
+<p>Использование:</p>
+<ul>
+<li>
+<p>Для объединения нескольких объектов в один:</p>
+<div class="code-example" data-highlight-block="16-16" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var vasya = {
+  age: 21,
+  name: 'Вася',
+  surname: 'Петров'
+};
+
+var user = {
+  isAdmin: false,
+  isEmailConfirmed: true
+};
+
+var student = {
+  university: 'My university'
+};
+
+// добавить к vasya свойства из user и student
+copy(vasya, user, student);
+
+alert( vasya.isAdmin ); // false
+alert( vasya.university ); // My university</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Для создания копии объекта <code>user</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// скопирует все свойства в пустой объект
+var userClone = copy({}, user);</code></pre>
+</div>
+</div>
+</div><p>Такой «клон» объекта может пригодиться там, где мы хотим изменять его свойства, при этом не трогая исходный объект <code>user</code>.</p>
+<p>В нашей реализации мы будем копировать только свойства первого уровня, то есть вложенные объекты как-то особым образом не обрабатываются. Впрочем, её можно расширить.</p>
+</li>
+</ul>
+<p>А вот и реализация:</p>
+<div class="code-example" data-autorun="true" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function copy() {
+  var dst = arguments[0];
+
+  for (var i = 1; i &lt; arguments.length; i++) {
+    var arg = arguments[i];
+    for (var key in arg) {
+      dst[key] = arg[key];
+    }
+  }
+
+  return dst;
+}</code></pre>
+</div>
+</div>
+</div><p>Здесь первый аргумент <code>copy</code> – это объект, в который нужно копировать, он назван <code>dst</code>. Для упрощения доступа к нему можно указать его прямо в объявлении функции:</p>
+<div class="code-example" data-highlight-block="0-0" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function copy(dst) {
+  // остальные аргументы остаются безымянными
+  for (var i = 1; i &lt; arguments.length; i++) {
+    var arg = arguments[i];
+    for (var key in arg) {
+      dst[key] = arg[key];
+    }
+  }
+
+  return dst;
+}</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#аргументы-по-умолчанию-через" name="аргументы-по-умолчанию-через">Аргументы по умолчанию через ||</a></h3><p>Если функция вызвана с меньшим количеством аргументов, чем указано, то отсутствующие аргументы считаются равными <code>undefined</code>.</p>
+<p>Зачастую в случае отсутствия аргумента мы хотим присвоить ему некоторое «стандартное» значение или, иначе говоря,  значение «по умолчанию». Это можно удобно сделать при помощи оператора логическое ИЛИ <code>||</code>.</p>
+<p>Например, функция <code>showWarning</code>, описанная ниже, должна показывать предупреждение. Для этого она принимает ширину <code>width</code>, высоту <code>height</code>, заголовок <code>title</code> и содержимое <code>contents</code>, но большая часть этих аргументов необязательна:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showWarning(width, height, title, contents) {
+  width = width || 200; // если не указана width, то width = 200
+  height = height || 100; // если нет height, то height = 100
+  title = title || "Предупреждение";
+
+  //...
+}</code></pre>
+</div>
+</div>
+</div><p>Это отлично работает в тех ситуациях, когда «нормальное» значение параметра в логическом контексте отлично от <code>false</code>. В коде выше, при передаче <code>width = 0</code> или <code>width = null</code>, оператор ИЛИ заменит его на значение по умолчанию.</p>
+<p>А что, если мы хотим использовать значение по умолчанию только если <code>width === undefined</code>? В этом случае оператор ИЛИ уже не подойдёт, нужно поставить явную проверку:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showWarning(width, height, title, contents) {
+  if (width === undefined) width = 200;
+  if (height === undefined) height = 100;
+  if (title === undefined) title = "Предупреждение";
+
+  //...
+}</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#arguments-callee" name="arguments-callee">Устаревшее свойство arguments.callee</a></h2><div class="important important_warn">
+<div class="important__header"><span class="important__type">Используйте NFE вместо <code>arguments.callee</code></span></div>
+<div class="important__content"><p>Это свойство устарело, при <code>use strict</code> оно не работает.</p>
+<p>Единственная причина, по которой оно тут – это то, что его можно встретить в старом коде, поэтому о нём желательно знать.</p>
+<p>Современная спецификация рекомендует использовать <a href="/named-function-expression#functions-nfe">именованные функциональные выражения (NFE)</a>.</p>
+</div></div>
+<p>В старом стандарте JavaScript объект <code>arguments</code> не только хранил список аргументов, но и содержал в свойстве <code>arguments.callee</code> ссылку на функцию, которая выполняется в данный момент.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f() {
+  alert( arguments.callee === f ); // true
+}
+
+f();</code></pre>
+</div>
+</div>
+</div><p>Эти два примера будут работать одинаково:</p>
+<div class="code-example" data-highlight-inline="2:22-28,7:22-43" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// подвызов через NFE
+var factorial = function f(n) {
+  return n==1 ? 1 : n*f(n-1);
+};
+
+// подвызов через arguments.callee
+var factorial = function(n) {
+  return n==1 ? 1 : n*arguments.callee(n-1);
+};</code></pre>
+</div>
+</div>
+</div><p>В учебнике мы его использовать не будем, оно приведено для общего ознакомления.</p>
+<h3><a class="main__anchor" href="#arguments-callee-caller" name="arguments-callee-caller">arguments.callee.caller</a></h3><p>Устаревшее свойство <code>arguments.callee.caller</code> хранит ссылку на <em>функцию, которая вызвала данную</em>.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Это свойство тоже устарело</span></div>
+<div class="important__content"><p>Это свойство было в старом стандарте, при <code>use strict</code> оно не работает, как и <code>arguments.callee</code>.</p>
+<p>Также ранее существовало более короткое свойство <code>arguments.caller</code>. Но это уже раритет, оно даже не кросс-браузерное. А вот свойство <code>arguments.callee.caller</code> поддерживается везде, если не использован <code>use strict</code>, поэтому в старом коде оно встречается.</p>
+</div></div>
+<p>Пример работы:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">f1();
+
+function f1() {
+  alert( arguments.callee.caller ); // null, меня вызвали из глобального кода
+  f2();
+}
+
+function f2() {
+  alert( arguments.callee.caller ); // f1, функция, из которой меня вызвали
+  f3();
+}
+
+function f3() {
+  alert( arguments.callee.caller ); // f2, функция, из которой меня вызвали
+}</code></pre>
+</div>
+</div>
+</div><p>В учебнике мы это свойство также не будем использовать.</p>
+<h2><a class="main__anchor" href="#именованные-аргументы" name="именованные-аргументы">«Именованные аргументы»</a></h2><p><em>Именованные аргументы</em> – альтернативная техника работы с аргументами, которая вообще не использует <code>arguments</code>.</p>
+<p>Некоторые языки программирования позволяют передать параметры как-то так: <code>f(width=100, height=200)</code>, то есть по именам, а что не передано, тех аргументов нет. Это очень удобно в тех случаях, когда аргументов много, сложно запомнить их порядок и большинство вообще не надо передавать, по умолчанию подойдёт.</p>
+<p>Такая ситуация часто встречается в компонентах интерфейса. Например, у «меню» может быть масса настроек отображения, которые можно «подкрутить» но обычно нужно передать всего один-два главных параметра, а остальные возьмутся по умолчанию.</p>
+<p>В JavaScript для этих целей используется передача аргументов в виде объекта, а в его свойствах мы передаём параметры.</p>
+<p>Получается так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showWarning(options) {
+  var width = options.width || 200; // по умолчанию
+  var height = options.height || 100;
+
+  var contents = options.contents || "Предупреждение";
+
+  // ...
+}</code></pre>
+</div>
+</div>
+</div><p>Вызвать такую функцию очень легко. Достаточно передать объект аргументов, указав в нем только нужные:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">showWarning({
+  contents: "Вы вызвали функцию" // и всё понятно!
+});</code></pre>
+</div>
+</div>
+</div><p>Сравним это с передачей аргументов через список:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">showWarning(null, null, "Предупреждение!");
+// мысль программиста "а что это за null, null в начале? ох, надо глядеть описание функции"</code></pre>
+</div>
+</div>
+</div><p>Не правда ли, объект – гораздо проще и понятнее?</p>
+<p>Еще один бонус кроме красивой записи – возможность повторного использования объекта аргументов:</p>
+<div class="code-example" data-highlight-block="10-10" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var opts = {
+  width: 400,
+  height: 200,
+  contents: "Текст"
+};
+
+showWarning(opts);
+
+opts.contents = "Другой текст";
+
+showWarning(opts); // вызвать с новым текстом, без копирования других аргументов</code></pre>
+</div>
+</div>
+</div><p>Именованные аргументы применяются во многих JavaScript-фреймворках.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Полный список аргументов, с которыми вызвана функция, доступен через <code>arguments</code>.</li>
+<li>Это псевдомассив, то есть объект, который похож на массив, в нём есть нумерованные свойства и <code>length</code>, но методов массива у него нет.</li>
+<li>В старом стандарте было свойство <code>arguments.callee</code> со ссылкой на текущую функцию, а также свойство <code>arguments.callee.caller</code>, содержащее ссылку на функцию, которая вызвала данную. Эти свойства устарели, при <code>use strict</code> обращение к ним приведёт к ошибке.</li>
+<li>Для указания аргументов по умолчанию, в тех случаях, когда они заведомо не <code>false</code>, удобен оператор <code>||</code>.</li>
+</ul>
+<p>В тех случаях, когда возможных аргументов много и, в особенности, когда большинство их имеют значения по умолчанию, вместо работы с <code>arguments</code> организуют передачу данных через объект, который как правило называют <code>options</code>.</p>
+<p>Возможен и гибридный подход, при котором первый аргумент обязателен, а второй – <code>options</code>, который содержит всевозможные дополнительные параметры:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showMessage(text, options) {
+  // показать сообщение text, настройки показа указаны в options
+}</code></pre>
+</div>
+</div>
+</div></cut></div></meta></article></main></div></body></html>

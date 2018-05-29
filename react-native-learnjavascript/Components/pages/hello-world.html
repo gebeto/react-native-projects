@@ -1,0 +1,108 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Привет, мир!" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В этой статье мы создадим простой скрипт и посмотрим, как он работает.</p>
+<cut>
+<h2><a class="main__anchor" href="#тег-script" name="тег-script">Тег SCRIPT</a></h2><div class="important important_smart">
+<div class="important__header"><span class="important__type">А побыстрее?</span></div>
+<div class="important__content"><p>В том (и только в том!) случае, если читатель нетерпелив и уже разрабатывал на JavaScript или имеет достаточно опыта в другом языке программировании, он может не читать каждую статью этого раздела, а перепрыгнуть сразу к главе <a href="/javascript-specials">Всё вместе: особенности JavaScript</a>. Там будет кратко самое основное.</p>
+<p>Если же у вас есть достаточно времени и желание начать с азов, то читайте дальше :)</p>
+</div></div>
+<p>Программы на языке JavaScript можно вставить в любое место HTML при помощи тега <code>SCRIPT</code>. Например:</p>
+<div class="code-example" data-demo-height="100" data-highlight-block="11-13" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;!-- Тег meta для указания кодировки --&gt;
+  &lt;meta charset="utf-8"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;p&gt;Начало документа...&lt;/p&gt;
+  &lt;script&gt;
+    alert( 'Привет, Мир!' );
+  &lt;/script&gt;
+
+  &lt;p&gt;...Конец документа&lt;/p&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div><p>Этот пример использует следующие элементы:</p>
+<dl>
+<dt><code>&lt;script&gt; ... &lt;/script&gt;</code></dt>
+<dd>
+<p>Тег <code>script</code> содержит исполняемый код. Предыдущие стандарты HTML требовали обязательного указания атрибута <code>type</code>, но сейчас он уже не нужен. Достаточно просто <code>&lt;script&gt;</code>.</p>
+<p>Браузер, когда видит <code>&lt;script&gt;</code>:</p>
+<ol>
+<li>Начинает отображать страницу, показывает часть документа до <code>script</code></li>
+</ol>
+</dd>
+</dl>
+<ol start="2">
+<li>
+<p>Встретив тег <code>script</code>, переключается в JavaScript-режим и не показывает, а исполняет его содержимое.</p>
+</li>
+<li>
+<p>Закончив выполнение, возвращается обратно в HTML-режим и <em>только тогда</em> отображает оставшуюся часть документа.</p>
+<p>Попробуйте этот пример в действии, и вы сами всё увидите.</p>
+</li>
+</ol>
+<dl>
+<dt><code>alert(сообщение)</code></dt>
+<dd>Отображает окно с сообщением и ждёт, пока посетитель не нажмёт «Ок».</dd>
+</dl>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Кодировка и тег <code>META</code></span></div>
+<div class="important__content"><p>При попытке сделать такой же файл у себя на диске и запустить, вы можете столкнуться с проблемой – выводятся «кракозяблы», «квадратики» и «вопросики» вместо русского текста.</p>
+<p>Чтобы всё было хорошо, нужно:</p>
+<ol>
+<li>Убедиться, что в <code>HEAD</code> есть строка <code>&lt;meta charset="utf-8"&gt;</code>. Если вы будете открывать файл с диска, то именно он укажет браузеру кодировку.</li>
+<li>Убедиться, что редактор сохранил файл именно в кодировке UTF-8, а не, скажем, в <code>windows-1251</code>.</li>
+</ol>
+<p>Указание кодировки – часть обычного HTML, я упоминаю об этом «на всякий случай», чтобы не было сюрпризов при запуске примеров локально.</p>
+</div></div>
+<h2><a class="main__anchor" href="#современная-разметка-для-script" name="современная-разметка-для-script">Современная разметка для SCRIPT</a></h2><p>В старых скриптах оформление тега <code>SCRIPT</code> было немного сложнее. В устаревших руководствах можно встретить следующие элементы:</p>
+<dl>
+<dt>Атрибут <code>&lt;script <u>type</u>=…&gt;</code></dt>
+<dd>В отличие от HTML5, стандарт HTML 4 требовал обязательного указания этого атрибута. Выглядел он так: <code>type="text/javascript"</code>. Если указать другое значение <code>type</code>, то скрипт выполнен не будет.</dd>
+</dl>
+<p>В современной разработке атрибут <code>type</code> не обязателен.</p>
+<dl>
+<dt>Атрибут <code>&lt;script <u>language</u>=…&gt;</code></dt>
+<dd>
+<p>Этот атрибут предназначен для указания языка, на котором написан скрипт. По умолчанию, язык – JavaScript, так что и этот атрибут ставить не обязательно.</p>
+</dd>
+<dt>Комментарии до и после скриптов</dt>
+<dd>
+<p>В совсем старых руководствах и книгах иногда рекомендуют использовать HTML-комментарии внутри <code>SCRIPT</code>, чтобы спрятать Javascript от браузеров, которые не поддерживают его.</p>
+<p>Выглядит это примерно так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script type="text/javascript"&gt;&lt;!--
+    ...
+//--&gt;&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Браузер, для которого предназначались такие трюки, очень старый Netscape, давно умер. Поэтому в этих комментариях нет нужды.</p>
+</dd>
+</dl>
+<p>Итак, для вставки скрипта мы просто пишем <code>&lt;script&gt;</code>, без дополнительных атрибутов и комментариев.</p>
+</cut></div></meta></article></main></div></body></html>

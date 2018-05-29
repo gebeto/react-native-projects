@@ -1,0 +1,365 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Модули" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Концепция модулей как способа организации JavaScript-кода существовала давно.</p>
+<p>Когда приложение сложное и кода много – мы пытаемся разбить его на файлы. В каждом файле описываем какую-то часть, а в дальнейшем – собираем эти части воедино.</p>
+<p>Модули в стандарте ECMAScript предоставляют удобные средства для этого.</p>
+<p>Такие средства предлагались сообществом и ранее, например:</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Asynchronous_module_definition">AMD</a> – одна из самых древних систем организации модулей, требует лишь наличия клиентской библиотеки, к примеру, <a href="http://requirejs.org/">require.js</a>, но поддерживается и серверными средствами.</li>
+<li><a href="http://wiki.commonjs.org/wiki/Modules/1.1">CommonJS</a> – система модулей, встроенная в сервер Node.JS. Требует поддержки на клиентской и серверной стороне.</li>
+<li><a href="https://github.com/umdjs/umd">UMD</a> – система модулей, которая предложена в качестве универсальной. UMD-модули будут работать и в системе AMD и в CommonJS.</li>
+</ul>
+<p>Все перечисленные выше системы требуют различных библиотек или систем сборки для использования.</p>
+<p>Новый стандарт отличается от них прежде всего тем, что это – стандарт. А значит, со временем, будет поддерживаться браузерами без дополнительных утилит.</p>
+<p>Однако, сейчас браузерной поддержки почти нет. Поэтому ES-модули используются в сочетании с системами сборки, такими как <a href="http://webpack.github.io/">webpack</a>, <a href="http://brunch.io/">brunch</a> и другими, при подключённом <a href="https://babeljs.io">Babel.JS</a>. Мы рассмотрим это далее.</p>
+<h2><a class="main__anchor" href="#что-такое-модуль" name="что-такое-модуль">Что такое модуль?</a></h2><p>Модулем считается файл с кодом.</p>
+<p>В этом файле ключевым словом <code>export</code> помечаются переменные и функции, которые могут быть использованы снаружи.</p>
+<p>Другие модули могут подключать их через вызов <code>import</code>.</p>
+<h2><a class="main__anchor" href="#export" name="export">export</a></h2><p>Ключевое слово <code>export</code> можно ставить:</p>
+<ul>
+<li>перед объявлением переменных, функций и классов.</li>
+<li>отдельно, при этом в фигурных скобках указывается, что именно экспортируется.</li>
+</ul>
+<p>Например, так экспортируется переменная <code>one</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// экспорт прямо перед объявлением
+export let one = 1;</code></pre>
+</div>
+</div>
+</div><p>Можно написать <code>export</code> и отдельно от объявления:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">let two = 2;
+
+export {two};</code></pre>
+</div>
+</div>
+</div><p>При этом в фигурных скобках указываются одна или несколько экспортируемых переменных.</p>
+<p>Для двух переменных будет так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">export {one, two};</code></pre>
+</div>
+</div>
+</div><p>При помощи ключевого слова <code>as</code> можно указать, что переменная <code>one</code> будет доступна снаружи (экспортирована) под именем <code>once</code>, а <code>two</code> – под именем <code>twice</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">export {one as once, two as twice};</code></pre>
+</div>
+</div>
+</div><p>Экспорт функций и классов выглядит так же:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">export class User {
+  constructor(name) {
+    this.name = name;
+  }
+};
+
+export function sayHi() {
+  alert("Hello!");
+};
+
+// отдельно от объявлений было бы так:
+// export {User, sayHi}</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">Для экспорта обязательно нужно имя</span></div>
+<div class="important__content"><p>Заметим, что и у функции и у класса при таком экспорте должно быть имя.</p>
+<p>Так будет ошибка:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// функция без имени
+export function() { alert("Error"); };</code></pre>
+</div>
+</div>
+</div><p>В экспорте указываются именно имена, а не произвольные выражения.</p>
+</div></div>
+<h2><a class="main__anchor" href="#import" name="import">import</a></h2><p>Другие модули могут подключать экспортированные значения при помощи ключевого слова <code>import</code>.</p>
+<p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">import {one, two} from "./nums";</code></pre>
+</div>
+</div>
+</div><p>Здесь:</p>
+<ul>
+<li><code>"./nums"</code> – модуль, как правило это путь к файлу модуля.</li>
+<li><code>one, two</code> – импортируемые переменные, которые должны быть обозначены в <code>nums</code> словом <code>export</code>.</li>
+</ul>
+<p>В результате импорта появятся локальные переменные <code>one</code>, <code>two</code>, которые будут содержать значения соответствующих экспортов.</p>
+<p>Например, при таком файле <code>nums.js</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">export let one = 1;
+export let two = 2;</code></pre>
+</div>
+</div>
+</div><p>Модуль ниже выведет «1 and 2»:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">import {one, two} from "./nums";
+
+alert( `${one} and ${two}` ); // 1 and 2</code></pre>
+</div>
+</div>
+</div><p>Импортировать можно и под другим именем, указав его в «as»:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// импорт one под именем item1, а two – под именем item2
+import {one as item1, two as item2} from "./nums";
+
+alert( `${item1} and ${item2}` ); // 1 and 2</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">Импорт всех значений в виде объекта</span></div>
+<div class="important__content"><p>Можно импортировать все значения сразу в виде объекта вызовом <code>import * as obj</code>, например:</p>
+<div class="code-example" data-highlight-block="0-0" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">import * as numbers from "./nums";
+
+// теперь экспортированные переменные - свойства numbers
+alert( `${numbers.one} and ${numbers.two}` ); // 1 and 2</code></pre>
+</div>
+</div>
+</div></div></div>
+<h2><a class="main__anchor" href="#export-default" name="export-default">export default</a></h2><p>Выше мы видели, что модуль может экспортировать выбранные переменные при помощи <code>export</code>.</p>
+<p>Однако, как правило, код стараются организовать так, чтобы каждый модуль делал одну вещь. Иначе говоря, «один файл – одна сущность, которую он описывает». Например, файл <code>user.js</code> содержит <code>class User</code>, файл <code>login.js</code> – функцию <code>login()</code> для авторизации, и т.п.</p>
+<p>При этом модули, разумеется, будут использовать друг друга. Например, <code>login.js</code>, скорее всего, будет импортировать класс <code>User</code> из модуля <code>user.js</code>.</p>
+<p>Для такой ситуации, когда один модуль экспортирует одно значение, предусмотрено особое ключевое сочетание <code>export default</code>.</p>
+<p>Если поставить после <code>export</code> слово <code>default</code>, то значение станет «экспортом по умолчанию».</p>
+<p>Такое значение можно импортировать без фигурных скобок.</p>
+<p>Например, файл <code>user.js</code>:</p>
+<div class="code-example" data-highlight-inline="0:0-14" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">export default class User {
+  constructor(name) {
+    this.name = name;
+  }
+};</code></pre>
+</div>
+</div>
+</div><p>…А в файле <code>login.js</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">import User from './user';
+
+new User("Вася");</code></pre>
+</div>
+</div>
+</div><p>«Экспорт по умолчанию» – своего рода «синтаксический сахар». Можно было бы и без него, импортировать значение обычным образом через фигурные скобки <code>{…}</code>. Если бы в <code>user.js</code> не было <code>default</code>, то в <code>login.js</code> необходимо было бы указать фигурные скобки:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// если бы user.js содержал
+// export class User { ... }
+
+// …то при импорте User понадобились бы фигурные скобки:
+import {User} from './user';
+
+new User("Вася");</code></pre>
+</div>
+</div>
+</div><p>На практике этот «сахар» весьма приятен, так как позволяет легко видеть, какое именно значение экспортирует модуль, а также обойтись без лишних символов при импорте.</p>
+<h2><a class="main__anchor" href="#commonjs" name="commonjs">CommonJS</a></h2><p>Если вы раньше работали с Node.JS или использовали систему сборки в синтаксисе CommonJS, то вот соответствия.</p>
+<p>Для экспорта по умолчанию вместо:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">module.exports = VARIABLE;</code></pre>
+</div>
+</div>
+</div><p>Пишем:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">export default VARIABLE;</code></pre>
+</div>
+</div>
+</div><p>А при импорте из такого модуля вместо:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">let VARIABLE = require('./file');</code></pre>
+</div>
+</div>
+</div><p>Пишем:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">import VARIABLE from './file';</code></pre>
+</div>
+</div>
+</div><p>Для экспорта нескольких значений из модуля, вместо:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">exports.NAME = VARIABLE;</code></pre>
+</div>
+</div>
+</div><p>Пишем в фигурных скобках, что надо экспортировать и под каким именем (без <code>as</code>, если имя совпадает):</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">export {VARIABLE as NAME};</code></pre>
+</div>
+</div>
+</div><p>При импорте – также фигурные скобки:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">import {NAME} from './file';</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#использование" name="использование">Использование</a></h2><p>Современный стандарт ECMAScript описывает, как импортировать и экспортировать значения из модулей, но он ничего не говорит о том, как эти модули искать, загружать и т.п.</p>
+<p>Такие механизмы предлагались в процессе создания стандарта, но были убраны по причине недостаточной проработанности. Возможно, они появятся в будущем.</p>
+<p>Сейчас используются системы сборки, как правило, в сочетании с Babel.JS.</p>
+<p>Система сборки обрабатывает скрипты, находит в них <code>import/export</code> и заменяет их на свои внутренние JavaScript-вызовы. При этом, как правило, много файлов-модулей объединяются в один или несколько скриптов, смотря как указано в конфигурации сборки.</p>
+<p>Ниже вы можете увидеть полный пример использования модулей с системой сборки <a href="http://webpack.github.io">webpack</a>.</p>
+<p>В нём есть:</p>
+<ul>
+<li><code>nums.js</code> – модуль, экспортирующий <code>one</code> и <code>two</code>, как описано выше.</li>
+<li><code>main.js</code> – модуль, который импортирует <code>one</code>, <code>two</code> из <code>nums</code> и выводит их сумму.</li>
+<li><code>webpack.config.js</code> – конфигурация для системы сборки.</li>
+<li><code>bundle.js</code> – файл, который создала система сборки из <code>main.js</code> и <code>nums.js</code>.</li>
+<li><code>index.html</code> – простой HTML-файл для демонстрации.</li>
+</ul>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">bundle.js</div><div class="code-tabs__switch">main.js</div><div class="code-tabs__switch">nums.js</div><div class="code-tabs__switch">webpack.config.js</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/modules/nums/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/heyfENvcLg0WnLTUjgMs?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/modules/nums/"></iframe></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>/******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId])
+/******/ 			return installedModules[moduleId].exports;
+
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			exports: {},
+/******/ 			id: moduleId,
+/******/ 			loaded: false
+/******/ 		};
+
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
+
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+
+
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
+
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(0);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _nums = __webpack_require__(1);
+
+	document.write('Сумма импортов: ' + (_nums.one + _nums.two));
+
+/***/ },
+/* 1 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var one = 1;
+
+	exports.one = one;
+	var two = 2;
+
+	exports.two = two;
+
+/***/ }
+/******/ ]);</code></pre></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>import {one, two} from './nums';
+
+document.write(`Сумма импортов: ${one + two}`);</code></pre></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>export let one = 1;
+
+let two = 2;
+
+export {two};</code></pre></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>// Для использования нужен Node.JS
+// Поставьте его:
+//   npm i -g webpack
+// Поставьте babel-loader:
+//   npm i babel-loader
+// Запустите его в директории с файлами:
+//   webpack
+
+module.exports = {
+  entry: './main',
+
+  output: {
+    filename: 'bundle.js'
+  },
+
+  module: {
+    loaders: [
+      { test: /\.js$/, loader: "babel" }
+    ]
+  }
+};</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!doctype html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+  &lt;script src="bundle.js"&gt;&lt;/script&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</code></pre></div></div></div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Современный стандарт описывает, как организовать код в модули, экспортировать и импортировать значения.</p>
+<p>Экспорт:</p>
+<ul>
+<li><code>export</code> можно поставить прямо перед объявлением функции, класса, переменной.</li>
+<li>Если <code>export</code> стоит отдельно от объявления, то значения в нём указываются в фигурных скобках: <code>export {…}</code>.</li>
+<li>Также можно экспортировать «значение по умолчанию» при помощи <code>export default</code>.</li>
+</ul>
+<p>Импорт:</p>
+<ul>
+<li>В фигурных скобках указываются значения, а затем – модуль, откуда их брать: <code>import {a, b, c as d} from "module"</code>.</li>
+<li>Можно импортировать все значения в виде объекта при помощи <code>import * as obj from "module"</code>.</li>
+<li>Без фигурных скобок будет импортировано «значение по умолчанию»: <code>import User from "user"</code>.</li>
+</ul>
+<p>На текущий момент модули требуют системы сборки на сервере. Автор этого текста преимущественно использует webpack, но есть и другие варианты.</p>
+</div></meta></article></main></div></body></html>

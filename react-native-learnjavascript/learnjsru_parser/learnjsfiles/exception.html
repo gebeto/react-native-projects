@@ -1,0 +1,612 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Перехват ошибок, "try..catch"' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Как бы мы хорошо ни программировали, в коде бывают ошибки. Или, как их иначе называют, «исключительные ситуации» (исключения).</p>
+<p>Обычно скрипт при ошибке, как говорят, «падает», с выводом ошибки в консоль.</p>
+<p>Но бывают случаи, когда нам хотелось бы как-то контролировать ситуацию, чтобы скрипт не просто «упал», а сделал что-то разумное.</p>
+<p>Для этого в JavaScript есть замечательная конструкция <code>try..catch</code>.</p>
+<cut>
+<h2><a class="main__anchor" href="#конструкция-try-catch" name="конструкция-try-catch">Конструкция try…catch</a></h2><p>Конструкция <code>try..catch</code> состоит из двух основных блоков: <code>try</code>, и затем <code>catch</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">try {
+
+  // код ...
+
+} catch (err) {
+
+  // обработка ошибки
+
+}</code></pre>
+</div>
+</div>
+</div><p>Работает она так:</p>
+<ol>
+<li>
+<p>Выполняется код внутри блока <code>try</code>.</p>
+</li>
+<li>
+<p>Если в нём ошибок нет, то блок <code>catch(err)</code> игнорируется, то есть выполнение доходит до конца <code>try</code> и потом прыгает через <code>catch</code>.</p>
+</li>
+<li>
+<p>Если в нём возникнет ошибка, то выполнение <code>try</code> на ней прерывается, и управление прыгает в начало блока <code>catch(err)</code>.</p>
+<p>При этом переменная <code>err</code> (можно выбрать и другое название) будет содержать объект ошибки с подробной информацией о произошедшем.</p>
+</li>
+</ol>
+<p><strong>Таким образом, при ошибке в <code>try</code> скрипт не «падает», и мы получаем возможность обработать ошибку внутри <code>catch</code>.</strong></p>
+<p>Посмотрим это на примерах.</p>
+<ul>
+<li>
+<p>Пример без ошибок: при запуске сработают <code>alert</code> <code>(1)</code> и <code>(2)</code>:</p>
+<div class="code-example" data-highlight-inline="2:33-40,6:33-40" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">try {
+
+  alert('Начало блока try');  // (1) &lt;--
+
+  // .. код без ошибок
+
+  alert('Конец блока try');   // (2) &lt;--
+
+} catch(e) {
+
+  alert('Блок catch не получит управление, так как нет ошибок'); // (3)
+
+}
+
+alert("Потом код продолжит выполнение...");</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Пример с ошибкой: при запуске сработают <code>(1)</code> и <code>(3)</code>:</p>
+<div class="code-example" data-highlight-block="4-4" data-highlight-inline="2:33-40,10:67-74" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">try {
+
+  alert('Начало блока try');  // (1) &lt;--
+
+  lalala; // ошибка, переменная не определена!
+
+  alert('Конец блока try');  // (2)
+
+} catch(e) {
+
+  alert('Ошибка ' + e.name + ":" + e.message + "\n" + e.stack); // (3) &lt;--
+
+}
+
+alert("Потом код продолжит выполнение...");</code></pre>
+</div>
+</div>
+</div></li>
+</ul>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type"><code>try..catch</code> подразумевает, что код синтаксически верен</span></div>
+<div class="important__content"><p>Если грубо нарушена структура кода, например не закрыта фигурная скобка или где-то стоит лишняя запятая, то никакой <code>try..catch</code> здесь не поможет. Такие ошибки называются <em>синтаксическими</em>, интерпретатор не может понять такой код.</p>
+<p>Здесь же мы рассматриваем ошибки <em>семантические</em>, то есть происходящие в корректном коде, в процессе выполнения.</p>
+</div></div>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type"><code>try..catch</code> работает только в синхронном коде</span></div>
+<div class="important__content"><p>Ошибку, которая произойдёт в коде, запланированном «на будущее», например, в <code>setTimeout</code>, <code>try..catch</code> не поймает:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">try {
+  setTimeout(function() {
+    throw new Error(); // вылетит в консоль
+  }, 1000);
+} catch (e) {
+  alert( "не сработает" );
+}</code></pre>
+</div>
+</div>
+</div><p>На момент запуска функции, назначенной через <code>setTimeout</code>, этот код уже завершится, интерпретатор выйдет из блока <code>try..catch</code>.</p>
+<p>Чтобы поймать ошибку внутри функции из <code>setTimeout</code>, и <code>try..catch</code> должен быть в той же функции.</p>
+</div></div>
+<h2><a class="main__anchor" href="#объект-ошибки" name="объект-ошибки">Объект ошибки</a></h2><p>В примере выше мы видим объект ошибки. У него есть три основных свойства:</p>
+<dl>
+<dt><code>name</code></dt>
+<dd>Тип ошибки. Например, при обращении к несуществующей переменной: <code>"ReferenceError"</code>.</dd>
+<dt><code>message</code></dt>
+<dd>Текстовое сообщение о деталях ошибки.</dd>
+<dt><code>stack</code></dt>
+<dd>Везде, кроме IE8-, есть также свойство <code>stack</code>, которое содержит строку с информацией о последовательности вызовов, которая привела к ошибке.</dd>
+</dl>
+<p>В зависимости от браузера, у него могут быть и дополнительные свойства, см. <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error">Error в MDN</a> и <a href="http://msdn.microsoft.com/en-us/library/dww52sbt%28v=vs.85%29.aspx">Error в MSDN</a>.</p>
+<h2><a class="main__anchor" href="#пример-использования" name="пример-использования">Пример использования</a></h2><p>В JavaScript есть встроенный метод <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse">JSON.parse(str)</a>, который используется для чтения JavaScript-объектов (и не только) из строки.</p>
+<p>Обычно он используется для того, чтобы обрабатывать данные, полученные по сети, с сервера или из другого источника.</p>
+<p>Мы получаем их и вызываем метод <code>JSON.parse</code>, вот так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var data = '{"name":"Вася", "age": 30}'; // строка с данными, полученная с сервера
+
+var user = JSON.parse(data); // преобразовали строку в объект
+
+// теперь user -- это JS-объект с данными из строки
+alert( user.name ); // Вася
+alert( user.age ); // 30</code></pre>
+</div>
+</div>
+</div><p>Более детально формат JSON разобран в главе <a href="/json">Формат JSON, метод toJSON</a>.</p>
+<p><strong>В случае, если данные некорректны, <code>JSON.parse</code> генерирует ошибку, то есть скрипт «упадёт».</strong></p>
+<p>Устроит ли нас такое поведение? Конечно нет!</p>
+<p>Получается, что если вдруг что-то не так с данными, то посетитель никогда (если, конечно, не откроет консоль) об этом не узнает.</p>
+<p>А люди очень-очень не любят, когда что-то «просто падает», без всякого объявления об ошибке.</p>
+<p><strong>Бывают ситуации, когда без <code>try..catch</code> не обойтись, это – одна из таких.</strong></p>
+<p>Используем <code>try..catch</code>, чтобы обработать некорректный ответ:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var data = "Has Error"; // в данных ошибка
+
+try {
+
+  var user = JSON.parse(data); // &lt;-- ошибка при выполнении
+  alert( user.name ); // не сработает
+
+} catch (e) {
+  // ...выполнится catch
+  alert( "Извините, в данных ошибка, мы попробуем получить их ещё раз" );
+  alert( e.name );
+  alert( e.message );
+}</code></pre>
+</div>
+</div>
+</div><p>Здесь в <code>alert</code> только выводится сообщение, но область применения гораздо шире: можно повторять запрос, можно предлагать посетителю использовать альтернативный способ, можно отсылать информацию об ошибке на сервер… Свобода действий.</p>
+<h2><a class="main__anchor" href="#генерация-своих-ошибок" name="генерация-своих-ошибок">Генерация своих ошибок</a></h2><p>Представим на минуту, что данные являются корректным JSON… Но в этом объекте нет нужного свойства <code>name</code>:</p>
+<div class="code-example" data-highlight-block="5-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var data = '{ "age": 30 }'; // данные неполны
+
+try {
+
+  var user = JSON.parse(data); // &lt;-- выполнится без ошибок
+  alert( user.name ); // undefined
+
+} catch (e) {
+  // не выполнится
+  alert( "Извините, в данных ошибка" );
+}</code></pre>
+</div>
+</div>
+</div><p>Вызов <code>JSON.parse</code> выполнится без ошибок, но ошибка в данных есть. И, так как свойство <code>name</code> обязательно должно быть, то для нас это такие же некорректные данные как и <code>"Has Error"</code>.</p>
+<p>Для того, чтобы унифицировать и объединить обработку ошибок парсинга и ошибок в структуре, мы воспользуемся оператором <code>throw</code>.</p>
+<h3><a class="main__anchor" href="#оператор-throw" name="оператор-throw">Оператор throw</a></h3><p>Оператор <code>throw</code> генерирует ошибку.</p>
+<p>Синтаксис: <code>throw &lt;объект ошибки&gt;</code>.</p>
+<p>Технически, в качестве объекта ошибки можно передать что угодно, это может быть даже не объект, а число или строка, но всё же лучше, чтобы это был объект, желательно – совместимый со стандартным, то есть чтобы у него были как минимум свойства <code>name</code> и <code>message</code>.</p>
+<p><strong>В качестве конструктора ошибок можно использовать встроенный конструктор: <code>new Error(message)</code> или любой другой.</strong></p>
+<p>В JavaScript встроен ряд конструкторов для стандартных ошибок: <code>SyntaxError</code>, <code>ReferenceError</code>, <code>RangeError</code> и некоторые другие. Можно использовать и их, но только чтобы не было путаницы.</p>
+<p>В данном случае мы используем конструктор <code>new SyntaxError(message)</code>. Он создаёт ошибку того же типа, что и <code>JSON.parse</code>.</p>
+<div class="code-example" data-highlight-block="6-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var data = '{ "age": 30 }'; // данные неполны
+
+try {
+
+  var user = JSON.parse(data); // &lt;-- выполнится без ошибок
+
+  if (!user.name) {
+    throw new SyntaxError("Данные некорректны");
+  }
+
+  alert( user.name );
+
+} catch (e) {
+  alert( "Извините, в данных ошибка" );
+}</code></pre>
+</div>
+</div>
+</div><p>Получилось, что блок <code>catch</code> – единое место для обработки ошибок во всех случаях: когда ошибка выявляется при <code>JSON.parse</code> или позже.</p>
+<h2><a class="main__anchor" href="#проброс-исключения" name="проброс-исключения">Проброс исключения</a></h2><p>В коде выше мы предусмотрели обработку ошибок, которые возникают при некорректных данных. Но может ли быть так, что возникнет какая-то другая ошибка?</p>
+<p>Конечно, может! Код – это вообще мешок с ошибками, бывает даже так что библиотеку выкладывают в открытый доступ, она там 10 лет лежит, её смотрят миллионы людей и на 11-й год находятся опаснейшие ошибки. Такова жизнь, таковы люди.</p>
+<p>Блок <code>catch</code> в нашем примере предназначен для обработки ошибок, возникающих при некорректных данных. Если же в него попала какая-то другая ошибка, то вывод сообщения о «некорректных данных» будет дезинформацией посетителя.</p>
+<p><strong>Ошибку, о которой <code>catch</code> не знает, он не должен обрабатывать.</strong></p>
+<p>Такая техника называется <em>«проброс исключения»</em>: в <code>catch(e)</code> мы анализируем объект ошибки, и если он нам не подходит, то делаем <code>throw e</code>.</p>
+<p>При этом ошибка «выпадает» из <code>try..catch</code> наружу. Далее она может быть поймана либо внешним блоком <code>try..catch</code> (если есть), либо «повалит» скрипт.</p>
+<p>В примере ниже <code>catch</code> обрабатывает только ошибки <code>SyntaxError</code>, а остальные – выбрасывает дальше:</p>
+<div class="code-example" data-highlight-block="10-10,16-20" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var data = '{ "name": "Вася", "age": 30 }'; // данные корректны
+
+try {
+
+  var user = JSON.parse(data);
+
+  if (!user.name) {
+    throw new SyntaxError("Ошибка в данных");
+  }
+
+  blabla(); // произошла непредусмотренная ошибка
+
+  alert( user.name );
+
+} catch (e) {
+
+  if (e.name == "SyntaxError") {
+    alert( "Извините, в данных ошибка" );
+  } else {
+    throw e;
+  }
+
+}</code></pre>
+</div>
+</div>
+</div><p>Заметим, что ошибка, которая возникла внутри блока <code>catch</code>, «выпадает» наружу, как если бы была в обычном коде.</p>
+<p>В следующем примере такие ошибки обрабатываются ещё одним, «более внешним» <code>try..catch</code>:</p>
+<div class="code-example" data-highlight-block="5-5,8-10,17-17" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function readData() {
+  var data = '{ "name": "Вася", "age": 30 }';
+
+  try {
+    // ...
+    blabla(); // ошибка!
+  } catch (e) {
+    // ...
+    if (e.name != 'SyntaxError') {
+      throw e; // пробрасываем
+    }
+  }
+}
+
+try {
+  readData();
+} catch (e) {
+  alert( "Поймал во внешнем catch: " + e ); // ловим
+}</code></pre>
+</div>
+</div>
+</div><p>В примере выше <code>try..catch</code> внутри <code>readData</code> умеет обрабатывать только <code>SyntaxError</code>, а внешний – все ошибки.</p>
+<p>Без внешнего проброшенная ошибка «вывалилась» бы в консоль, с остановкой скрипта.</p>
+<h2><a class="main__anchor" href="#оборачивание-исключений" name="оборачивание-исключений">Оборачивание исключений</a></h2><p>И, для полноты картины – последняя, самая продвинутая техника по работе с ошибками. Она, впрочем, является стандартной практикой во многих объектно-ориентированных языках.</p>
+<p>Цель функции <code>readData</code> в примере выше – прочитать данные. При чтении могут возникать разные ошибки, не только <code>SyntaxError</code>, но и, возможно, к примеру, <code>URIError</code> (неправильное применение функций работы с URI), да и другие.</p>
+<p>Код, который вызвал <code>readData</code>, хотел бы иметь либо результат, либо информацию об ошибке.</p>
+<p>При этом очень важным является вопрос: обязан ли этот внешний код знать о всевозможных типах ошибок, которые могут возникать при чтении данных, и уметь перехватывать их?</p>
+<p>Обычно внешний код хотел бы работать «на уровень выше», и получать либо результат, либо «ошибку чтения данных», при этом какая именно ошибка произошла – ему неважно. Ну, или, если будет важно, то хотелось бы иметь возможность это узнать, но обычно не требуется.</p>
+<p>Это важнейший общий подход к проектированию – каждый участок функционала должен получать информацию на том уровне, который ему необходим.</p>
+<p>Мы его видим везде в грамотно построенном коде, но не всегда отдаём себе в этом отчёт.</p>
+<p>В данном случае, если при чтении данных происходит ошибка, то мы будем генерировать её в виде объекта <code>ReadError</code>, с соответствующим сообщением. А «исходную» ошибку – на всякий случай тоже сохраним, присвоим в свойство <code>cause</code> (англ. – причина).</p>
+<p>Выглядит это так:</p>
+<div class="code-example" data-highlight-block="19-19" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function ReadError(message, cause) {
+  this.message = message;
+  this.cause = cause;
+  this.name = 'ReadError';
+  this.stack = cause.stack;
+}
+
+function readData() {
+  var data = '{ bad data }';
+
+  try {
+    // ...
+    JSON.parse(data);
+    // ...
+  } catch (e) {
+    // ...
+    if (e.name == 'URIError') {
+      throw new ReadError("Ошибка в URI", e);
+    } else if (e.name == 'SyntaxError') {
+      throw new ReadError("Синтаксическая ошибка в данных", e);
+    } else {
+      throw e; // пробрасываем
+    }
+  }
+}
+
+try {
+  readData();
+} catch (e) {
+  if (e.name == 'ReadError') {
+    alert( e.message );
+    alert( e.cause ); // оригинальная ошибка-причина
+  } else {
+    throw e;
+  }
+}</code></pre>
+</div>
+</div>
+</div><p>Этот подход называют «оборачиванием» исключения, поскольку мы берём ошибки «более низкого уровня» и «заворачиваем» их в <code>ReadError</code>, которая соответствует текущей задаче.</p>
+<h2><a class="main__anchor" href="#секция-finally" name="секция-finally">Секция finally</a></h2><p>Конструкция <code>try..catch</code> может содержать ещё один блок: <code>finally</code>.</p>
+<p>Выглядит этот расширенный синтаксис так:</p>
+<div class="code-example" data-highlight-inline="0:0-3,2:2-7,4:2-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">try {
+   .. пробуем выполнить код ..
+} catch(e) {
+   .. перехватываем исключение ..
+} finally {
+   .. выполняем всегда ..
+}</code></pre>
+</div>
+</div>
+</div><p>Секция <code>finally</code> не обязательна, но если она есть, то она выполняется всегда:</p>
+<ul>
+<li>после блока <code>try</code>, если ошибок не было,</li>
+<li>после <code>catch</code>, если они были.</li>
+</ul>
+<p>Попробуйте запустить такой код?</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">try {
+  alert( 'try' );
+  if (confirm('Сгенерировать ошибку?')) BAD_CODE();
+} catch (e) {
+  alert( 'catch' );
+} finally {
+  alert( 'finally' );
+}</code></pre>
+</div>
+</div>
+</div><p>У него два варианта работы:</p>
+<ol>
+<li>Если вы ответите на вопрос «Сгенерировать ошибку?» утвердительно, то <code>try -&gt; catch -&gt; finally</code>.</li>
+<li>Если ответите отрицательно, то <code>try -&gt; finally</code>.</li>
+</ol>
+<p><strong>Секцию <code>finally</code> используют, чтобы завершить начатые операции при любом варианте развития событий.</strong></p>
+<p>Например, мы хотим подсчитать время на выполнение функции <code>sum(n)</code>, которая должна возвратить сумму чисел от <code>1</code> до <code>n</code> и работает рекурсивно:</p>
+<div class="code-example" data-highlight-block="12-14" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sum(n) {
+  return n ? (n + sum(n - 1)) : 0;
+}
+
+var n = +prompt('Введите n?', 100);
+
+var start = new Date();
+
+try {
+  var result = sum(n);
+} catch (e) {
+  result = 0;
+} finally {
+  var diff = new Date() - start;
+}
+
+alert( result ? result : 'была ошибка' );
+alert( "Выполнение заняло " + diff );</code></pre>
+</div>
+</div>
+</div><p>Здесь секция <code>finally</code> гарантирует, что время будет подсчитано в любых ситуациях – при ошибке в <code>sum</code> или без неё.</p>
+<p>Вы можете проверить это, запустив код с указанием <code>n=100</code> – будет без ошибки, <code>finally</code> выполнится после <code>try</code>, а затем с <code>n=100000</code> – будет ошибка из-за слишком глубокой рекурсии, управление прыгнет в <code>finally</code> после <code>catch</code>.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type"><code>finally</code> и <code>return</code></span></div>
+<div class="important__content"><p>Блок <code>finally</code> срабатывает при <em>любом</em> выходе из <code>try..catch</code>, в том числе и <code>return</code>.</p>
+<p>В примере ниже, из <code>try</code> происходит <code>return</code>, но <code>finally</code> получает управление до того, как контроль возвращается во внешний код.</p>
+<div class="code-example" data-highlight-block="9-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function func() {
+
+  try {
+    // сразу вернуть значение
+    return 1;
+
+  } catch (e) {
+    /* ... */
+  } finally {
+    alert( 'finally' );
+  }
+}
+
+alert( func() ); // сначала finally, потом 1</code></pre>
+</div>
+</div>
+</div><p>Если внутри <code>try</code> были начаты какие-то процессы, которые нужно завершить по окончании работы, во в <code>finally</code> это обязательно будет сделано.</p>
+<p>Кстати, для таких случаев иногда используют <code>try..finally</code> вообще без <code>catch</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function func() {
+  try {
+    return 1;
+  } finally {
+    alert( 'Вызов завершён' );
+  }
+}
+
+alert( func() ); // сначала finally, потом 1</code></pre>
+</div>
+</div>
+</div><p>В примере выше <code>try..finally</code> вообще не обрабатывает ошибки. Задача в другом – выполнить код при любом выходе из <code>try</code> – с ошибкой ли, без ошибок или через <code>return</code>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#последняя-надежда-window-onerror" name="последняя-надежда-window-onerror">Последняя надежда: window.onerror</a></h2><p>Допустим, ошибка произошла вне блока <code>try..catch</code> или выпала из <code>try..catch</code> наружу, во внешний код. Скрипт упал.</p>
+<p>Можно ли как-то узнать о том, что произошло? Да, конечно.</p>
+<p>В браузере существует специальное свойство <code>window.onerror</code>, если в него записать функцию, то она выполнится и получит в аргументах сообщение ошибки, текущий URL и номер строки, откуда «выпала» ошибка.</p>
+<p>Необходимо лишь позаботиться, чтобы функция была назначена заранее.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="1-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script&gt;
+  window.onerror = function(message, url, lineNumber) {
+    alert("Поймана ошибка, выпавшая в глобальную область!\n" +
+      "Сообщение: " + message + "\n(" + url + ":" + lineNumber + ")");
+  };
+
+  function readData() {
+    error(); // ой, что-то не так
+  }
+
+  readData();
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Как правило, роль <code>window.onerror</code> заключается в том, чтобы не оживить скрипт – скорее всего, это уже невозможно, а в том, чтобы отослать сообщение об ошибке на сервер, где разработчики о ней узнают.</p>
+<p>Существуют даже специальные веб-сервисы, которые предоставляют скрипты для отлова и аналитики таких ошибок, например: <a href="https://errorception.com/">https://errorception.com/</a> или <a href="http://www.muscula.com/">http://www.muscula.com/</a>.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Обработка ошибок – большая и важная тема.</p>
+<p>В JavaScript для этого предусмотрены:</p>
+<ul>
+<li>
+<p>Конструкция <code>try..catch..finally</code> – она позволяет обработать произвольные ошибки в блоке кода.</p>
+<p>Это удобно в тех случаях, когда проще сделать действие и потом разбираться с результатом, чем долго и нудно проверять, не упадёт ли чего.</p>
+<p>Кроме того, иногда проверить просто невозможно, например <code>JSON.parse(str)</code> не позволяет «проверить» формат строки перед разбором. В этом случае блок <code>try..catch</code> необходим.</p>
+<p>Полный вид конструкции:</p>
+<div class="code-example" data-highlight-inline="0:0-3,2:2-7,4:2-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">try {
+   .. пробуем выполнить код ..
+} catch(e) {
+   .. перехватываем исключение ..
+} finally {
+   .. выполняем всегда ..
+}</code></pre>
+</div>
+</div>
+</div><p>Возможны также варианты <code>try..catch</code> или <code>try..finally</code>.</p>
+</li>
+<li>
+<p>Оператор <code>throw err</code> генерирует свою ошибку, в качестве <code>err</code> рекомендуется использовать объекты, совместимые с встроенным типом <a href="http://javascript.ru/Error">Error</a>, содержащие свойства <code>message</code> и <code>name</code>.</p>
+</li>
+</ul>
+<p>Кроме того, мы рассмотрели некоторые важные приёмы:</p>
+<ul>
+<li>
+<p>Проброс исключения – <code>catch(err)</code> должен обрабатывать только те ошибки, которые мы рассчитываем в нём увидеть, остальные – пробрасывать дальше через <code>throw err</code>.</p>
+<p>Определить, нужная ли это ошибка, можно, например, по свойству <code>name</code>.</p>
+</li>
+<li>
+<p>Оборачивание исключений – функция, в процессе работы которой возможны различные виды ошибок, может «обернуть их» в одну общую ошибку, специфичную для её задачи, и уже её пробросить дальше. Чтобы, при необходимости, можно было подробно определить, что произошло, исходную ошибку обычно присваивают в свойство этой, общей. Обычно это нужно для логирования.</p>
+</li>
+<li>
+<p>В <code>window.onerror</code> можно присвоить функцию, которая выполнится при любой «выпавшей» из скрипта ошибке. Как правило, это используют в информационных целях, например отправляют информацию об ошибке на специальный сервис.</p>
+</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

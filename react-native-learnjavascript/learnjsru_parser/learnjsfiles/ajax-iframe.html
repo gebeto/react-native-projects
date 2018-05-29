@@ -1,0 +1,760 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="IFRAME для AJAX и COMET" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Эта глава посвящена <code>IFRAME</code> – самому древнему и кросс-браузерному способу AJAX-запросов.</p>
+<p>Сейчас он используется, разве что, для поддержки кросс-доменных запросов в IE7- и, что чуть более актуально, для реализации COMET в IE9-.</p>
+<p>Для общения с сервером создается невидимый <code>IFRAME</code>. В него отправляются данные, и в него же сервер пишет ответ.</p>
+<cut>
+<h2><a class="main__anchor" href="#введение" name="введение">Введение</a></h2><p>Сначала – немного вспомогательных функций и особенности работы с <code>IFRAME</code>.</p>
+<h3><a class="main__anchor" href="#двуличность-iframe-окно-документ" name="двуличность-iframe-окно-документ">Двуличность IFRAME: окно+документ</a></h3><p>Что такое IFRAME? На этот вопрос у браузера два ответа</p>
+<pre><code>1. IFRAME -- это HTML-тег: &lt;code&gt;&amp;lt;iframe&amp;gt;&lt;/code&gt; со стандартным набором свойств.
+
+- Тег можно создавать в JavaScript
+- У тега есть стили, можно менять.
+- К тегу можно обратиться через `document.getElementById` и другие методы.
+2. IFRAME -- это окно браузера, вложенное в основное
+
+- IFRAME -- такое же по функционалу окно браузера, как и основное, с адресом и т.п.
+    - Если документ в `IFRAME` и внешнее окно находятся на разных доменах, то прямой вызов методов друг друга невозможен.
+- Ссылку на это окно можно получить через `window.frames['имя фрейма']`.
+</code></pre>
+<p>Для достижения цели мы будем работать как с тегом, так и с окном. Они, конечно же, взаимосвязаны.</p>
+<p><strong>В теге <code>&lt;iframe&gt;</code> свойство <code>contentWindow</code> хранит ссылку на окно.</strong></p>
+<p>Окна также содержатся в коллекции <code>window.frames</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// Окно из ифрейма
+var iframeWin = iframe.contentWindow;
+
+// Можно получить и через frames, если мы знаем имя ифрейма (и оно у него есть)
+var iframeWin = window.frames[iframe.name];
+iframeWin.parent == window; // parent из iframe указывает на родительское окно
+
+// Документ не будет доступен, если iframe с другого домена
+var iframeDoc = iframe.contentWindow.document;</code></pre>
+</div>
+</div>
+</div><p>Больше информации об ифреймах вы можете получить в главе <a href="/iframes">Общение между окнами и фреймами</a>.</p>
+<h3><a class="main__anchor" href="#iframe-и-история-посещений" name="iframe-и-история-посещений">IFRAME и история посещений</a></h3><p><code>IFRAME</code> – полноценное окно, поэтому навигация в нём попадает в историю посещений.</p>
+<p>Это означает, что при нажатии кнопки «Назад» браузер вернёт посетителя назад не в основном окне, а в ифрейме. В лучшем случае – браузер возьмёт предыдущее состояние ифрейма из кэша и посетитель просто подумает, что кнопка не сработала. В худшем – в ифрейм будет сделан предыдущий запрос, а это уже точно ни к чему.</p>
+<p><strong>Наши запросы в ифрейм – служебные и для истории не предназначены. К счастью, есть ряд техник, которые позволяют обойти проблему.</strong></p>
+<ul>
+<li>
+<p>Ифрейм нужно создавать динамически, через JavaScript.</p>
+</li>
+<li>
+<p>Когда ифрейм уже создан, то единственный способ поменять его <code>src</code> без попадания запроса в историю посещений:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// newSrc - новый адрес
+iframeDoc.location.replace(newSrc);</code></pre>
+</div>
+</div>
+</div><p>Вы можете возразить: «но ведь <code>iframeDoc</code> не всегда доступен! <code>iframe</code> может быть с другого домена – как быть тогда?». Ответ: вместо смены <code>src</code> этого ифрейма – создать новый, с новым <code>src</code>.</p>
+</li>
+<li>
+<p>POST-запросы в <code>iframe</code> всегда попадают в историю посещений.</p>
+</li>
+<li>
+<p>… Но если <code>iframe</code> удалить, то лишняя история тоже исчезнет :). Сделать это можно по окончании запроса.</p>
+</li>
+</ul>
+<p><strong>Таким образом, общий принцип использования <code>IFRAME</code>: динамически создать, сделать запрос, удалить.</strong></p>
+<p>Бывает так, что удалить по каким-то причинам нельзя, тогда возможны проблемы с историей, описанные выше.</p>
+<h3><a class="main__anchor" href="#функция-createiframe" name="функция-createiframe">Функция createIframe</a></h3><p>Приведенная ниже функция <code>createIframe(name, src, debug)</code> кросс-браузерно создаёт ифрейм с данным именем и <code>src</code>.</p>
+<p>Аргументы:</p>
+<dl>
+<dt><code>name</code></dt>
+<dd>Имя и <code>id</code> ифрейма</dd>
+<dt><code>src</code></dt>
+<dd>Исходный адрес ифрейма. Необязательный параметр.</dd>
+<dt><code>debug</code></dt>
+<dd>Если параметр задан, то ифрейм после создания не прячется.</dd>
+</dl>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function createIframe(name, src, debug) {
+  src = src || 'javascript:false'; // пустой src
+
+  var tmpElem = document.createElement('div');
+
+  // в старых IE нельзя присвоить name после создания iframe
+  // поэтому создаём через innerHTML
+  tmpElem.innerHTML = '&lt;iframe name="' + name + '" id="' + name + '" src="' + src + '"&gt;';
+  var iframe = tmpElem.firstChild;
+
+  if (!debug) {
+    iframe.style.display = 'none';
+  }
+
+  document.body.appendChild(iframe);
+
+  return iframe;
+}</code></pre>
+</div>
+</div>
+</div><p>Ифрейм здесь добавляется к <code>document.body</code>. Конечно, вы можете исправить этот код и добавлять его в любое другое место документа.</p>
+<p>Кстати, при вставке, если не указан <code>src</code>, тут же произойдёт событие <code>iframe.onload</code>. Пока обработчиков нет, поэтому оно будет проигнорировано.</p>
+<h3><a class="main__anchor" href="#функция-posttoiframe" name="функция-posttoiframe">Функция postToIframe</a></h3><p>Функция <code>postToIframe(url, data, target)</code> отправляет POST-запрос в ифрейм с именем <code>target</code>, на адрес <code>url</code> с данными <code>data</code>.</p>
+<p>Аргументы:</p>
+<dl>
+<dt><code>url</code></dt>
+<dd>URL, на который отправлять запрос.</dd>
+<dt><code>data</code></dt>
+<dd>Объект содержит пары <code>ключ:значение</code> для полей формы. Значение будет приведено к строке.</dd>
+<dt><code>target</code></dt>
+<dd>Имя ифрейма, в который отправлять данные.</dd>
+</dl>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// Например: postToIframe('/vote', {mark:5}, 'frame1')
+
+function postToIframe(url, data, target) {
+  var phonyForm = document.getElementById('phonyForm');
+  if (!phonyForm) {
+    // временную форму создаем, если нет
+    phonyForm = document.createElement("form");
+    phonyForm.id = 'phonyForm';
+    phonyForm.style.display = "none";
+    phonyForm.method = "POST";
+    document.body.appendChild(phonyForm);
+  }
+
+  phonyForm.action = url;
+  phonyForm.target = target;
+
+  // заполнить форму данными из объекта
+  var html = [];
+  for (var key in data) {
+    var value = String(data[key]).replace(/"/g, "&amp;quot;");
+    // в старых IE нельзя указать name после создания input
+    // поэтому используем innerHTML вместо DOM-методов
+    html.push("&lt;input type='hidden' name=\"" + key + "\" value=\"" + value + "\"&gt;");
+  }
+  phonyForm.innerHTML = html.join('');
+
+  phonyForm.submit();
+}</code></pre>
+</div>
+</div>
+</div><p>Эта функция формирует форму динамически, но, конечно, это лишь один из возможных сценариев использования.</p>
+<p>В <code>IFRAME</code> можно отправлять и существующую форму, включающую файловые и другие поля.</p>
+<h2><a class="main__anchor" href="#запросы-get-и-post" name="запросы-get-и-post">Запросы GET и POST</a></h2><p>Общий алгоритм обращения к серверу через ифрейм:</p>
+<ol>
+<li>
+<p>Создаём <code>iframe</code> со случайным именем <code>iframeName</code>.</p>
+</li>
+<li>
+<p>Создаём в основном окне объект <code>CallbackRegistry</code>, в котором в <code>CallbackRegistry[iframeName]</code> сохраняем функцию, которая будет обрабатывать результат.</p>
+</li>
+<li>
+<p>Отправляем GET или POST-запрос в него.</p>
+</li>
+<li>
+<p>Сервер отвечает как-то так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script&gt;
+  parent.CallbackRegistry[window.name]({данные});
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>…То есть, вызывает из основного окна функцию обработки (<code>window.name</code> в ифрейме – его имя).</p>
+</li>
+<li>
+<p>Дополнительно нужен обработчик <code>iframe.onload</code> – он сработает и проверит, выполнилась ли функция <code>CallbackRegistry[window.name]</code>. Если нет, значит какая-то ошибка. Сервер при нормальном потоке выполнения всегда отвечает её вызовом.</p>
+</li>
+</ol>
+<p>Подробнее можно понять процесс, взглянув на код.</p>
+<p>Мы будем использовать в нём две функции – одну для GET, другую – для POST:</p>
+<ul>
+<li><code>iframeGet(url, onSuccess, onError)</code> – для GET-запросов на <code>url</code>. При успешном запросе вызывается <code>onSuccess(result)</code>, при неуспешном: <code>onError()</code>.</li>
+<li><code>iframePost(url, data, onSuccess, onError)</code> – для POST-запросов на <code>url</code>. Значением <code>data</code> должен быть объект <code>ключ:значение</code> для пересылаемых данных, он конвертируется в поля формы.</li>
+</ul>
+<p>Пример в действии, возвращающий дату сервера при GET и разницу между датами клиента и сервера при POST:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">iframe.js</div><div class="code-tabs__switch">server.js</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/ajax-iframe/date/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_download" href="/tutorial/zipview/date.zip?plunkId=UH0pcXt365slbph5z0zU" target="_blank"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/ajax-iframe/date/"></iframe></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>function createIframe(name, src, debug) {
+  src = src || 'javascript:false'; // пустой src
+
+  var tmpElem = document.createElement('div');
+
+  // в старых IE нельзя присвоить name после создания iframe, поэтому создаём через innerHTML
+  tmpElem.innerHTML = '&lt;iframe name="' + name + '" id="' + name + '" src="' + src + '"&gt;';
+  var iframe = tmpElem.firstChild;
+
+  if (!debug) {
+    iframe.style.display = 'none';
+  }
+
+  document.body.appendChild(iframe);
+
+  return iframe;
+}
+
+// функция постит объект-хэш content в виде формы с нужным url , target
+// напр. postToIframe('/count.php', {a:5,b:6}, 'frame1')
+
+function postToIframe(url, data, target) {
+  var phonyForm = document.getElementById('phonyForm');
+  if (!phonyForm) {
+    // временную форму создаем, если нет
+    phonyForm = document.createElement("form");
+    phonyForm.id = 'phonyForm';
+    phonyForm.style.display = "none";
+    phonyForm.method = "POST";
+    phonyForm.enctype = "multipart/form-data";
+    document.body.appendChild(phonyForm);
+  }
+
+  phonyForm.action = url;
+  phonyForm.target = target;
+
+  // заполнить форму данными из объекта
+  var html = [];
+  for (var key in data) {
+    var value = String(data[key]).replace(/"/g, "&amp;quot;");
+    html.push("&lt;input type='hidden' name=\"" + key + "\" value=\"" + value + "\"&gt;");
+  }
+  phonyForm.innerHTML = html.join('');
+
+  phonyForm.submit();
+}
+
+
+var CallbackRegistry = {}; // реестр
+
+function iframeGet(url, onSuccess, onError) {
+
+  var iframeOk = false; // флаг успешного ответа сервера
+
+  var iframeName = Math.random(); // случайное имя для ифрейма
+  var iframe = createIframe(iframeName, url);
+
+  CallbackRegistry[iframeName] = function(data) {
+    iframeOk = true; // сервер ответил успешно
+    onSuccess(data);
+  }
+
+  iframe.onload = function() {
+    iframe.parentNode.removeChild(iframe); // очистка
+    delete CallbackRegistry[iframeName];
+    if (!iframeOk) onError(); // если сервер не ответил как надо - что-то не так
+  }
+
+}
+
+// аналогично iframeGet, но в postToIframe передаются данные data
+function iframePost(url, data, onSuccess, onError) {
+
+  var iframeOk = false;
+
+  var iframeName = Math.random();
+  var iframe = createIframe(iframeName);
+
+  CallbackRegistry[iframeName] = function(data) {
+    iframeOk = true;
+    onSuccess(data);
+  }
+
+  iframe.onload = function() {
+    iframe.parentNode.removeChild(iframe); // очистка
+    delete CallbackRegistry[iframeName];
+
+    if (!iframeOk) onError(); // если коллбэк не вызвался - что-то не так
+  }
+
+  postToIframe(url, data, iframeName);
+}</code></pre></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>var http = require('http');
+var url = require('url');
+var static = require('node-static');
+var file = new static.Server('.', {
+  cache: 0
+});
+var multiparty = require('multiparty');
+
+function accept(req, res) {
+
+  var urlParsed = url.parse(req.url, true);
+  res.setHeader('Cache-Control', 'no-cache');
+
+  if (urlParsed.pathname == '/server') {
+    res.end(wrap(new Date()));
+    return;
+  } else if (urlParsed.pathname == '/diff') {
+
+    var form = new multiparty.Form();
+    form.parse(req, function(err, fields, files) {
+      var diff = new Date() - fields.clientDate[0];
+      res.end(wrap(diff));
+    });
+
+  } else {
+    file.serve(req, res);
+  }
+
+}
+
+function wrap(data) {
+  return '&lt;script&gt;parent.CallbackRegistry[window.name](' + JSON.stringify(data) + ')&lt;/script&gt;';
+}
+
+
+// ------ запустить сервер -------
+
+if (!module.parent) {
+  http.createServer(accept).listen(8080);
+} else {
+  exports.accept = accept;
+}</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;body&gt;
+
+  &lt;script src="iframe.js"&gt;&lt;/script&gt;
+
+  &lt;script&gt;
+    function ok(result) {
+      alert('result: ' + result);
+    }
+
+    function fail() {
+      alert('fail');
+    }
+  &lt;/script&gt;
+
+  &lt;button onclick="iframeGet('server', ok, fail)"&gt;iframeGet server&lt;/button&gt;
+
+  &lt;button onclick="iframePost('diff', {clientDate: +new Date}, ok, fail)"&gt;iframePost diff&lt;/button&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>Прямой вызов функции внешнего окна из ифрейма отлично работает, потому что они с одного домена. Если с разных, то нужны дополнительные действия, например:</p>
+<ul>
+<li>
+<p>В IE8+ есть интерфейс <a href="https://developer.mozilla.org/en-US/docs/DOM/window.postMessage">postMessage</a> для общения между окнами с разных доменов.</p>
+</li>
+<li>
+<p>В любых, даже самых старых IE, можно обмениваться данными через <code>window.name</code>. Эта переменная хранит «имя» окна или фрейма, которое не меняется при перезагрузке страницы.</p>
+<p>Поэтому если мы сделали <code>POST</code> в <code>&lt;iframe&gt;</code> на другой домен и он поставил <code>window.name = "Вася"</code>, а затем сделал редирект на основной домен, то эти данные станут доступны внешней странице.</p>
+</li>
+<li>
+<p>Также в совсем старых IE можно обмениваться данными через хеш, то есть фрагмент URL после <code>#</code>. Его изменение доступно между ифреймами с разных доменов и не приводит к перезагрузке страницы. Таким образом они могут передавать данные друг другу. Есть готовые библиотеки, которые реализуют этот подход, например <a href="http://ternarylabs.github.io/porthole/">Porthole</a>.</p>
+</li>
+</ul>
+<h2><a class="main__anchor" href="#iframe-для-comet" name="iframe-для-comet">IFRAME для COMET</a></h2><p>Бесконечный IFRAME – самый старый способ организации COMET. Когда-то он был основой AJAX-приложений, а сейчас – используется лишь в случаях, когда браузер не поддерживает современный стандарт WebSocket, то есть для IE9-.</p>
+<p>Этот способ основан на том, что браузер читает страницу последовательно и обрабатывает все новые теги по мере того, как сервер их присылает.</p>
+<p>Классическая реализация – это когда клиент создает невидимый IFRAME, ведущий на служебный URL. Сервер, получив соединение на этот URL, не закрывает его, а
+время от времени присылает блоки сообщений <code>&lt;script&gt;…javascript…&lt;/script&gt;</code>. Появившийся в IFRAME’е javascript тут же выполняется браузером, передавая информацию на основную страницу.</p>
+<p>Таким образом, для передачи данных используется «бесконечный» ифрейм, через который сервер присылает все новые данные.</p>
+<p>Схема работы:</p>
+<ol>
+<li>Создаётся <code>&lt;iframe src="COMET_URL"&gt;</code>, по адресу <code>COMET_URL</code> расположен сервер.</li>
+<li>Сервер выдаёт начало («шапку») документа и останавливается, оставляя соединение активным.</li>
+<li>Когда сервер хочет что-то отправить – он пишет в соединение <code>&lt;script&gt;parent.onMessage(сообщение)&lt;/script&gt;</code> Браузер тут же выполняет этот скрипт – так сообщение приходит на клиент.</li>
+<li>Ифрейм, в теории, грузится бесконечно. Его завершение означает обрыв канала связи. Его можно поймать по <code>iframe.onload</code> и заново открыть соединение (создать новый <code>iframe</code>).</li>
+</ol>
+<p>Также ифрейм можно пересоздавать время от времени, для очистки памяти от старых сообщений.</p>
+<figure><div class="image" style="width:492px">
+<div class="image__ratio" style="padding-top:46.34146341463415%"></div>
+<img alt="" class="image__image" height="228" src="article/ajax-iframe/comet.png" width="492">
+</img></div></figure><p>Ифрейм при этом работает только на получение данных с сервера, как альтернатива <a href="/server-sent-events">Server Sent Events</a>. Для запросов используется обычный <code>XMLHttpRequest</code>.</p>
+<h2><a class="main__anchor" href="#обход-проблем-с-ie" name="обход-проблем-с-ie">Обход проблем с IE</a></h2><p>Такое использование ифреймов является хаком. Поэтому есть ряд проблем:</p>
+<ol>
+<li>Показывается индикатор загрузки, «курсор-часики».</li>
+<li>При POST в <code>&lt;iframe&gt;</code> раздаётся звук «клика».</li>
+<li>Браузер буферизует начало страницы.</li>
+</ol>
+<p>Мы должны эти проблемы решить, прежде всего, в IE, поскольку в других браузерах есть <a href="/websockets">WebSocket</a> и <a href="/server-sent-events">Server Sent Events</a> .</p>
+<p>Проще всего решить последнюю – IE не начинает обработку страницы, пока она не загрузится до определенного размера.</p>
+<p>Поэтому в таком <code>IFRAME</code> первые несколько сообщений задержатся:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+  &lt;body&gt;
+  &lt;script&gt;parent.onMessage("привет");&lt;/script&gt;
+  &lt;script&gt;parent.onMessage("от сервера");&lt;/script&gt;
+  ...</code></pre>
+</div>
+</div>
+</div><p>Решение – забить начало ифрейма чем-нибудь, поставить, например, килобайт пробелов в начале:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;body&gt;
+  ******* 1 килобайт пробелов, а потом уже сообщения ******
+  &lt;script&gt;
+    parent.onMessage("привет");
+  &lt;/script&gt;
+  &lt;script&gt;
+    parent.onMessage("от сервера");
+  &lt;/script&gt;
+  ...</code></pre>
+</div>
+</div>
+</div><p>Для решения проблемы с индикацией загрузки и клика мы можем использовать безопасный ActiveX-объект <code>htmlfile</code>. IE не требует разрешений на его создание. Фактически, это независимый HTML-документ.</p>
+<p>Оказывается, если <code>iframe</code> создать в нём, то никакой анимации и звуков не будет.</p>
+<p>Итак, схема:</p>
+<ol>
+<li>Основное окно <code>main</code> создаёт вспомогательный объект: <code>new ActiveXObject("htmlfile")</code>. Это HTML-документ со своим <code>window</code>, похоже на встроенный <code>iframe</code>.</li>
+<li>В <code>htmlfile</code> записывается <code>iframe</code>.</li>
+<li>Цепочка общения: основное окно – <code>htmlfile</code> – ифрейм.</li>
+</ol>
+<h3><a class="main__anchor" href="#iframeactivexget" name="iframeactivexget">iframeActiveXGet</a></h3><p>На самом деле всё еще проще, если посмотреть на код:</p>
+<p>Метод <code>iframeActiveXGet</code> по существу идентичен обычному <code>iframeGet</code>, которое мы рассмотрели. Единственное отличие – вместо <code>createIframe</code> используется особый метод <code>createActiveXFrame</code>:</p>
+<div class="code-example" data-highlight-block="5-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function iframeActiveXGet(url, onSuccess, onError) {
+
+  var iframeOk = false;
+
+  var iframeName = Math.random();
+  var iframe = createActiveXFrame(iframeName, url);
+
+  CallbackRegistry[iframeName] = function(data) {
+    iframeOk = true;
+    onSuccess(data);
+  }
+
+  iframe.onload = function() {
+    iframe.parentNode.removeChild(iframe); // очистка
+    delete CallbackRegistry[iframeName];
+    if (!iframeOk) onError(); // если коллбэк не вызвался - что-то не так
+  }
+
+}</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#createactivexframe" name="createactivexframe">createActiveXFrame</a></h3><p>В этой функции творится вся IE-магия:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function createActiveXFrame(name, src) {
+  // (1)
+  var htmlfile = window.htmlfile;
+  if (!htmlfile) {
+    htmlfile = window.htmlfile = new ActiveXObject("htmlfile");
+    htmlfile.open();
+    // (2)
+    htmlfile.write("&lt;html&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;");
+    htmlfile.close();
+    // (3)
+    htmlfile.parentWindow.CallbackRegistry = CallbackRegistry;
+  }
+
+  // (4)
+  src = src || 'javascript:false';
+  htmlfile.body.insertAdjacentHTML('beforeEnd',
+    "&lt;iframe name='" + name + "' src='" + src + "'&gt;&lt;/iframe&gt;");
+  return htmlfile.body.lastChild;
+}</code></pre>
+</div>
+</div>
+</div><ol>
+<li>
+<p>Вспомогательный объект <code>htmlfile</code> будет один и он будет глобальным. Можно и спрятать переменную в замыкании. Смысл в том, что в один <code>htmlfile</code> можно записать много ифреймов, так что не будем множить сущности и занимать ими лишнюю память.</p>
+</li>
+<li>
+<p>В <code>htmlfile</code> можно записать любой текст и, при необходимости, через  <code>document.write('&lt;script&gt;...&lt;\/script&gt;)</code>. Здесь мы делаем пустой документ.</p>
+</li>
+<li>
+<p>Когда загрузится <code>iframe</code>, он сделает вызов:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script&gt;
+  parent.CallbackRegistry[window.name](объект с данными);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Здесь <code>parent'ом</code> для <code>iframe'а</code> будет <code>htmlfile</code>, т.е. <code>CallbackRegistry</code> будет искаться среди переменных соответствующего ему окна, а вовсе не верхнего <code>window</code>.</p>
+<p>Окно для <code>htmlfile</code> доступно как <code>htmlfile.parentWindow</code>, копируем в него ссылку на реестр коллбэков <code>CallbackRegistry</code>. Теперь ифрейм его найдёт.</p>
+</li>
+<li>
+<p>Далее вставляем ифрейм в документ. В старых <code>IE</code> нельзя поменять <code>name</code> ифрейму через DOM, поэтому вставляем строкой через <code>insertAdjacentHTML</code>.</p>
+</li>
+</ol>
+<p>Пример в действии (только IE):</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">activex.js</div><div class="code-tabs__switch">server.js</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/ajax-iframe/date-activex/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_download" href="/tutorial/zipview/date-activex.zip?plunkId=kUsjarLGoPwGhcy9RNze" target="_blank"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/ajax-iframe/date-activex/"></iframe></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>var CallbackRegistry = {}; // реестр
+
+function iframeActiveXGet(url, onSuccess, onError) {
+
+  var iframeOk = false;
+
+  var iframeName = Math.random();
+  var iframe = createActiveXFrame(iframeName, url);
+
+  CallbackRegistry[iframeName] = function(data) {
+    iframeOk = true;
+    onSuccess(data);
+  }
+
+  iframe.onload = function() {
+    iframe.parentNode.removeChild(iframe); // очистка
+    delete CallbackRegistry[iframeName];
+    if (!iframeOk) onError(); // если коллбэк не вызвался - что-то не так
+  }
+
+}
+
+
+function createActiveXFrame(name, src) {
+  var htmlfile = window.htmlfile;
+  if (!htmlfile) {
+    htmlfile = window.htmlfile = new ActiveXObject("htmlfile");
+    htmlfile.open();
+    htmlfile.write("&lt;html&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;");
+    htmlfile.close();
+    htmlfile.parentWindow.CallbackRegistry = CallbackRegistry;
+  }
+
+  src = src || 'javascript:false'; // пустой src
+  htmlfile.body.insertAdjacentHTML('beforeEnd', "&lt;iframe name='" + name + "' src='" + src + "'&gt;&lt;/iframe&gt;");
+  return htmlfile.body.lastChild; // window in .document.parentWindow
+}</code></pre></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>var http = require('http');
+var url = require('url');
+var static = require('node-static');
+var file = new static.Server('.', {
+  cache: 0
+});
+var multiparty = require('multiparty');
+
+function accept(req, res) {
+
+  var urlParsed = url.parse(req.url, true);
+  res.setHeader('Cache-Control', 'no-cache');
+
+  if (urlParsed.pathname == '/server') {
+    res.end(wrap(new Date()));
+    return;
+  } else if (urlParsed.pathname == '/diff') {
+
+    var form = new multiparty.Form();
+    form.parse(req, function(err, fields, files) {
+      var diff = new Date() - fields.clientDate[0];
+      res.end(wrap(diff));
+    });
+
+  } else {
+    file.serve(req, res);
+  }
+
+}
+
+function wrap(data) {
+  return '&lt;script&gt;parent.CallbackRegistry[window.name](' + JSON.stringify(data) + ')&lt;/script&gt;';
+}
+
+
+// ------ запустить сервер -------
+
+if (!module.parent) {
+  http.createServer(accept).listen(8080);
+} else {
+  exports.accept = accept;
+}</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;body&gt;
+
+  &lt;script src="activex.js"&gt;&lt;/script&gt;
+
+  &lt;script&gt;
+    function ok(result) {
+      alert('result: ' + result);
+    }
+
+    function fail() {
+      alert('fail');
+    }
+
+    function go() {
+      if (!("ActiveXObject" in window)) {
+        alert("Только Internet Explorer");
+        return;
+      }
+      iframeActiveXGet("server", ok, fail);
+    }
+  &lt;/script&gt;
+
+
+  &lt;button onclick="go()"&gt;iframeActiveXGet server date&lt;/button&gt;
+
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>Запрос, который происходит, полностью незаметен.</p>
+<p>Метод POST делается аналогично, только форму нужно добавлять не в основное окно, а в <code>htmlfile</code>, через вызов <code>htmlfile.appendChild</code>. В остальном – всё так же, как и при обычной отправке через ифрейм.</p>
+<p>Впрочем, для COMET нужен именно GET.</p>
+<p>Можно и сочетать эти способы: если есть ActiveX: <code>if ("ActiveXObject" in window)</code> – используем методы для IE, описанные выше, а иначе – обычные методы.</p>
+<p>Вот мини-приложение с сервером на Node.JS, непрерывно получающее текущее время с сервера через <code>&lt;iframe&gt;</code>, сочетающее эти подходы:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">iframeComet.js</div><div class="code-tabs__switch">server.js</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/ajax-iframe/date-comet/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_download" href="/tutorial/zipview/date-comet.zip?plunkId=ITCZaSqUs8hNWovk7rut" target="_blank"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/ajax-iframe/date-comet/"></iframe></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>var IframeComet = new function() {
+  var self = this;
+
+  var connectTries = 0,
+    reconnectTimer;
+  var htmlfile; // for ie only
+  var iframe;
+
+  this.onConnected = function() {
+    connectTries = 0;
+    clearTimeout(reconnectTimer);
+  };
+
+  this.onMessage = function(message) { /* ... */ };
+
+  this.onError = function(err) { /* ... */ };
+
+  this.open = function(url) {
+    connectTries++;
+
+    if (connectTries &gt; 3) {
+      self.onError("Unable to connect");
+    }
+
+    if ("ActiveXObject" in window) { // IE
+      createActiveXFrame(url);
+    } else {
+      createIframe(url);
+    }
+
+    reconnectTimer = setTimeout(function() {
+      if (!self.isConnected()) {
+        self.open(url);
+      }
+    }, connectTries * 2000);
+
+    // в Chrome не срабатывает при обрыве соединения,
+    // так что используем там другой =) транспорт
+    iframe.onload = function() {
+      self.open(url);
+    };
+
+  };
+
+  this.isConnected = function() {
+    return connectTries == 0; // onConnect обнуляет connectTries
+  }
+
+  function cleanIframe() {
+    if (iframe) {
+      iframe.src = "javascript:false";
+      iframe.parentNode.removeChild(iframe); // очистка
+    }
+  }
+
+  function createIframe(src) {
+    cleanIframe();
+
+    iframe = document.createElement('iframe');
+    iframe.src = src || 'javascript:false';
+    iframe.style.display = 'none';
+
+    document.body.appendChild(iframe);
+  }
+
+
+  function createActiveXFrame(src) {
+    cleanIframe();
+
+    if (!htmlfile) {
+      htmlfile = new ActiveXObject("htmlfile");
+      htmlfile.open();
+      htmlfile.write("&lt;html&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;");
+      htmlfile.close();
+      htmlfile.parentWindow.IframeComet = self;
+    }
+
+    src = src || 'javascript:false'; // пустой src
+    htmlfile.body.insertAdjacentHTML('beforeEnd', "&lt;iframe src='" + src + "'&gt;&lt;/iframe&gt;");
+    iframe = htmlfile.body.lastChild; // window in .document.parentWindow
+  }
+
+}</code></pre></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>var http = require('http');
+var url = require('url');
+var static = require('node-static');
+var file = new static.Server('.', {
+  cache: 0
+});
+
+
+function accept(req, res) {
+
+  if (req.url == '/comet') {
+    res.writeHead(200, {
+      'Content-Type': 'text/html; charset=utf-8'
+    });
+
+    res.write('&lt;!DOCTYPE HTML&gt;&lt;html&gt; \
+			&lt;head&gt;&lt;meta junk="' + new Array(2000).join('*') + '"/&gt; \
+			&lt;script&gt; \
+			  var i = parent.IframeComet; \
+			  i.onConnected()&lt;/script&gt; \
+			&lt;/head&gt;&lt;body&gt;');
+
+    setInterval(function() {
+      var now = new Date();
+      var timeStr = now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds();
+      res.write('&lt;script&gt;i.onMessage("' + timeStr + '")&lt;/script&gt;');
+    }, 1000);
+
+    return;
+  } else {
+    file.serve(req, res);
+  }
+
+}
+
+
+// ------ запустить сервер -------
+
+if (!module.parent) {
+  http.createServer(accept).listen(8080);
+} else {
+  exports.accept = accept;
+}</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;body&gt;
+
+  &lt;script src="iframeComet.js"&gt;&lt;/script&gt;
+
+  &lt;button onclick="go()"&gt;IframeComet.open("comet");&lt;/button&gt;
+
+
+  &lt;div id="showElem"&gt;&lt;/div&gt;
+
+  &lt;script&gt;
+    IframeComet.onMessage = IframeComet.onError = show;
+
+    function show(msg) {
+      showElem.innerHTML = msg;
+    }
+
+    function go() {
+      IframeComet.open("comet");
+    }
+  &lt;/script&gt;
+
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>Ещё раз заметим, что обычно такое сочетание не нужно, так как если не IE9-, то можно использовать более современные средства для COMET.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Iframe позволяет делать «AJAX»-запросы и хитро обходить кросс-доменные ограничения в IE7-. Обычно для этого используют либо <code>window.name</code> с редиректом, либо хеш с библиотекой типа <a href="https://github.com/ternarylabs/porthole">Porthole</a>.</li>
+<li>В IE9- iframe можно использовать для COMET. В IE10 уже есть WebSocket.</li>
+</ul>
+<p>Существует ряд уже готовых клиент-серверных библиотек, которые реализуют AJAX/COMET, в том числе и через iframe, мы рассмотрим их позже. Поэтому совсем не обязательно делать «с нуля». Хотя, как можно видеть из главы, это совсем несложно.</p>
+</cut></div></meta></article></main></div></body></html>

@@ -1,0 +1,555 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Шаблонизатор LoDash" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В этой главе мы рассмотрим <em>шаблонизацию</em> – удобный способ генерации HTML по «шаблону» и данным.</p>
+<cut>
+<p>Большинство виджетов, которые мы видели ранее, получают готовый HTML/DOM и «оживляют» его. Это типичный случай в сайтах, где JavaScript – на ролях «второго помощника». Разметка, CSS уже есть, от JavaScript, условно говоря, требуются лишь обработчики, чтобы менюшки заработали.</p>
+<p>Но в сложных интерфейсах разметка изначально отсутствует на странице. Компоненты генерируют свой DOM сами, динамически, на основе данных, полученных с сервера или из других источников.</p>
+<h2><a class="main__anchor" href="#зачем-нужны-шаблоны" name="зачем-нужны-шаблоны">Зачем нужны шаблоны?</a></h2><p>Ранее мы уже видели код <code>Menu</code>, который сам создаёт свой элемент:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Menu(options) {
+  // ... приведены только методы для генерации DOM ...
+
+  function render() {
+    elem = document.createElement('div');
+    elem.className = "menu";
+
+    var titleElem = document.createElement('span');
+    elem.appendChild(titleElem);
+    titleElem.className = "title";
+    titleElem.textContent = options.title;
+
+    elem.onmousedown = function() {
+      return false;
+    };
+
+    elem.onclick = function(event) {
+      if (event.target.closest('.title')) {
+        toggle();
+      }
+    }
+
+  }
+
+  function renderItems() {
+    var items = options.items || [];
+    var list = document.createElement('ul');
+    items.forEach(function(item) {
+      var li = document.createElement('li');
+      li.textContent = item;
+      list.appendChild(li);
+    });
+    elem.appendChild(list);
+  }
+  // ...
+}</code></pre>
+</div>
+</div>
+</div><p>Понятен ли этот код? Очевидно ли, какой HTML генерируют методы <code>render</code>, <code>renderItems</code>?</p>
+<p>С первого взгляда – вряд ли. Нужно как минимум внимательно посмотреть и продумать код, чтобы разобраться, какая именно DOM-структура создаётся.</p>
+<p>…А что, если нужно изменить создаваемый HTML? …А что, если эта задача досталась не программисту, который написал этот код, а верстальщику, который с HTML/CSS проекта знаком отлично, но этот JS-код видит впервые? Вероятность ошибок при этом зашкаливает за все разумные пределы.</p>
+<p>К счастью, генерацию HTML можно упростить. Для этого воспользуемся библиотекой шаблонизации.</p>
+<h2><a class="main__anchor" href="#пример-шаблона" name="пример-шаблона">Пример шаблона</a></h2><p><em>Шаблон</em> – это строка в специальном формате, которая путём подстановки значений (текст сообщения, цена и т.п.) и выполнения встроенных фрагментов кода превращается в DOM/HTML.</p>
+<p>Пример шаблона для меню:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div class="menu"&gt;
+  &lt;span class="title"&gt;&lt;%-title%&gt;&lt;/span&gt;
+  &lt;ul&gt;
+    &lt;% items.forEach(function(item) { %&gt;
+    &lt;li&gt;&lt;%-item%&gt;&lt;/li&gt;
+    &lt;% }); %&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</div><p>Как видно, это обычный HTML, с вставками вида <code>&lt;% ... %&gt;</code>.</p>
+<p>Для работы с таким шаблоном используется специальная функция <code>_.template</code>, которая предоставляется фреймворком <a href="http://lodash.com/docs#template">LoDash</a>, её синтаксис мы подробно посмотрим далее.</p>
+<p>Пример использования <code>_.template</code> для генерации HTML с шаблоном выше:</p>
+<div class="code-example" data-highlight-block="0-1" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// сгенерировать HTML, используя шаблон tmpl (см. выше)
+// с данными title и items
+var html = _.template(tmpl)({
+  title: "Сладости",
+  items: [
+    "Торт",
+    "Печенье",
+    "Пирожное"
+  ]
+});</code></pre>
+</div>
+</div>
+</div><p>Значение <code>html</code> в результате:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div class="menu"&gt;
+  &lt;span class="title"&gt;Сладости&lt;/span&gt;
+  &lt;ul&gt;
+    &lt;li&gt;Торт&lt;/li&gt;
+    &lt;li&gt;Печенье&lt;/li&gt;
+    &lt;li&gt;Сладости&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</div><p>Этот код гораздо проще, чем JS-код, не правда ли? Шаблон очень наглядно показывает, что в итоге должно получиться. В отличие от кода, в шаблоне первичен текст, а вставок кода обычно мало.</p>
+<p>Давайте подробнее познакомимся с <code>_.template</code> и синтаксисом шаблонов.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Holy war detected!</span></div>
+<div class="important__content"><p>Способов шаблонизации и, в особенности, синтаксисов шаблонов, примерно столько же, сколько способов <a href="http://lurkmore.to/%D0%9A%D0%B0%D0%BA_%D0%BF%D0%BE%D0%B9%D0%BC%D0%B0%D1%82%D1%8C_%D0%BB%D1%8C%D0%B2%D0%B0_%D0%B2_%D0%BF%D1%83%D1%81%D1%82%D1%8B%D0%BD%D0%B5">поймать льва в пустыне</a>. Иначе говоря… много.</p>
+<p>Эта глава – совершенно не место для священных войн на эту тему.</p>
+<p>Далее будет более полный обзор типов шаблонных систем, применяемых в JavaScript, но начнём мы с <code>_.template</code>, поскольку эта функция проста, быстра и демонстрирует приёмы, используемые в целом классе шаблонных систем, активно используемых в самых разных JS-проектах.</p>
+</div></div>
+<h2><a class="main__anchor" href="#синтаксис-шаблона" name="синтаксис-шаблона">Синтаксис шаблона</a></h2><p>Шаблон представляет собой строку со специальными разделителями, которых всего три:</p>
+<dl>
+<dt><code>&lt;% code %&gt;</code> – код</dt>
+<dd>
+<p>Код между разделителями <code>&lt;% ... %&gt;</code> будет выполнен «как есть»</p>
+</dd>
+<dt><code>&lt;%= expr %&gt;</code> – для вставки <code>expr</code> как HTML</dt>
+<dd>
+<p>Переменная или выражение внутри <code>&lt;%= ... %&gt;</code> будет вставлено  «как есть». Например: <code>&lt;%=title %&gt;</code> вставит значение переменной <code>title</code>, а <code>&lt;%=2+2%&gt;</code> вставит <code>4</code>.</p>
+</dd>
+<dt><code>&lt;%- expr %&gt;</code> – для вставки <code>expr</code> как текста</dt>
+<dd>
+<p>Переменная или выражение внутри <code>&lt;%- ... %&gt;</code> будет вставлено «как текст», то есть с заменой символов <code>&lt; &gt; &amp; " '</code> на соответствующие HTML-entities.</p>
+<p>Например, если <code>expr</code> содержит текст <code>&lt;br&gt;</code>, то при <code>&lt;%-expr%&gt;</code> в результат попадёт, в отличие от <code>&lt;%=expr%&gt;</code>, не HTML-тег <code>&lt;br&gt;</code>, а  текст <code>&amp;lt;br&amp;gt;</code>.</p>
+</dd>
+</dl>
+<h2><a class="main__anchor" href="#функция-template" name="функция-template">Функция _.template</a></h2><p>Для работы с шаблоном в библиотеке <a href="https://github.com/bestiejs/lodash">LoDash</a> есть функция <code>_.template(tmpl, data, options)</code>.</p>
+<p>Её аргументы:</p>
+<dl>
+<dt><code>tmpl</code></dt>
+<dd>Шаблон.</dd>
+<dt><code>options</code></dt>
+<dd>Необязательные настройки, например можно поменять разделители.</dd>
+</dl>
+<p>Эта функция запускает «компиляцию» шаблона <code>tmpl</code> и возвращает результат в виде функции, которую далее можно запустить с данными и получить строку-результат.</p>
+<p>Вот так:</p>
+<div class="code-example" data-highlight-block="0-0,3-3,8-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// Шаблон
+var tmpl = _.template('&lt;span class="title"&gt;&lt;%=title%&gt;&lt;/span&gt;');
+
+// Данные
+var data = {
+  title: "Заголовок"
+};
+
+// Результат подстановки
+alert( tmpl(data) ); // &lt;span class="title"&gt;Заголовок&lt;/span&gt;</code></pre>
+</div>
+</div>
+</div><p>Пример выше похож на операцию «поиск-и-замена»: шаблон просто заменил <code>&lt;%=title%&gt;</code> на значение свойства <code>data.title</code>.</p>
+<p>Но возможность вставки JS-кода делает шаблоны сильно мощнее.</p>
+<p>Например, вот шаблон для генерации списка от <code>1</code> до <code>count</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// используется \, чтобы объявить многострочную переменную-текст шаблона
+var tmpl = '&lt;ul&gt;\
+  &lt;% for (var i=1; i&lt;=count; i++) { %&gt; \
+    &lt;li&gt;&lt;%=i%&gt;&lt;/li&gt; \
+  &lt;% } %&gt;\
+&lt;/ul&gt;';
+alert( _.template(tmpl)({count: 5}) ); // &lt;ul&gt;&lt;li&gt;1&lt;/li&gt;&lt;li&gt;2&lt;/li&gt;...&lt;/ul&gt;</code></pre>
+</div>
+</div>
+</div><p>Здесь в результат попал сначала текст <code>&lt;ul&gt;</code>, потом выполнился код <code>for</code>, который последовательно сгенерировал элементы списка, и затем список был закрыт <code>&lt;/ul&gt;</code>.</p>
+<h2><a class="main__anchor" href="#хранение-шаблона-в-документе" name="хранение-шаблона-в-документе">Хранение шаблона в документе</a></h2><p>Шаблон – это многострочный HTML-текст. Записывать его прямо в скрипте – неудобно.</p>
+<p>Один из альтернативных способов объявления шаблона – записать его в HTML, в тег <code>&lt;script&gt;</code> с нестандартным <code>type</code>, например <code>"text/template"</code>:</p>
+<div class="code-example" data-highlight-inline="0:14-27" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script type="text/template" id="menu-template"&gt;
+&lt;div class="menu"&gt;
+  &lt;span class="title"&gt;&lt;%-title%&gt;&lt;/span&gt;
+&lt;/div&gt;
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Если <code>type</code> не знаком браузеру, то содержимое такого скрипта игнорируется, однако оно доступно при помощи <code>innerHTML</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var template = document.getElementById('menu-template').innerHTML;</code></pre>
+</div>
+</div>
+</div><p>В данном случае выбран <code>type="text/template"</code>, однако подошёл бы и любой другой нестандартный, например <code>text/html</code>. Главное, что браузер такой скрипт никак не обработает. То есть, это всего лишь способ передать строку шаблона в HTML.</p>
+<p>Полный пример цикла с подключением библиотеки и шаблоном в HTML:</p>
+<div class="code-example" data-demo-height="150" data-highlight-block="15-17" data-highlight-inline="4:8-28" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!-- библиотека LoDash --&gt;
+&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.3.0/lodash.js"&gt;&lt;/script&gt;
+
+&lt;!-- шаблон для списка от 1 до count --&gt;
+&lt;script type="text/template" id="list-template"&gt;
+&lt;ul&gt;
+  &lt;% for (var i=1; i&lt;=count; i++) { %&gt;
+  &lt;li&gt;&lt;%=i%&gt;&lt;/li&gt;
+  &lt;% } %&gt;
+&lt;/ul&gt;
+&lt;/script&gt;
+
+&lt;script&gt;
+  var tmpl = _.template(document.getElementById('list-template').innerHTML);
+
+  // ..а вот и результат
+  var result = tmpl({count: 5});
+  document.write( result );
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#как-работает-функция-template" name="как-работает-функция-template">Как работает функция _.template?</a></h2><p>Понимание того, как работает <code>_.template</code>, очень важно для отладки ошибок в шаблонах.</p>
+<p>Как обработка шаблонов устроена внутри? За счёт чего организована возможность перемежать с текстом произвольный JS-код?</p>
+<p>Оказывается, очень просто.</p>
+<p>Вызов <code>_.template(str)</code> разбивает строку <code>str</code> по разделителям и, при помощи <code>new Function</code> создаёт на её основе JavaScript-функцию. Тело этой функции создаётся таким образом, что код, который в шаблоне оформлен как <code>&lt;% ... %&gt;</code> – попадает в неё «как есть», а переменные и текст прибавляются к специальному временному «буферу», который в итоге возвращается.</p>
+<p>Взглянем на пример:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var compiled = _.template("&lt;h1&gt;&lt;%=title%&gt;&lt;/h1&gt;");
+
+alert( compiled );</code></pre>
+</div>
+</div>
+</div><p>Функция <code>compiled</code>, которую вернул вызов <code>_template</code> из этого примера, выглядит примерно так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function(obj) {
+  obj || (obj = {});
+  var __t, __p = '', __e = _.escape;
+  with(obj) { \
+    __p += '&lt;h1&gt;' +
+      ((__t = (title)) == null ? '' : __t) +
+      '&lt;/h1&gt;';
+  }
+  return __p
+}</code></pre>
+</div>
+</div>
+</div><p>Она является результатом вызова <code>new Function("obj", "код")</code>, где <code>код</code> динамическим образом генерируется на основе шаблона:</p>
+<ol>
+<li>Вначале в коде идёт «шапка» – стандартное начало функции, в котором объявляется переменная <code>__p</code>. В неё будет записываться результат.</li>
+<li>Затем добавляется блок <code>with(obj) { ... }</code>, внутри которого в <code>__p</code> добавляются фрагменты HTML из шаблона, а также переменные из выражений <code>&lt;%=...%&gt;</code>. Код из <code>&lt;%...%&gt;</code> копируется в функцию «как есть».</li>
+<li>Затем функция завершается, и <code>return __p</code> возвращает результат.</li>
+</ol>
+<p>При вызове этой функции, например <code>compiled({title: "Заголовок"})</code>, она получает объект данных как <code>obj</code>, здесь это <code>{title: "Заголовок"}</code>, и если внутри <code>with(obj) { .. }</code> обратиться к <code>title</code>, то по правилам <a href="/with">конструкции with</a> это свойство будет получено из объекта.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Можно и без <code>with</code></span></div>
+<div class="important__content"><p>Конструкция <code>with</code> является устаревшей, но в данном случае она полезна.</p>
+<p>Так как функция создаётся через <code>new Function("obj", "код")</code> то:</p>
+<ul>
+<li>Она работает в глобальной области видимости, не имеет доступа к внешним локальным переменным.</li>
+<li>Внешний <code>use strict</code> на такую функцию не влияет, то есть даже в строгом режиме шаблон продолжит работать.</li>
+</ul>
+<p>Если мы всё же не хотим использовать <code>with</code> – нужно поставить второй параметр – <code>options</code>, указав параметр <code>variable</code> (название переменной с данными).</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( _.template("&lt;h1&gt;&lt;%=menu.title%&gt;&lt;/h1&gt;", {variable: "menu"}) );</code></pre>
+</div>
+</div>
+</div><p>Результат:</p>
+<div class="code-example" data-highlight-block="0-0" data-highlight-inline="0:9-13" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function(menu) {
+  var __t, __p = '';
+  __p += '&lt;h1&gt;' +
+    ((__t = (menu.title)) == null ? '' : __t) +
+    '&lt;/h1&gt;';
+  return __p
+}</code></pre>
+</div>
+</div>
+</div><p>При таком подходе переменная <code>title</code> уже не будет искаться в объекте данных автоматически, поэтому нужно будет обращаться к ней как <code>&lt;%=menu.title%&gt;</code>.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Кеширование скомпилированных шаблонов</span></div>
+<div class="important__content"><p>Чтобы не компилировать один и тот же шаблон много раз, результаты обычно кешируют.</p>
+<p>Например, глобальная функция <code>getTemplate("menu-template")</code> может доставать шаблон из HTML, компилировать, результат запоминать и сразу отдавать при последующих обращениях к тому же шаблону.</p>
+</div></div>
+<h3><a class="main__anchor" href="#меню-на-шаблонах" name="меню-на-шаблонах">Меню на шаблонах</a></h3><p>Рассмотрим для наглядности полный пример меню на шаблонах.</p>
+<p>HTML (шаблоны):</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script type="text/template" id="menu-template"&gt;
+&lt;div class="menu"&gt;
+  &lt;span class="title"&gt;&lt;%-title%&gt;&lt;/span&gt;
+&lt;/div&gt;
+&lt;/script&gt;
+
+&lt;script type="text/template" id="menu-list-template"&gt;
+&lt;ul&gt;
+  &lt;% items.forEach(function(item) { %&gt;
+  &lt;li&gt;&lt;%-item%&gt;&lt;/li&gt;
+  &lt;% }); %&gt;
+&lt;/ul&gt;
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>JS для создания меню:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var menu = new Menu({
+  title: "Сладости",
+  // передаём также шаблоны
+  template: _.template(document.getElementById('menu-template').innerHTML),
+  listTemplate: _.template(document.getElementById('menu-list-template').innerHTML),
+  items: [
+    "Торт",
+    "Пончик",
+    "Пирожное",
+    "Шоколадка",
+    "Мороженое"
+  ]
+});
+
+document.body.appendChild(menu.getElem());</code></pre>
+</div>
+</div>
+</div><p>JS код <code>Menu</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Menu(options) {
+  var elem;
+
+  function getElem() {
+    if (!elem) render();
+    return elem;
+  }
+
+  function render() {
+    var html = options.template({
+      title: options.title
+    });
+
+    elem = document.createElement('div');
+    elem.innerHTML = html;
+    elem = elem.firstElementChild;
+
+    elem.onmousedown = function() {
+      return false;
+    }
+
+    elem.onclick = function(event) {
+      if (event.target.closest('.title')) {
+        toggle();
+      }
+    }
+  }
+
+  function renderItems() {
+    if (elem.querySelector('ul')) return;
+
+    var listHtml = options.listTemplate({
+      items: options.items
+    });
+    elem.insertAdjacentHTML("beforeEnd", listHtml);
+  }
+
+  function open() {
+    renderItems();
+    elem.classList.add('open');
+  };
+
+  function close() {
+    elem.classList.remove('open');
+  };
+
+  function toggle() {
+    if (elem.classList.contains('open')) close();
+    else open();
+  };
+
+  this.getElem = getElem;
+  this.toggle = toggle;
+  this.close = close;
+  this.open = open;
+}</code></pre>
+</div>
+</div>
+</div><p>Результат:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/template-lodash/menu-template/" style="height:160px"></iframe>
+</div><p>Здесь два шаблона. Первый мы уже разобрали, посмотрим теперь на список <code>ul/li</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;ul&gt;
+  &lt;% items.forEach(function(item) { %&gt;
+  &lt;li&gt;&lt;%-item%&gt;&lt;/li&gt;
+  &lt;% }); %&gt;
+&lt;/ul&gt;</code></pre>
+</div>
+</div>
+</div><p>Если разбить шаблон для списка элементов по разделителям, то он будет таким:</p>
+<ul>
+<li><code>&lt;ul&gt;</code> – текст</li>
+<li><code>&lt;% items.forEach(function(item) { %&gt;</code> – код</li>
+<li><code>&lt;li&gt;</code> – текст</li>
+<li><code>&lt;%-item%&gt;</code> – вставить значение <code>item</code> с экранированием</li>
+<li><code>&lt;/li&gt;</code> – текст</li>
+<li><code>&lt;% }); %&gt;</code> – код</li>
+<li><code>&lt;/ul&gt;</code> – текст</li>
+</ul>
+<p>Вот функция, которую возвратит <code>_.template(tmpl)</code> для этого шаблона:</p>
+<div class="code-example" data-highlight-block="4-10" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function(obj) {
+  obj || (obj = {});
+  var __t, __p = '', __e = _.escape;
+  with(obj) {
+    __p += '\n&lt;ul&gt;\n  ';
+    items.forEach(function(item) {
+      __p += '\n  &lt;li&gt;' +
+        __e(item) + // &lt;%-item%&gt; экранирование функцией _.escape
+        '&lt;/li&gt;\n  ';
+    });
+    __p += '\n&lt;/ul&gt;\n';
+  }
+  return __p
+}</code></pre>
+</div>
+</div>
+</div><p>Как видно, она один-в-один повторяет код и вставляет текст в переменную <code>__p</code>. При этом выражение в <code>&lt;%-...%&gt;</code> обёрнуто в вызов <a href="http://lodash.com/docs#escape">_.escape</a>, который заменяет спецсимволы HTML на их текстовые варианты.</p>
+<h2><a class="main__anchor" href="#отладка-шаблонов" name="отладка-шаблонов">Отладка шаблонов</a></h2><p>Что, если в шаблоне ошибка? Например, синтаксическая. Конечно, ошибки будут возникать, куда же без них.</p>
+<p>Шаблон компилируется в функцию, ошибка будет либо при компиляции, либо позже, в процессе её выполнения. В различных шаблонных системах есть свои средства отладки, <code>_.template</code> тут не блистает.</p>
+<p>Но и здесь можно кое-что отладить. При ошибке, если она не синтаксическая, отладчик при этом останавливается где-то посередине «страшной» функции.</p>
+<p>Попробуйте сами запустить пример с открытыми инструментами разработчика и <em>включённой</em> опцией «остановка при ошибке»:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.3.0/lodash.js"&gt;&lt;/script&gt;
+
+&lt;script type="text/template" id="menu-template"&gt;
+&lt;div class="menu"&gt;
+  &lt;span class="title"&gt;&lt;%-title%&gt;&lt;/span&gt;
+  &lt;ul&gt;
+  &lt;% items.forEach(function(item) { %&gt;
+    &lt;li&gt;&lt;%-item%&gt;&lt;/li&gt;
+  &lt;% }); %&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+&lt;/script&gt;
+
+&lt;script&gt;
+  var tmpl = _.template(document.getElementById('menu-template').innerHTML);
+
+  var result = tmpl({ title: "Заголовок" });
+
+  document.write(result);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>В шаблоне допущена ошибка, поэтому отладчик остановит выполнение.</p>
+<p>В Chrome картина будет примерно такой:</p>
+<figure><div class="image" style="width:672px">
+<div class="image__ratio" style="padding-top:48.36309523809524%"></div>
+<img alt="" class="image__image" height="325" src="article/template-lodash/template-debugger.png" width="672">
+</img></div></figure><p>Библиотека LoDash пытается нам помочь, подсказать, в каком именно шаблоне произошла ошибка. Ведь из функции это может быть неочевидно.</p>
+<p>Для этого она добавляет к шаблонам специальный идентификатор <a href="http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/#toc-sourceurl">sourceURL</a>, который служит аналогом «имени файла».  На картинке он отмечен красным.</p>
+<p>По умолчанию <code>sourceURL</code> имеет вид <code>/lodash/template/source[N]</code>, где <code>N</code> – постоянно увеличивающийся номер шаблона. В данном случае мы можем понять, что эта функция получена при самой первой компиляции.</p>
+<p>Это, конечно, лучше чем ничего, но, как правило, его имеет смысл заменить <code>sourceURL</code> на свой, указав при компиляции дополнительный параметр <code>sourceURL</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">...
+var compiled = _.template(tmpl, {sourceURL: '/template/menu-template'});
+...</code></pre>
+</div>
+</div>
+</div><p>Попробуйте запустить <a href="/article/template-lodash/template-error-sourceurl/">исправленный пример</a> и вы увидите в качестве имени файла <code>/template/menu-template</code>.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Не определена переменная – ошибка</span></div>
+<div class="important__content"><p>Кстати говоря, а в чём же здесь ошибка?</p>
+<p>…А в том, что переменная <code>items</code> не передана в шаблон. При доступе к неизвестной переменной JavaScript генерирует ошибку.</p>
+<p>Самый простой способ это обойти – обращаться к необязательным переменным через <code>obj</code>, например <code>&lt;%=obj.items%&gt;</code>. Тогда в случае <code>undefined</code> просто ничего не будет выведено. Но в данном случае реакция совершенно адекватна, так как для меню список опций <code>items</code> является обязательным.</p>
+</div></div>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Шаблоны полезны для того, чтобы отделить HTML от кода. Это упрощает разработку и поддержку.</p>
+<p>В этой главе подробно разобрана система шаблонизации из библиотеки <a href="https://lodash.com">LoDash</a>:</p>
+<ul>
+<li>Шаблон – это строка со специальными вставками кода <code>&lt;% ... %&gt;</code> или переменных <code>&lt;%- expr -&gt;</code>, <code>&lt;%= expr -&gt;</code>.</li>
+<li>Вызов <code>_.template(tmpl)</code> превращает шаблон <code>tmpl</code> в функцию, которой в дальнейшем передаются данные –
+и она генерирует HTML с ними.</li>
+</ul>
+<p>В этой главе мы рассмотрели хранение шаблонов в документе, при помощи <code>&lt;script&gt;</code> с нестандартным <code>type</code>. Конечно, есть и другие способы, можно хранить шаблоны и в отдельном файле, если шаблонная система или система сборки проектов это позволяют.</p>
+<p>Шаблонных систем много. Многие основаны на схожем принципе – генерации функции из строки, например:</p>
+<ul>
+<li><a href="http://www.embeddedjs.com/">EJS</a></li>
+<li><a href="http://jade-lang.com/">Jade</a></li>
+<li><a href="http://handlebarsjs.com/">Handlebars</a></li>
+</ul>
+<p>Есть и альтернативный подход – шаблонная система получает «образец» DOM-узла и клонирует его вызовом <code>cloneNode(true)</code>, каждый раз изменяя что-то внутри. В отличие от подхода, описанного выше, это будет работать не с произвольной строкой текста, а только и именно с DOM-узлами. Но в некоторых ситуациях у него есть преимущество.</p>
+<p>Такой подход используется во фреймворках:</p>
+<ul>
+<li><a href="http://angularjs.org">AngularJS</a></li>
+<li><a href="http://knockoutjs.com/">Knockout.JS</a></li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

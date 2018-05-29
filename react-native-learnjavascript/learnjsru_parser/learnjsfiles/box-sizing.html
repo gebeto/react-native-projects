@@ -1,0 +1,175 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Свойство "box-sizing"' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Свойство <code>box-sizing</code> может принимать одно из двух значений – <code>border-box</code> или <code>content-box</code>. В зависимости от выбранного значения браузер по-разному трактует значение свойств <code>width/height</code>.</p>
+<cut>
+<h2><a class="main__anchor" href="#значения-box-sizing" name="значения-box-sizing">Значения box-sizing</a></h2><dl>
+<dt><code>content-box</code></dt>
+<dd>Это значение по умолчанию. В этом случае свойства <code>width/height</code> обозначают то, что находится <em>внутри <code>padding</code></em>.</dd>
+<dt><code>border-box</code></dt>
+<dd>Значения <code>width/height</code> задают высоту/ширину <em>всего элемента</em>.</dd>
+</dl>
+<p>Для большей наглядности посмотрим на картинку этого <code>div</code> в зависимости от <code>box-sizing</code>:</p>
+<div class="code-example" data-highlight-block="4-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+div {
+  width: 200px;
+  height: 100px;
+  box-sizing: border-box (вверху) | content-box (внизу);
+
+  padding: 20px;
+  border:5px solid brown;
+}</code></pre>
+</div>
+</div>
+</div><figure><div class="image" style="width:550px">
+<div class="image__ratio" style="padding-top:72.54545454545455%"></div>
+<img alt="" class="image__image" height="399" src="article/box-sizing/border-box.png" width="550">
+</img></div></figure><p>В верхнем случае браузер нарисовал весь элемент размером в <code>width x height</code>, в нижнем – интерпретировал <code>width/height</code> как размеры внутренней области.</p>
+<p>Исторически сложилось так, что по умолчанию принят <code>content-box</code>, а <code>border-box</code> некоторые браузеры используют если не указан <code>DOCTYPE</code>, в режиме совместимости.</p>
+<p>Но есть как минимум один случай, когда явное указание <code>border-box</code> может быть полезно: растягивание элемента до ширины родителя.</p>
+<h2><a class="main__anchor" href="#пример-подстроить-ширину-к-родителю" name="пример-подстроить-ширину-к-родителю">Пример: подстроить ширину к родителю</a></h2><p>Задача: подогнать элемент по ширине внешнего элемента, чтобы он заполнял всё его пространство. Без привязки к конкретному размеру элемента в пикселях.</p>
+<p>Например, мы хотим, чтобы элементы формы ниже были одинакового размера:</p>
+<div class="code-example" data-autorun="true" data-highlight-block="15-19" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  form {
+    width: 200px;
+    border: 2px solid green;
+  }
+
+  form input,
+  form select {
+    display: block;
+    padding-left: 5px;
+    /* padding для красоты */
+  }
+&lt;/style&gt;
+
+&lt;form&gt;
+  &lt;input&gt;
+  &lt;input&gt;
+  &lt;select&gt;
+    &lt;option&gt;опции&lt;/option&gt;
+  &lt;/select&gt;
+&lt;/form&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-bb6j07" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><p>Как сделать, чтобы элементы растянулись чётко по ширине <code>FORM</code>? Попробуйте добиться этого самостоятельно, перед тем как читать дальше.</p>
+<h3><a class="main__anchor" href="#попытка-width-100" name="попытка-width-100">Попытка width:100%</a></h3><p>Первое, что приходит в голову – поставить всем <code>INPUT'ам</code> ширину <code>width: 100%</code>.</p>
+<p>Попробуем:</p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-highlight-block="9-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  form {
+    width: 200px;
+    border: 2px solid green;
+  }
+
+  form input, form select {
+    display: block;
+    padding-left: 5px;
+    width: 100%;
+  }
+&lt;/style&gt;
+
+&lt;form&gt;
+  &lt;input&gt;
+  &lt;input&gt;
+  &lt;select&gt;&lt;option&gt;опции&lt;/option&gt;&lt;/select&gt;
+&lt;/form&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-ghe9x0" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><p>Как видно, не получается. <strong>Элементы вылезают за пределы родителя.</strong></p>
+<p><strong>Причина – ширина элемента 100% по умолчанию относится к внутренней области, не включающей <code>padding</code> и <code>border</code>.</strong> То есть, внутренняя область растягивается до <code>100%</code> родителя, и к ней снаружи прибавляются <code>padding/border</code>, которые и вылезают.</p>
+<p>Есть два решения этой проблемы.</p>
+<h3><a class="main__anchor" href="#решение-дополнительный-элемент" name="решение-дополнительный-элемент">Решение: дополнительный элемент</a></h3><p>Можно убрать <code>padding/border</code> у элементов <code>INPUT/SELECT</code> и завернуть каждый из них в дополнительный <code>DIV</code>, который будет обеспечивать дизайн:</p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  form {
+    width: 200px;
+    border: 2px solid green;
+  }
+  /* убрать padding/border */
+
+  form input,
+  form select {
+    padding: 0;
+    border: 0;
+    width: 100%;
+  }
+  /* внешний div даст дизайн */
+
+  form div {
+    padding-left: 5px;
+    border: 1px solid black;
+  }
+&lt;/style&gt;
+
+&lt;form&gt;
+  &lt;div&gt;
+    &lt;input&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;input&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;select&gt;
+      &lt;option&gt;опции&lt;/option&gt;
+    &lt;/select&gt;
+  &lt;/div&gt;
+&lt;/form&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-e2kxtx" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><p>В принципе, это работает. Но нужны дополнительные элементы. А если мы делаем дерево или большую редактируемую таблицу, да и вообще – любой интерфейс, где элементов и так много, то лишние нам точно не нужны.</p>
+<p>Кроме того, такое решение заставляет пожертвовать встроенным в браузер дизайном элементов <code>INPUT/SELECT</code>.</p>
+<h3><a class="main__anchor" href="#решение-box-sizing" name="решение-box-sizing">Решение: box-sizing</a></h3><p>Существует другой способ, гораздо более естественный, чем предыдущий.</p>
+<p><strong>При помощи <code>box-sizing: border-box</code> мы можем сказать браузеру, что ширина, которую мы ставим, относится к элементу полностью, включая <code>border</code> и <code>padding</code></strong>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-highlight-block="9-11" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  form {
+    width: 200px;
+    border: 2px solid green;
+  }
+
+  form input, form select {
+    display: block;
+    padding-left: 5px;
+    -moz-box-sizing: border-box; /* в Firefox нужен префикс */
+    box-sizing: border-box;
+    width: 100%;
+  }
+&lt;/style&gt;
+
+&lt;form&gt;
+  &lt;input&gt;
+  &lt;input&gt;
+  &lt;select&gt;&lt;option&gt;опции&lt;/option&gt;&lt;/select&gt;
+&lt;/form&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-ebjpd3" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><p>Мы сохранили «родную» рамку вокруг <code>INPUT/SELECT</code> и не добавили лишних элементов. Всё замечательно.</p>
+<p>Свойство <code>box-sizing</code> поддерживается в IE начиная с версии 8.</p>
+</cut></div></meta></article></main></div></body></html>

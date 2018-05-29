@@ -1,0 +1,462 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Функции" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Зачастую нам надо повторять одно и то же действие во многих частях программы.</p>
+<p>Например, красиво вывести сообщение необходимо при приветствии посетителя, при выходе посетителя с сайта, ещё где-нибудь.</p>
+<p>Чтобы не повторять один и тот же код во многих местах, придуманы функции. Функции являются основными «строительными блоками» программы.</p>
+<cut>
+<p>Примеры встроенных функций вы уже видели – это <code>alert(message)</code>, <code>prompt(message, default)</code> и <code>confirm(question)</code>. Но можно создавать и свои.</p>
+<h2><a class="main__anchor" href="#объявление" name="объявление">Объявление</a></h2><p>Пример объявления функции:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showMessage() {
+  alert( 'Привет всем присутствующим!' );
+}</code></pre>
+</div>
+</div>
+</div><p>Вначале идет ключевое слово <code>function</code>, после него <em>имя функции</em>, затем <em>список параметров</em> в скобках (в примере выше он пустой) и <em>тело функции</em> – код, который выполняется при её вызове.</p>
+<p>Объявленная функция доступна по имени, например:</p>
+<div class="code-example" data-highlight-block="4-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showMessage() {
+  alert( 'Привет всем присутствующим!' );
+}
+
+showMessage();
+showMessage();</code></pre>
+</div>
+</div>
+</div><p>Этот код выведет сообщение два раза. Уже здесь видна <strong>главная цель создания функций: избавление от дублирования кода</strong>.</p>
+<p>Если понадобится поменять сообщение или способ его вывода – достаточно изменить его в одном месте: в функции, которая его выводит.</p>
+<h2><a class="main__anchor" href="#локальные-переменные" name="локальные-переменные">Локальные переменные</a></h2><p>Функция может содержать <em>локальные</em> переменные, объявленные через <code>var</code>. Такие переменные видны только внутри функции:</p>
+<div class="code-example" data-highlight-block="1-1" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showMessage() {
+  var message = 'Привет, я - Вася!'; // локальная переменная
+
+  alert( message );
+}
+
+showMessage(); // 'Привет, я - Вася!'
+
+alert( message ); // &lt;-- будет ошибка, т.к. переменная видна только внутри</code></pre>
+</div>
+</div>
+</div><p><strong>Блоки <code>if/else</code>, <code>switch</code>, <code>for</code>, <code>while</code>, <code>do..while</code> не влияют на область видимости переменных.</strong></p>
+<p>При объявлении переменной в таких блоках, она всё равно будет видна во всей функции.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="6-7" data-highlight-inline="2:7-10,3:4-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function count() {
+  // переменные i,j не будут уничтожены по окончании цикла
+  for (var i = 0; i &lt; 3; i++) {
+    var j = i * 2;
+  }
+
+  alert( i ); // i=3, последнее значение i, при нём цикл перестал работать
+  alert( j ); // j=4, последнее значение j, которое вычислил цикл
+}</code></pre>
+</div>
+</div>
+</div><p><strong>Неважно, где именно в функции и сколько раз объявляется переменная. Любое объявление срабатывает один раз и распространяется на всю функцию.</strong></p>
+<p>Объявления переменных в примере выше можно передвинуть вверх, это ни на что не повлияет:</p>
+<div class="code-example" data-highlight-block="1-1" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function count() {
+  var i, j; // передвинули объявления var в начало
+  for (i = 0; i &lt; 3; i++) {
+    j = i * 2;
+  }
+
+  alert( i ); // i=3
+  alert( j ); // j=4
+}</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#внешние-переменные" name="внешние-переменные">Внешние переменные</a></h2><p>Функция может обратиться ко внешней переменной, например:</p>
+<div class="code-example" data-highlight-inline="0:4-12,3:31-39" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var userName = 'Вася';
+
+function showMessage() {
+  var message = 'Привет, я ' + userName;
+  alert(message);
+}
+
+showMessage(); // Привет, я Вася</code></pre>
+</div>
+</div>
+</div><p>Доступ возможен не только на чтение, но и на запись. При этом, так как переменная внешняя, то изменения будут видны и снаружи функции:</p>
+<div class="code-example" data-highlight-block="11-11" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var userName = 'Вася';
+
+function showMessage() {
+  userName = 'Петя'; // (1) присвоение во внешнюю переменную
+
+  var message = 'Привет, я ' + userName;
+  alert( message );
+}
+
+showMessage();
+
+alert( userName ); // Петя, значение внешней переменной изменено функцией</code></pre>
+</div>
+</div>
+</div><p>Конечно, если бы внутри функции, в строке <code>(1)</code>, была бы объявлена своя локальная переменная <code>var userName</code>, то все обращения использовали бы её, и внешняя переменная осталась бы неизменной.</p>
+<p><strong>Переменные, объявленные на уровне всего скрипта, называют <em>«глобальными переменными»</em>.</strong></p>
+<p>В примере выше переменная <code>userName</code> – глобальная.</p>
+<p>Делайте глобальными только те переменные, которые действительно имеют общее значение для вашего проекта, а нужные для решения конкретной задачи – пусть будут локальными в соответствующей функции.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Внимание: неявное объявление глобальных переменных!</span></div>
+<div class="important__content"><p>В старом стандарте JavaScript существовала возможность неявного объявления переменных присвоением значения.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showMessage() {
+  message = 'Привет'; // без var!
+}
+
+showMessage();
+
+alert( message ); // Привет</code></pre>
+</div>
+</div>
+</div><p>В коде выше переменная <code>message</code> нигде не объявлена, а сразу присваивается. Скорее всего, программист просто забыл поставить <code>var</code>.</p>
+<p>При <code>use strict</code> такой код привёл бы к ошибке, но без него переменная будет создана автоматически, причём в примере выше она создаётся не в функции, а на уровне всего скрипта.</p>
+<p>Избегайте этого.</p>
+<p>Здесь опасность даже не в автоматическом создании переменной, а в том, что глобальные переменные должны использоваться тогда, когда действительно нужны «общескриптовые» параметры.</p>
+<p>Забыли <code>var</code> в одном месте, потом в другом – в результате одна функция неожиданно поменяла глобальную переменную, которую использует другая. И поди разберись, кто и когда её поменял, не самая приятная ошибка для отладки.</p>
+</div></div>
+<p>В будущем, когда мы лучше познакомимся с основами JavaScript, в главе <a href="/closures">Замыкания, функции изнутри</a>, мы более детально рассмотрим внутренние механизмы работы переменных и функций.</p>
+<h2><a class="main__anchor" href="#параметры" name="параметры">Параметры</a></h2><p>При вызове функции ей можно передать данные, которые та использует по своему усмотрению.</p>
+<p>Например, этот код выводит два сообщения:</p>
+<div class="code-example" data-highlight-block="7-8" data-highlight-inline="0:21-31" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showMessage(from, text) { // параметры from, text
+
+  from = "** " + from + " **"; // здесь может быть сложный код оформления
+
+  alert(from + ': ' + text);
+}
+
+showMessage('Маша', 'Привет!');
+showMessage('Маша', 'Как дела?');</code></pre>
+</div>
+</div>
+</div><p><strong>Параметры копируются в локальные переменные функции</strong>.</p>
+<p>Например, в коде ниже есть внешняя переменная <code>from</code>, значение которой при запуске функции копируется в параметр функции с тем же именем. Далее функция работает уже с параметром:</p>
+<div class="code-example" data-highlight-block="1-1" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showMessage(from, text) {
+  from = '**' + from + '**'; // меняем локальную переменную from
+  alert( from + ': ' + text );
+}
+
+var from = "Маша";
+
+showMessage(from, "Привет");
+
+alert( from ); // старое значение from без изменений, в функции была изменена копия</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#аргументы-по-умолчанию" name="аргументы-по-умолчанию">Аргументы по умолчанию</a></h2><p>Функцию можно вызвать с любым количеством аргументов.</p>
+<p>Если параметр не передан при вызове – он считается равным <code>undefined</code>.</p>
+<p>Например, функцию показа сообщения <code>showMessage(from, text)</code> можно вызвать с одним аргументом:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">showMessage("Маша");</code></pre>
+</div>
+</div>
+</div><p>При этом можно проверить, и если параметр не передан – присвоить ему значение «по умолчанию»:</p>
+<div class="code-example" data-highlight-block="1-3,9-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showMessage(from, text) {
+  if (text === undefined) {
+    text = 'текст не передан';
+  }
+
+  alert( from + ": " + text );
+}
+
+showMessage("Маша", "Привет!"); // Маша: Привет!
+showMessage("Маша"); // Маша: текст не передан</code></pre>
+</div>
+</div>
+</div><p><strong>При объявлении функции необязательные аргументы, как правило, располагают в конце списка.</strong></p>
+<p>Для указания значения «по умолчанию», то есть, такого, которое используется, если аргумент не указан, используется два способа:</p>
+<ol>
+<li>
+<p>Можно проверить, равен ли аргумент <code>undefined</code>, и если да – то записать в него значение по умолчанию. Этот способ продемонстрирован в примере выше.</p>
+</li>
+<li>
+<p>Использовать оператор <code>||</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showMessage(from, text) {
+  text = text || 'текст не передан';
+
+  ...
+}</code></pre>
+</div>
+</div>
+</div><p>Второй способ считает, что аргумент отсутствует, если передана пустая строка, <code>0</code>, или вообще любое значение, которое в логическом контексте является <code>false</code>.</p>
+</li>
+</ol>
+<p>Если аргументов передано больше, чем надо, например <code>showMessage("Маша", "привет", 1, 2, 3)</code>, то ошибки не будет. Но, чтобы получить такие «лишние» аргументы, нужно будет прочитать их из специального объекта <code>arguments</code>, который мы рассмотрим в главе <a href="/arguments-pseudoarray">Псевдомассив аргументов "arguments"</a>.</p>
+<h2><a class="main__anchor" href="#возврат-значения" name="возврат-значения">Возврат значения</a></h2><p>Функция может возвратить результат, который будет передан в вызвавший её код.</p>
+<p>Например, создадим функцию <code>calcD</code>, которая будет возвращать дискриминант квадратного уравнения по формуле <code>b<sup>2</sup> – 4ac</code>:</p>
+<div class="code-example" data-highlight-inline="1:3-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function calcD(a, b, c) {
+   return b*b - 4*a*c;
+}
+
+var test = calcD(-4, 2, 1);
+alert(test); // 20</code></pre>
+</div>
+</div>
+</div><p><strong>Для возврата значения используется директива <code>return</code>.</strong></p>
+<p>Она может находиться в любом месте функции. Как только до неё доходит управление – функция  завершается и значение передается обратно.</p>
+<p>Вызовов <code>return</code> может быть и несколько, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function checkAge(age) {
+  if (age &gt; 18) {
+    return true;
+  } else {
+    return confirm('Родители разрешили?');
+  }
+}
+
+var age = prompt('Ваш возраст?');
+
+if (checkAge(age)) {
+  alert( 'Доступ разрешен' );
+} else {
+  alert( 'В доступе отказано' );
+}</code></pre>
+</div>
+</div>
+</div><p>Директива <code>return</code> может также использоваться без значения, чтобы прекратить выполнение и выйти из функции.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showMovie(age) {
+  if (!checkAge(age)) {
+    return;
+  }
+
+  alert( "Фильм не для всех" ); // (*)
+  // ...
+}</code></pre>
+</div>
+</div>
+</div><p>В коде выше, если сработал <code>if</code>, то строка <code>(*)</code> и весь код под ней никогда не выполнится, так как <code>return</code> завершает выполнение функции.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Значение функции без <code>return</code> и с пустым <code>return</code></span></div>
+<div class="important__content"><p>В случае, когда функция не вернула значение или <code>return</code> был без аргументов, считается что она вернула <code>undefined</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function doNothing() { /* пусто */ }
+
+alert( doNothing() ); // undefined</code></pre>
+</div>
+</div>
+</div><p>Обратите внимание, никакой ошибки нет. Просто возвращается <code>undefined</code>.</p>
+<p>Ещё пример, на этот раз с <code>return</code> без аргумента:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function doNothing() {
+  return;
+}
+
+alert( doNothing() === undefined ); // true</code></pre>
+</div>
+</div>
+</div></div></div>
+<h2><a class="main__anchor" href="#function-naming" name="function-naming">Выбор имени функции</a></h2><p>Имя функции следует тем же правилам, что и имя переменной. Основное отличие – оно должно быть глаголом, т.к. функция – это действие.</p>
+<p>Как правило, используются глагольные префиксы, обозначающие общий характер действия, после которых следует уточнение.</p>
+<p>Функции, которые начинаются с <code>"show"</code> – что-то показывают:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">showMessage(..)     // префикс show, "показать" сообщение</code></pre>
+</div>
+</div>
+</div><p>Функции, начинающиеся с <code>"get"</code> – получают, и т.п.:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">getAge(..)          // get, "получает" возраст
+calcD(..)           // calc, "вычисляет" дискриминант
+createForm(..)      // create, "создает" форму
+checkPermission(..) // check, "проверяет" разрешение, возвращает true/false</code></pre>
+</div>
+</div>
+</div><p>Это очень удобно, поскольку взглянув на функцию – мы уже примерно представляем, что она делает, даже если функцию написал совсем другой человек, а в отдельных случаях – и какого вида значение она возвращает.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Одна функция – одно действие</span></div>
+<div class="important__content"><p>Функция должна делать только то, что явно подразумевается её названием. И это должно быть одно действие.</p>
+<p>Если оно сложное и подразумевает поддействия – может быть имеет смысл выделить их в отдельные функции? Зачастую это имеет смысл, чтобы лучше структурировать код.</p>
+<p><strong>…Но самое главное – в функции не должно быть ничего, кроме самого действия и поддействий, неразрывно связанных с ним.</strong></p>
+<p>Например, функция проверки данных (скажем, <code>"validate"</code>) не должна показывать сообщение об ошибке. Её действие – проверить.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Сверхкороткие имена функций</span></div>
+<div class="important__content"><p>Имена функций, которые используются <em>очень часто</em>, иногда делают сверхкороткими.</p>
+<p>Например, во фреймворке <a href="http://jquery.com">jQuery</a> есть функция <code>$</code>, во фреймворке <a href="http://prototypejs.org/">Prototype</a> – функция <code>$$</code>, а в библиотеке <a href="http://lodash.com/">LoDash</a> очень активно используется функция с названием из одного символа подчеркивания <code>_</code>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Объявление функции имеет вид:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function имя(параметры, через, запятую) {
+  код функции
+}</code></pre>
+</div>
+</div>
+</div><ul>
+<li>Передаваемые значения копируются в параметры функции и становятся локальными переменными.</li>
+<li>Параметры функции копируются в её локальные переменные.</li>
+<li>Можно объявить новые локальные переменые при помощи <code>var</code>.</li>
+<li>Значение возвращается оператором <code>return ...</code>.</li>
+<li>Вызов <code>return</code> тут же прекращает функцию.</li>
+<li>Если <code>return;</code> вызван без значения, или функция завершилась без <code>return</code>, то её результат равен <code>undefined</code>.</li>
+</ul>
+<p>При обращении к необъявленной переменной функция будет искать внешнюю переменную с таким именем, но лучше, если функция использует только локальные переменные:</p>
+<ul>
+<li>Это делает очевидным общий поток выполнения – что передаётся в функцию и какой получаем результат.</li>
+<li>Это предотвращает возможные конфликты доступа, когда две функции, возможно написанные в разное время или разными людьми, неожиданно друг для друга меняют одну и ту же внешнюю переменную.</li>
+</ul>
+<p>Именование функций:</p>
+<ul>
+<li>Имя функции должно понятно и чётко отражать, что она делает. Увидев её вызов в коде, вы должны тут же понимать, что она делает.</li>
+<li>Функция – это действие, поэтому для имён функций, как правило, используются глаголы.</li>
+</ul>
+<p>Функции являются основными строительными блоками скриптов. Мы будем неоднократно возвращаться к ним и изучать все более и более глубоко.</p>
+</cut></div></meta></article></main></div></body></html>

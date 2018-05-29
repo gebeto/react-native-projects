@@ -1,0 +1,372 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Функциональное наследование" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Наследование – это создание новых «классов» на основе существующих.</p>
+<p>В JavaScript его можно реализовать несколькими путями, один из которых – с использованием наложения конструкторов, мы рассмотрим в этой главе.</p>
+<cut>
+<h2><a class="main__anchor" href="#зачем-наследование" name="зачем-наследование">Зачем наследование?</a></h2><p>Ранее мы обсуждали различные реализации кофеварки. Продолжим эту тему далее.</p>
+<p>Хватит ли нам только кофеварки для удобной жизни? Вряд ли… Скорее всего, ещё понадобятся как минимум холодильник, микроволновка, а возможно и другие <em>машины</em>.</p>
+<p>В реальной жизни у этих <em>машин</em> есть базовые правила пользования. Например, большая кнопка <i class="fa fa-power-off"></i> – включение, шнур с розеткой нужно воткнуть в питание и т.п.</p>
+<p>Можно сказать, что «у всех машин есть общие свойства, а конкретные машины могут их дополнять».</p>
+<p>Именно поэтому, увидев новую технику, мы уже можем что-то с ней сделать, даже не читая инструкцию.</p>
+<p>Механизм наследования позволяет определить базовый класс <code>Машина</code>, в нём описать то, что свойственно всем машинам, а затем на его основе построить другие, более конкретные: <code>Кофеварка</code>, <code>Холодильник</code> и т.п.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">В веб-разработке всё так же</span></div>
+<div class="important__content"><p>В веб-разработке нам могут понадобиться классы <code>Меню</code>, <code>Табы</code>, <code>Диалог</code> и другие компоненты интерфейса. В них всех обычно есть что-то общее.</p>
+<p>Можно выделить такой общий функционал в класс <code>Компонент</code> и наследовать их от него, чтобы не дублировать код.</p>
+</div></div>
+<h2><a class="main__anchor" href="#наследование-от-machine" name="наследование-от-machine">Наследование от Machine</a></h2><p>Базовый класс «машина» <code>Machine</code> будет реализовывать общего вида методы «включить» <code>enable()</code> и «выключить» <code>disable()</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Machine() {
+  var enabled = false;
+
+  this.enable = function() {
+    enabled = true;
+  };
+
+  this.disable = function() {
+    enabled = false;
+  };
+}</code></pre>
+</div>
+</div>
+</div><p>Унаследуем от него кофеварку. При этом она получит эти методы автоматически:</p>
+<div class="code-example" data-highlight-block="1-1,13-15" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function CoffeeMachine(power) {
+  Machine.call(this); // отнаследовать
+
+  var waterAmount = 0;
+
+  this.setWaterAmount = function(amount) {
+    waterAmount = amount;
+  };
+
+}
+
+var coffeeMachine = new CoffeeMachine(10000);
+
+coffeeMachine.enable();
+coffeeMachine.setWaterAmount(100);
+coffeeMachine.disable();</code></pre>
+</div>
+</div>
+</div><p>Наследование реализовано вызовом <code>Machine.call(this)</code> в начале конструктора <code>CoffeeMachine</code>.</p>
+<p>Он вызывает функцию <code>Machine</code>, передавая ей в качестве контекста <code>this</code> текущий объект. <code>Machine</code>, в процессе выполнения, записывает в <code>this</code> различные полезные свойства и методы, в нашем случае <code>this.enable</code> и <code>this.disable</code>.</p>
+<p>Далее конструктор <code>CoffeeMachine</code> продолжает выполнение и может добавить свои свойства и методы.</p>
+<p>В результате мы получаем объект <code>coffeeMachine</code>, который включает в себя методы из <code>Machine</code> и <code>CoffeeMachine</code>.</p>
+<h2><a class="main__anchor" href="#защищённые-свойства" name="защищённые-свойства">Защищённые свойства</a></h2><p>В коде выше есть одна проблема.</p>
+<p><strong>Наследник не имеет доступа к приватным свойствам родителя.</strong></p>
+<p>Иначе говоря, если кофеварка захочет обратиться к <code>enabled</code>, то её ждёт разочарование:</p>
+<div class="code-example" data-highlight-block="17-18" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Machine() {
+  var enabled = false;
+
+  this.enable = function() {
+    enabled = true;
+  };
+
+  this.disable = function() {
+    enabled = false;
+  };
+}
+
+function CoffeeMachine(power) {
+  Machine.call(this);
+
+  this.enable();
+
+  // ошибка, переменная не определена!
+  alert( enabled );
+}
+
+var coffeeMachine = new CoffeeMachine(10000);</code></pre>
+</div>
+</div>
+</div><p>Это естественно, ведь <code>enabled</code> – локальная переменная функции <code>Machine</code>. Она находится в другой области видимости.</p>
+<p><strong>Чтобы наследник имел доступ к свойству, оно должно быть записано в <code>this</code>.</strong></p>
+<p>При этом, чтобы обозначить, что свойство является внутренним, его имя начинают с подчёркивания <code>_</code>.</p>
+<div class="code-example" data-highlight-block="1-1,17-17" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Machine() {
+  this._enabled = false; // вместо var enabled
+
+  this.enable = function() {
+    this._enabled = true;
+  };
+
+  this.disable = function() {
+    this._enabled = false;
+  };
+}
+
+function CoffeeMachine(power) {
+  Machine.call(this);
+
+  this.enable();
+
+  alert( this._enabled ); // true
+}
+
+var coffeeMachine = new CoffeeMachine(10000);</code></pre>
+</div>
+</div>
+</div><p>Подчёркивание в начале свойства – общепринятый знак, что свойство является внутренним, предназначенным лишь для доступа из самого объекта и его наследников. Такие свойства называют <em>защищёнными</em>.</p>
+<p>Технически, залезть в него из внешнего кода, конечно, возможно, но приличный программист так делать не будет.</p>
+<h2><a class="main__anchor" href="#перенос-свойства-в-защищённые" name="перенос-свойства-в-защищённые">Перенос свойства в защищённые</a></h2><p>У <code>CoffeeMachine</code> есть приватное свойство <code>power</code>. Сейчас мы его тоже сделаем защищённым и перенесём в <code>Machine</code>, поскольку «мощность» свойственна всем машинам, а не только кофеварке.</p>
+<div class="code-example" data-highlight-block="1-1,15-15" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Machine(power) {
+  this._power = power; // (1)
+
+  this._enabled = false;
+
+  this.enable = function() {
+    this._enabled = true;
+  };
+
+  this.disable = function() {
+    this._enabled = false;
+  };
+}
+
+function CoffeeMachine(power) {
+  Machine.apply(this, arguments); // (2)
+
+  alert( this._enabled ); // false
+  alert( this._power ); // 10000
+}
+
+var coffeeMachine = new CoffeeMachine(10000);</code></pre>
+</div>
+</div>
+</div><p>Теперь все машины <code>Machine</code> имеют мощность <code>power</code>. Обратим внимание, что мы из параметра конструктора сразу скопировали её в объект в строке <code>(1)</code>. Иначе она была бы недоступна из наследников.</p>
+<p>В строке <code>(2)</code> мы теперь вызываем не просто <code>Machine.call(this)</code>, а расширенный вариант: <code>Machine.apply(this, arguments)</code>, который вызывает <code>Machine</code> в текущем контексте вместе с передачей текущих аргументов.</p>
+<p>Можно было бы использовать и более простой вызов <code>Machine.call(this, power)</code>, но использование <code>apply</code> гарантирует передачу всех аргументов, вдруг их количество увеличится – не надо будет переписывать.</p>
+<h2><a class="main__anchor" href="#переопределение-методов" name="переопределение-методов">Переопределение методов</a></h2><p>Итак, мы получили класс <code>CoffeeMachine</code>, который наследует от <code>Machine</code>.</p>
+<p>Аналогичным образом мы можем унаследовать от <code>Machine</code> холодильник <code>Fridge</code>, микроволновку <code>MicroOven</code> и другие классы, которые разделяют общий «машинный» функционал, то есть имеют мощность и их можно включать/выключать.</p>
+<p>Для этого достаточно вызвать <code>Machine</code> в текущем контексте, а затем добавить свои методы.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// Fridge может добавить и свои аргументы,
+// которые в Machine не будут использованы
+function Fridge(power, temperature) {
+  Machine.apply(this, arguments);
+
+  // ...
+}</code></pre>
+</div>
+</div>
+</div><p>Бывает так, что реализация конкретного метода машины в наследнике имеет свои особенности.</p>
+<p>Можно, конечно, объявить в <code>CoffeeMachine</code> свой <code>enable</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function CoffeeMachine(power, capacity) {
+  Machine.apply(this, arguments);
+
+  // переопределить this.enable
+  this.enable = function() {
+    /* enable для кофеварки */
+  };
+}</code></pre>
+</div>
+</div>
+</div><p>…Однако, как правило, мы хотим не заменить, а <em>расширить</em> метод родителя, добавить к нему что-то. Например, сделать так, чтобы при включении кофеварка тут же запускалась.</p>
+<p>Для этого метод родителя предварительно копируют в переменную, и затем вызывают внутри нового <code>enable</code> – там, где считают нужным:</p>
+<div class="code-example" data-highlight-block="3-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function CoffeeMachine(power) {
+  Machine.apply(this, arguments);
+
+  var parentEnable = this.enable; // (1)
+  this.enable = function() { // (2)
+      parentEnable.call(this); // (3)
+      this.run(); // (4)
+    }
+
+  ...
+}</code></pre>
+</div>
+</div>
+</div><p><strong>Общая схема переопределения метода (по строкам выделенного фрагмента кода):</strong></p>
+<ol>
+<li>Копируем доставшийся от родителя метод <code>this.enable</code> в переменную, например <code>parentEnable</code>.</li>
+<li>Заменяем <code>this.enable</code> на свою функцию…</li>
+<li>…Которая по-прежнему реализует старый функционал через вызов <code>parentEnable</code>.</li>
+<li>…И в дополнение к нему делает что-то своё, например запускает приготовление кофе.</li>
+</ol>
+<p>Обратим внимание на строку <code>(3)</code>.</p>
+<p>В ней родительский метод вызывается так: <code>parentEnable.call(this)</code>. Если бы вызов был таким: <code>parentEnable()</code>, то ему бы не передался текущий <code>this</code> и возникла бы ошибка.</p>
+<p>Технически, можно сделать возможность вызывать его и как <code>parentEnable()</code>, но тогда надо гарантировать, что контекст будет правильным, например привязать его при помощи <code>bind</code> или при объявлении, в родителе, вообще не использовать <code>this</code>, а получать контекст через замыкание, вот так:</p>
+<div class="code-example" data-highlight-block="3-3,6-7,25-29" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Machine(power) {
+  this._enabled = false;
+
+  var self = this;
+
+  this.enable = function() {
+    // используем внешнюю переменную вместо this
+    self._enabled = true;
+  };
+
+  this.disable = function() {
+    self._enabled = false;
+  };
+
+}
+
+function CoffeeMachine(power) {
+  Machine.apply(this, arguments);
+
+  var waterAmount = 0;
+
+  this.setWaterAmount = function(amount) {
+    waterAmount = amount;
+  };
+
+  var parentEnable = this.enable;
+  this.enable = function() {
+      parentEnable(); // теперь можно вызывать как угодно, this не важен
+      this.run();
+    }
+
+  function onReady() {
+    alert( 'Кофе готово!' );
+  }
+
+  this.run = function() {
+    setTimeout(onReady, 1000);
+  };
+
+}
+
+var coffeeMachine = new CoffeeMachine(10000);
+coffeeMachine.setWaterAmount(50);
+coffeeMachine.enable();</code></pre>
+</div>
+</div>
+</div><p>В коде выше родительский метод <code>parentEnable = this.enable</code> успешно продолжает работать даже при вызове без контекста. А всё потому, что использует <code>self</code> внутри.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Организация наследования, которая описана в этой главе, называется «функциональным паттерном наследования».</p>
+<p>Её общая схема (кратко):</p>
+<ol>
+<li>
+<p>Объявляется конструктор родителя <code>Machine</code>. В нём могут быть приватные (private), публичные (public) и защищённые (protected) свойства:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Machine(params) {
+  // локальные переменные и функции доступны только внутри Machine
+  var privateProperty;
+
+  // публичные доступны снаружи
+  this.publicProperty = ...;
+
+  // защищённые доступны внутри Machine и для потомков
+  // мы договариваемся не трогать их снаружи
+  this._protectedProperty = ...
+}
+
+var machine = new Machine(...)
+machine.public();</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Для наследования конструктор потомка вызывает родителя в своём контексте через <code>apply</code>. После чего может добавить свои переменные и методы:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function CoffeeMachine(params) {
+  // универсальный вызов с передачей любых аргументов
+  Machine.apply(this, arguments);
+
+  this.coffeePublicProperty = ...
+}
+
+var coffeeMachine = new CoffeeMachine(...);
+coffeeMachine.publicProperty();
+coffeeMachine.coffeePublicProperty();</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>В <code>CoffeeMachine</code> свойства, полученные от родителя, можно перезаписать своими. Но обычно требуется не заменить, а расширить метод родителя. Для этого он предварительно копируется в переменную:</p>
+<div class="code-example" data-highlight-block="3-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function CoffeeMachine(params) {
+  Machine.apply(this, arguments);
+
+  var parentProtected = this._protectedProperty;
+  this._protectedProperty = function(args) {
+    parentProtected.apply(this, args); // (*)
+    // ...
+  };
+}</code></pre>
+</div>
+</div>
+</div><p>Строку <code>(*)</code> можно упростить до <code>parentProtected(args)</code>, если метод родителя не использует <code>this</code>, а, например, привязан к <code>var self = this</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Machine(params) {
+  var self = this;
+
+  this._protected = function() {
+    self.property = "value";
+  };
+}</code></pre>
+</div>
+</div>
+</div></li>
+</ol>
+<p>Надо сказать, что способ наследования, описанный в этой главе, используется нечасто.</p>
+<p>В следующих главах мы будем изучать прототипный подход, который обладает рядом преимуществ.</p>
+<p>Но знать и понимать его необходимо, поскольку во многих существующих библиотеках классы написаны в функциональном стиле, и расширять/наследовать от них можно только так.</p>
+</cut></div></meta></article></main></div></body></html>

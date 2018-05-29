@@ -1,0 +1,28 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Прокрутка: событие scroll" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Событие <code>onscroll</code> происходит, когда элемент прокручивается.</p>
+<p>В отличие от события <code>onwheel</code> (колесико мыши), его могут генерировать только прокручиваемые элементы или окно <code>window</code>. Но зато оно генерируется всегда, при любой прокрутке, не обязательно «мышиной».</p>
+<cut>
+<p>Например, следующая функция при прокрутке окна выдает количество прокрученных пикселей:</p>
+<div class="code-example" data-autorun="true" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">window.onscroll = function() {
+  var scrolled = window.pageYOffset || document.documentElement.scrollTop;
+  document.getElementById('showScroll').innerHTML = scrolled + 'px';
+}</code></pre>
+</div>
+</div>
+</div><p>В действии:
+Текущая прокрутка = <b id="showScroll">прокрутите окно</b></p>
+<p>Каких-либо особенностей события здесь нет, разве что для его использования нужно отлично представлять, как получить текущее значение прокрутки или прокрутить документ. Об этом мы говорили ранее, в главе <a href="/metrics">Размеры и прокрутка элементов</a>.</p>
+<p>Некоторые области применения <code>onscroll</code>:</p>
+<ul>
+<li>Показ дополнительных элементов навигации при прокрутке.</li>
+<li>Подгрузка и инициализация элементов интерфейса, ставших видимыми после прокрутки.</li>
+</ul>
+<p>Вашему вниманию предлагаются несколько задач, которые вы можете решить сами или посмотреть использование <code>onscroll</code> на их примере.</p>
+</cut></div></meta></article></main></div></body></html>

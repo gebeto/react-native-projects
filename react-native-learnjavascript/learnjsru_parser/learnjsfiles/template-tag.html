@@ -1,0 +1,55 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Шаблоны &lt;template&gt;" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Элемент <code>&lt;template&gt;</code> предназначен для хранения «образца» разметки, невидимого и предназначенного для вставки куда-либо.</p>
+<p>Конечно, есть много способов записать произвольный невидимый текст в HTML. В чём же особенность <code>&lt;template&gt;</code>?</p>
+<p>Его отличие от обычных тегов в том, что его содержимое обрабатывается особым образом. Оно не только скрыто, но и считается находящимся вообще «вне документа». А при вставке автоматически «оживает», выполняются из него скрипты, начинает проигрываться видео и т.п.</p>
+<cut>
+<p>Содержимое тега <code>&lt;template&gt;</code>, в отличие, к примеру, от шаблонов или <code>&lt;script type="неизвестный тип"&gt;</code>, обрабатывается браузером.  А значит, должно быть корректным HTML.</p>
+<p>Оно доступно как <code>DocumentFragment</code> в свойстве тега <code>content</code>. Предполагается, что мы, при необходимости, возьмём <code>content</code> и вставим, куда надо.</p>
+<h2><a class="main__anchor" href="#вставка-шаблона" name="вставка-шаблона">Вставка шаблона</a></h2><p>Пример вставки шаблона <code>tmpl</code> в Shadow DOM элемента <code>elem</code>:</p>
+<div class="code-example" data-autorun="no-epub" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;p id="elem"&gt;
+  Доброе утро, страна!&lt;/p&gt;
+
+&lt;template id="tmpl"&gt;
+  &lt;h3&gt;&lt;content&gt;&lt;/content&gt;&lt;/h3&gt;
+  &lt;p&gt;Привет из подполья!&lt;/p&gt;
+  &lt;script&gt;
+    document.write('...document.write:Новость!');
+  &lt;/script&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+  var root = elem.createShadowRoot();
+  root.appendChild(tmpl.content.cloneNode(true));
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-7f4b5d" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><p>У нас получилось, что:</p>
+<ol>
+<li>В элементе <code>#elem</code> содержатся данные в некоторой оговорённой разметке.</li>
+<li>Шаблон <code>#tmpl</code> указывает, как их отобразить, куда и в какие HTML-теги завернуть содержимое <code>#elem</code>.</li>
+<li>Здесь шаблон показывается в Shadow DOM тега. Технически, это не обязательно, шаблон можно использовать и без Shadow DOM, но тогда не сработает тег <code>&lt;content&gt;</code>.</li>
+</ol>
+<p>Можно также заметить, что скрипт из шаблона выполнился. Это важнейшее отличие вставки шаблона от вставки HTML через <code>innerHTML</code> и от обычного <code>DocumentFragment</code>.</p>
+<p>Также мы вставили не сам <code>tmpl.content</code>, а его клон. Это обычная практика, чтобы можно было использовать один шаблон много раз.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Тег <code>&lt;template&gt;</code> не призван заменить системы шаблонизации. В нём нет хитрых операторов итерации, привязок к данным.</p>
+<p>Его основная особенность – это возможность вставки «живого» содержимого, вместе со скриптами.</p>
+<p>И, конечно, мелочь, но удобно, что он не требует никаких библиотек.</p>
+</cut></div></meta></article></main></div></body></html>

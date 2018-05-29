@@ -1,0 +1,406 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Логические операторы" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Для операций над логическими значениями в JavaScript есть <code>||</code> (ИЛИ), <code>&amp;&amp;</code> (И) и <code>!</code> (НЕ).</p>
+<p>Хоть они и называются <em>«логическими»</em>, но в JavaScript могут применяться к значениям любого типа и возвращают также значения любого типа.</p>
+<cut>
+<h2><a class="main__anchor" href="#или" name="или">|| (ИЛИ)</a></h2><p>Оператор ИЛИ выглядит как двойной символ вертикальной черты:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">result = a || b;</code></pre>
+</div>
+</div>
+</div><p>Логическое ИЛИ в классическом программировании работает следующим образом: "если <em>хотя бы один</em> из аргументов <code>true</code>, то возвращает <code>true</code>, иначе – <code>false</code>". В JavaScript, как мы увидим далее, это не совсем так, но для начала рассмотрим только логические значения.</p>
+<p>Получается следующая «таблица результатов»:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( true || true ); // true
+alert( false || true ); // true
+alert( true || false ); // true
+alert( false || false ); // false</code></pre>
+</div>
+</div>
+</div><p>Если значение не логического типа – то оно к нему приводится в целях вычислений. Например, число <code>1</code> будет воспринято как <code>true</code>, а <code>0</code> – как <code>false</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">if (1 || 0) { // сработает как if( true || false )
+  alert( 'верно' );
+}</code></pre>
+</div>
+</div>
+</div><p>Обычно оператор ИЛИ используется в <code>if</code>, чтобы проверить, выполняется ли хотя бы одно из условий, например:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var hour = 9;
+
+if (hour &lt; 10 || hour &gt; 18) {
+  alert( 'Офис до 10 или после 18 закрыт' );
+}</code></pre>
+</div>
+</div>
+</div><p>Можно передать и больше условий:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var hour = 12,
+  isWeekend = true;
+
+if (hour &lt; 10 || hour &gt; 18 || isWeekend) {
+  alert( 'Офис до 10 или после 18 или в выходной закрыт' );
+}</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#короткий-цикл-вычислений" name="короткий-цикл-вычислений">Короткий цикл вычислений</a></h2><p>JavaScript вычисляет несколько ИЛИ слева направо. При этом, чтобы экономить ресурсы, используется так называемый <em>«короткий цикл вычисления»</em>.</p>
+<p>Допустим, вычисляются несколько ИЛИ подряд: <code>a || b || c || ...</code>. Если первый аргумент – <code>true</code>, то результат заведомо будет <code>true</code> (хотя бы одно из значений – <code>true</code>), и остальные значения игнорируются.</p>
+<p>Это особенно заметно, когда выражение, переданное в качестве второго аргумента, имеет <em>сторонний эффект</em> – например, присваивает переменную.</p>
+<p>При запуске примера ниже присвоение <code>x</code> не произойдёт:</p>
+<div class="code-example" data-highlight-inline="2:0-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var x;
+
+true || (x = 1);
+
+alert(x); // undefined, x не присвоен</code></pre>
+</div>
+</div>
+</div><p>…А в примере ниже первый аргумент – <code>false</code>, так что ИЛИ попытается вычислить второй, запустив тем самым присваивание:</p>
+<div class="code-example" data-highlight-inline="2:0-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var x;
+
+false || (x = 1);
+
+alert(x); // 1</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#значение-или" name="значение-или">Значение ИЛИ</a></h2><blockquote class="quote"><div class="quote__i"><div class="quote__text"><p><code>||</code> запинается на «правде»,<br>
+<code>&amp;&amp;</code> запинается на «лжи».</br></p>
+</div></div><footer class="quote__footer">
+<cite class="quote__author">Илья Канатов, участник курса JavaScript</cite>
+</footer></blockquote><p>Итак, как мы видим, оператор ИЛИ вычисляет ровно столько значений, сколько необходимо – до первого <code>true</code>.</p>
+<p>При этом оператор ИЛИ возвращает то значение, на котором остановились вычисления. Причём, не преобразованное к логическому типу.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 1 || 0 ); // 1
+alert( true || 'неважно что' ); // true
+
+alert( null || 1 ); // 1
+alert( undefined || 0 ); // 0</code></pre>
+</div>
+</div>
+</div><p>Это используют, в частности, чтобы выбрать первое «истинное» значение из списка:</p>
+<div class="code-example" data-highlight-block="5-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var undef; // переменная не присвоена, т.е. равна undefined
+var zero = 0;
+var emptyStr = "";
+var msg = "Привет!";
+
+var result = undef || zero || emptyStr || msg || 0;
+
+alert( result ); // выведет "Привет!" - первое значение, которое является true</code></pre>
+</div>
+</div>
+</div><p>Если все значения «ложные», то <code>||</code> возвратит последнее из них:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( undefined || '' || false || 0 ); // 0</code></pre>
+</div>
+</div>
+</div><p>Итак, оператор <code>||</code> вычисляет операнды слева направо до первого «истинного» и возвращает его, а если все ложные – то последнее значение.</p>
+<p>Иначе можно сказать, что "<code>||</code> запинается на правде".</p>
+<h2><a class="main__anchor" href="#и" name="и">&amp;&amp; (И)</a></h2><p>Оператор И пишется как два амперсанда <code>&amp;&amp;</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">result = a &amp;&amp; b;</code></pre>
+</div>
+</div>
+</div><p>В классическом программировании И возвращает <code>true</code>, если оба аргумента истинны, а иначе – <code>false</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( true &amp;&amp; true ); // true
+alert( false &amp;&amp; true ); // false
+alert( true &amp;&amp; false ); // false
+alert( false &amp;&amp; false ); // false</code></pre>
+</div>
+</div>
+</div><p>Пример с <code>if</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var hour = 12,
+  minute = 30;
+
+if (hour == 12 &amp;&amp; minute == 30) {
+  alert( 'Время 12:30' );
+}</code></pre>
+</div>
+</div>
+</div><p>Как и в ИЛИ, в И допустимы любые значения:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">if (1 &amp;&amp; 0) { // вычислится как true &amp;&amp; false
+  alert( 'не сработает, т.к. условие ложно' );
+}</code></pre>
+</div>
+</div>
+</div><p>К И применим тот же принцип «короткого цикла вычислений», но немного по-другому, чем к ИЛИ.</p>
+<p>Если левый аргумент – <code>false</code>, оператор И возвращает его и заканчивает вычисления. Иначе – вычисляет и возвращает правый аргумент.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// Первый аргумент - true,
+// Поэтому возвращается второй аргумент
+alert( 1 &amp;&amp; 0 ); // 0
+alert( 1 &amp;&amp; 5 ); // 5
+
+// Первый аргумент - false,
+// Он и возвращается, а второй аргумент игнорируется
+alert( null &amp;&amp; 5 ); // null
+alert( 0 &amp;&amp; "не важно" ); // 0</code></pre>
+</div>
+</div>
+</div><p>Можно передать и несколько значений подряд, при этом возвратится первое «ложное» (на котором остановились вычисления), а если его нет – то последнее:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 1 &amp;&amp; 2 &amp;&amp; null &amp;&amp; 3 ); // null
+
+alert( 1 &amp;&amp; 2 &amp;&amp; 3 ); // 3</code></pre>
+</div>
+</div>
+</div><p>Итак, оператор <code>&amp;&amp;</code> вычисляет операнды слева направо до первого «ложного» и возвращает его, а если все истинные – то последнее значение.</p>
+<p>Иначе можно сказать, что "<code>&amp;&amp;</code> запинается на лжи".</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Приоритет у <code>&amp;&amp;</code> больше, чем у <code>||</code></span></div>
+<div class="important__content"><p>Приоритет оператора И <code>&amp;&amp;</code> больше, чем ИЛИ <code>||</code>, так что он выполняется раньше.</p>
+<p>Поэтому в следующем коде сначала будет вычислено правое И: <code>1 &amp;&amp; 0 = 0</code>, а уже потом – ИЛИ.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 5 || 1 &amp;&amp; 0 ); // 5</code></pre>
+</div>
+</div>
+</div></div></div>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Не используйте <code>&amp;&amp;</code> вместо <code>if</code></span></div>
+<div class="important__content"><p>Оператор <code>&amp;&amp;</code> в простых случаях можно использовать вместо <code>if</code>, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var x = 1;
+
+(x &gt; 0) &amp;&amp; alert( 'Больше' );</code></pre>
+</div>
+</div>
+</div><p>Действие в правой части <code>&amp;&amp;</code> выполнится только в том случае, если до него дойдут вычисления. То есть, <code>alert</code> сработает, если в левой части будет <code>true</code>.</p>
+<p>Получился аналог:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var x = 1;
+
+if (x &gt; 0) {
+  alert( 'Больше' );
+}</code></pre>
+</div>
+</div>
+</div><p>Однако, как правило, вариант с <code>if</code> лучше читается и воспринимается. Он более очевиден, поэтому лучше использовать его. Это, впрочем, относится и к другим неочевидным применениям возможностей языка.</p>
+</div></div>
+<h2><a class="main__anchor" href="#не" name="не">! (НЕ)</a></h2><p>Оператор НЕ – самый простой. Он получает один аргумент. Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var result = !value;</code></pre>
+</div>
+</div>
+</div><p>Действия <code>!</code>:</p>
+<ol>
+<li>Сначала приводит аргумент к логическому типу <code>true/false</code>.</li>
+<li>Затем возвращает противоположное значение.</li>
+</ol>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( !true ); // false
+alert( !0 ); // true</code></pre>
+</div>
+</div>
+</div><p><strong>В частности, двойное НЕ используют для преобразования значений к логическому типу:</strong></p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( !!"строка" ); // true
+alert( !!null ); // false</code></pre>
+</div>
+</div>
+</div></cut></div></meta></article></main></div></body></html>

@@ -1,0 +1,314 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="setTimeout и setInterval" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Почти все реализации JavaScript имеют внутренний таймер-планировщик, который позволяет задавать вызов функции через заданный период времени.</p>
+<p>В частности, эта возможность поддерживается в браузерах и в сервере Node.JS.</p>
+<cut>
+<h2><a class="main__anchor" href="#settimeout" name="settimeout">setTimeout</a></h2><p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var timerId = setTimeout(func / code, delay[, arg1, arg2...])</code></pre>
+</div>
+</div>
+</div><p>Параметры:</p>
+<dl>
+<dt><code>func/code</code></dt>
+<dd>Функция или строка кода для исполнения.
+Строка поддерживается для совместимости, использовать её не рекомендуется.</dd>
+<dt><code>delay</code></dt>
+<dd>Задержка в милисекундах, 1000 милисекунд равны 1 секунде.</dd>
+<dt><code>arg1</code>, <code>arg2</code>…</dt>
+<dd>Аргументы, которые нужно передать функции. Не поддерживаются в IE9-.</dd>
+</dl>
+<p>Исполнение функции произойдёт спустя время, указанное в параметре <code>delay</code>.</p>
+<p>Например, следующий код вызовет <code>func()</code> через одну секунду:</p>
+<div class="code-example" data-highlight-block="4-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function func() {
+  alert( 'Привет' );
+}
+
+setTimeout(func, 1000);</code></pre>
+</div>
+</div>
+</div><p>С передачей аргументов (не сработает в IE9-):</p>
+<div class="code-example" data-highlight-block="4-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function func(phrase, who) {
+  alert( phrase + ', ' + who );
+}
+
+setTimeout(func, 1000, "Привет", "Вася"); // Привет, Вася</code></pre>
+</div>
+</div>
+</div><p>Если первый аргумент является строкой, то интерпретатор создаёт анонимную функцию из этой строки.</p>
+<p>То есть такая запись тоже сработает:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">setTimeout("alert('Привет')", 1000);</code></pre>
+</div>
+</div>
+</div><p>Однако, использование строк не рекомендуется, так как они могут вызвать проблемы при минимизации кода, и, вообще, сама возможность использовать строку сохраняется лишь для совместимости.</p>
+<p>Вместо них используйте анонимные функции, вот так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">setTimeout(function() { alert('Привет') }, 1000);</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#отмена-исполнения-cleartimeout" name="отмена-исполнения-cleartimeout">Отмена исполнения clearTimeout</a></h3><p>Функция <code>setTimeout</code> возвращает числовой идентификатор таймера <code>timerId</code>, который можно использовать для отмены действия.</p>
+<p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var timerId = setTimeout(...);
+clearTimeout(timerId);</code></pre>
+</div>
+</div>
+</div><p>В следующем примере мы ставим таймаут, а затем удаляем (передумали). В результате ничего не происходит.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var timerId = setTimeout(function() { alert(1) }, 1000);
+alert(timerId); // число - идентификатор таймера
+
+clearTimeout(timerId);
+alert(timerId); // всё ещё число, оно не обнуляется после отмены</code></pre>
+</div>
+</div>
+</div><p>Как видно из <code>alert</code>, в браузере идентификатор таймера является обычным числом. Другие JavaScript-окружения, например Node.JS, могут возвращать объект таймера, с дополнительными методами.</p>
+<p><strong>Такие разночтения вполне соответствуют стандарту просто потому, что в спецификации JavaScript про таймеры нет ни слова.</strong></p>
+<p>Таймеры – это надстройка над JavaScript, которая описана в <a href="http://www.w3.org/TR/html5/webappapis.html#timers">секции Timers</a> стандарта HTML5 для браузеров и в <a href="http://nodejs.org/docs/latest/api/timers.html">документации к Node.JS</a> – для сервера.</p>
+<h2><a class="main__anchor" href="#setinterval" name="setinterval">setInterval</a></h2><p>Метод <code>setInterval</code> имеет синтаксис, аналогичный <code>setTimeout</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var timerId = setInterval(func / code, delay[, arg1, arg2...])</code></pre>
+</div>
+</div>
+</div><p>Смысл аргументов – тот же самый. Но, в отличие от <code>setTimeout</code>, он запускает выполнение функции не один раз, а  регулярно повторяет её через указанный интервал времени. Остановить исполнение можно вызовом <code>clearInterval(timerId)</code>.</p>
+<p>Следующий пример при запуске станет выводить сообщение каждые две секунды, пока не пройдёт 5 секунд:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// начать повторы с интервалом 2 сек
+var timerId = setInterval(function() {
+  alert( "тик" );
+}, 2000);
+
+// через 5 сек остановить повторы
+setTimeout(function() {
+  clearInterval(timerId);
+  alert( 'стоп' );
+}, 5000);</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">Модальные окна замораживают время в Chrome/Opera/Safari</span></div>
+<div class="important__content"><p>Что будет, если долго не жать <code>OK</code> на появившемся <code>alert</code>? Это зависит от браузера.</p>
+<p>В браузерах Chrome, Opera и Safari внутренний таймер «заморожен» во время показа <code>alert/confirm/prompt</code>. А вот в IE и Firefox внутренний таймер продолжит идти.</p>
+<p>Поэтому, если закрыть <code>alert</code> после небольшой паузы, то в Firefox/IE следующий <code>alert</code> будет показан сразу же (время подошло), а в Chrome/Opera/Safari – только через 2 секунды после закрытия.</p>
+</div></div>
+<h3><a class="main__anchor" href="#рекурсивный-settimeout" name="рекурсивный-settimeout">Рекурсивный setTimeout</a></h3><p>Важная альтернатива <code>setInterval</code> – рекурсивный <code>setTimeout</code>:</p>
+<div class="code-example" data-highlight-block="8-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/** вместо:
+var timerId = setInterval(function() {
+  alert( "тик" );
+}, 2000);
+*/
+
+var timerId = setTimeout(function tick() {
+  alert( "тик" );
+  timerId = setTimeout(tick, 2000);
+}, 2000);</code></pre>
+</div>
+</div>
+</div><p>В коде выше следующее выполнение планируется сразу после окончания предыдущего.</p>
+<p><strong>Рекурсивный <code>setTimeout</code> – более гибкий метод тайминга, чем <code>setInterval</code>, так как время до следующего выполнения можно запланировать по-разному, в зависимости от результатов текущего.</strong></p>
+<p>Например, у нас есть сервис, который в 5 секунд опрашивает сервер на предмет новых данных. В случае, если сервер перегружен, можно увеличивать интервал опроса до 10, 20, 60 секунд… А потом вернуть обратно, когда всё нормализуется.</p>
+<p>Если у нас регулярно проходят грузящие процессор задачи, то мы можем оценивать время, потраченное на их выполнение, и планировать следующий запуск раньше или позже.</p>
+<p><strong>Рекурсивный <code>setTimeout</code> гарантирует паузу между вызовами, <code>setInterval</code> – нет.</strong></p>
+<p>Давайте сравним два кода. Первый использует <code>setInterval</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var i = 1;
+setInterval(function() {
+  func(i);
+}, 100);</code></pre>
+</div>
+</div>
+</div><p>Второй использует рекурсивный <code>setTimeout</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var i = 1;
+setTimeout(function run() {
+  func(i);
+  setTimeout(run, 100);
+}, 100);</code></pre>
+</div>
+</div>
+</div><p>При <code>setInterval</code> внутренний таймер будет срабатывать чётко каждые <code>100</code> мс и вызывать <code>func(i)</code>:</p>
+<figure><div class="image" style="width:570px">
+<div class="image__ratio" style="padding-top:32.10526315789474%"></div>
+<img alt="" class="image__image" height="183" src="article/settimeout-setinterval/setinterval-interval.png" width="570">
+</img></div></figure><p>Вы обратили внимание?…</p>
+<p><strong>Реальная пауза между вызовами <code>func</code> при <code>setInterval</code> меньше, чем указана в коде!</strong></p>
+<p>Это естественно, ведь время работы функции никак не учитывается, оно «съедает» часть интервала.</p>
+<p>Возможно и такое что <code>func</code> оказалась сложнее, чем мы рассчитывали и выполнялась дольше, чем 100 мс.</p>
+<p>В этом случае интерпретатор будет ждать, пока функция завершится, затем проверит таймер и, если время вызова <code>setInterval</code> уже подошло (или прошло), то следующий вызов произойдёт <em>сразу же</em>.</p>
+<p><strong>Если функция и выполняется дольше, чем пауза <code>setInterval</code>, то вызовы будут происходить вообще без перерыва.</strong></p>
+<p>Исключением является IE, в котором таймер «застывает» во время выполнения JavaScript.</p>
+<p>А так будет выглядеть картинка с рекурсивным <code>setTimeout</code>:</p>
+<figure><div class="image" style="width:574px">
+<div class="image__ratio" style="padding-top:35.54006968641115%"></div>
+<img alt="" class="image__image" height="204" src="article/settimeout-setinterval/settimeout-interval.png" width="574">
+</img></div></figure><p><strong>При рекурсивном <code>setTimeout</code> задержка всегда фиксирована и равна 100 мс.</strong></p>
+<p>Это происходит потому, что каждый новый запуск планируется только после окончания текущего.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Управление памятью</span></div>
+<div class="important__content"><p>Сборщик мусора в JavaScript не чистит функции, назначенные в таймерах, пока таймеры актуальны.</p>
+<p>При передаче функции в <code>setInterval/setTimeout</code> создаётся внутренняя ссылка на неё, через которую браузер её будет запускать, и которая препятствует удалению из памяти, даже если функция анонимна.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// Функция будет жить в памяти, пока не сработал (или не был очищен) таймер
+setTimeout(function() {}, 100);</code></pre>
+</div>
+</div>
+</div><ul>
+<li>Для <code>setTimeout</code> – внутренняя ссылка исчезнет после исполнения функции.</li>
+<li>Для <code>setInterval</code> – ссылка исчезнет при очистке таймера.</li>
+</ul>
+<p>Так как функция также тянет за собой всё замыкание, то ставшие неактуальными, но не отменённые <code>setInterval</code> могут приводить к излишним тратам памяти.</p>
+</div></div>
+<h2><a class="main__anchor" href="#минимальная-задержка-таймера" name="минимальная-задержка-таймера">Минимальная задержка таймера</a></h2><p>У браузерного таймера есть минимальная возможная задержка. Она меняется от примерно нуля до 4 мс в современных браузерах. В более старых она может быть больше и достигать 15 мс.</p>
+<p>По <a href="http://www.w3.org/TR/html5/webappapis.html#timers">стандарту</a>, минимальная задержка составляет 4 мс.  Так что нет разницы между <code>setTimeout(..,1)</code> и <code>setTimeout(..,4)</code>.</p>
+<p>Посмотреть минимальное разрешение «вживую» можно на следующем примере.</p>
+<p><strong>В примере ниже каждая полоска удлиняется вызовом <code>setInterval</code> с указанной на ней задержкой – от 0 мс (сверху) до 20 мс (внизу).</strong></p>
+<p>Позапускайте его в различных браузерах. Вы заметите, что несколько первых полосок анимируются с одинаковой скоростью. Это как раз потому, что слишком маленькие задержки таймер не различает.</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/settimeout-setinterval/setinterval-anim/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="Gjvr7zTMPZOPlk9fqykN" href="http://plnkr.co/edit/Gjvr7zTMPZOPlk9fqykN?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/settimeout-setinterval/setinterval-anim/" style="height:300px"></iframe>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Важно:</span></div>
+<div class="important__content"><p>В Internet Explorer, нулевая задержка <code>setInterval(.., 0)</code> не сработает. Это касается именно <code>setInterval</code>, т.е. <code>setTimeout(.., 0)</code> работает нормально.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Откуда взялись эти 4 мс?</span></div>
+<div class="important__content"><p>Почему минимальная задержка – 4 мс, а не 1 мс? Зачем она вообще существует?</p>
+<p>Это – «привет» от прошлого. Браузер Chrome как-то пытался убрать минимальную задержку в своих ранних версиях, но оказалось, что существуют сайты, которые используют <code>setTimeout(..,0)</code> рекурсивно, создавая тем самым «асинхронный цикл». И, если задержку совсем убрать, то будет 100% загрузка процессора, такой сайт «подвесит» браузер.</p>
+<p>Поэтому, чтобы не ломать существующие скрипты, решили сделать задержку. По возможности, небольшую. На время создания стандарта оптимальным числом показалось 4 мс.</p>
+</div></div>
+<h2><a class="main__anchor" href="#реальная-частота-срабатывания" name="реальная-частота-срабатывания">Реальная частота срабатывания</a></h2><p>В ряде ситуаций таймер будет срабатывать реже, чем обычно. Задержка между вызовами  <code>setInterval(..., 4)</code> может быть не 4 мс, а 30 мс или даже 1000 мс.</p>
+<ul>
+<li>
+<p>Большинство браузеров (десктопных в первую очередь) продолжают выполнять <code>setTimeout/setInterval</code>, даже если вкладка неактивна.</p>
+<p>При этом ряд из них (Chrome, FF, IE10) снижают минимальную частоту таймера, до 1 раза в секунду. Получается, что в «фоновой» вкладке будет срабатывать таймер, но редко.</p>
+</li>
+<li>
+<p>При работе от батареи, в ноутбуке – браузеры тоже могут снижать частоту, чтобы реже выполнять код и экономить заряд батареи. Особенно этим известен IE. Снижение может достигать нескольких раз, в зависимости от настроек.</p>
+</li>
+<li>
+<p>При слишком большой загрузке процессора JavaScript может не успевать обрабатывать таймеры вовремя. При этом некоторые запуски <code>setInterval</code> будут пропущены.</p>
+</li>
+</ul>
+<p><strong>Вывод: на частоту 4 мс стоит ориентироваться, но не стоит рассчитывать.</strong></p>
+<p>Посмотрим снижение частоты в действии на небольшом примере.</p>
+<p>При клике на кнопку ниже запускается <code>setInterval(..., 90)</code>, который выводит список интервалов времени между 25 последними срабатываниями таймера. Запустите его. Перейдите на другую вкладку и вернитесь.</p>
+<div id="timer-interval-log"></div>
+<p><button onclick="timerIntervalLog()">Запустить повтор с интервалом в 90 мс</button>
+<button onclick="clearInterval(timerIntervalLogTimer)">Остановить повтор</button></p>
+<script>
+var timerIntervalLogTimer;
+function timerIntervalLog() {
+  var arr = [];
+  var d = new Date;
+  timerIntervalLogTimer = setInterval(function() {
+    var diff = new Date - d;
+    if (diff > 100) diff = '<span style="color:red">'+diff+'</span>';
+    arr.push( diff );
+    if (arr.length > 25) arr.shift();
+    document.getElementById('timer-interval-log').innerHTML = arr;
+    d = new Date;
+  }, 90);
+}
+</script>
+<p>Если ваш браузер увеличивает таймаут при фоновом выполнении вкладки, то вы увидите увеличенные интервалы, помеченные <span style="color:red">красным</span>.</p>
+<p>Кроме того, вы заметите, что таймер не является идеально точным ;)</p>
+<h2><a class="main__anchor" href="#разбивка-долгих-скриптов" name="разбивка-долгих-скриптов">Разбивка долгих скриптов</a></h2><p>Нулевой или небольшой таймаут также используют, чтобы разорвать поток выполнения «тяжелых» скриптов.</p>
+<p>Например, скрипт для подсветки синтаксиса должен проанализировать код, создать много цветных элементов для подсветки и добавить их в документ – на большом файле это займёт много времени, браузер может даже подвиснуть, что неприемлемо.</p>
+<p>Для того, чтобы этого избежать, сложная задача разбивается на части, выполнение каждой части запускается через мини-интервал после предыдущей, чтобы дать браузеру время.</p>
+<p>Например, осуществляется анализ и подсветка первых 100 строк, затем через 20 мс – следующие 100 строк и так далее. При этом можно подстраиваться под CPU посетителя: замерять время на анализ 100 строк и, если процессор хороший, то в следующий раз обработать 200 строк, а если плохой – то 50. В итоге подсветка будет работать с адекватной быстротой и без тормозов на любых текстах и компьютерах.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Методы <code>setInterval(func, delay)</code> и <code>setTimeout(func, delay)</code> позволяют запускать <code>func</code> регулярно/один раз через <code>delay</code> миллисекунд.</li>
+<li>Оба метода возвращают идентификатор таймера. Его используют для остановки выполнения вызовом <code>clearInterval/clearTimeout</code>.</li>
+<li>В случаях, когда нужно гарантировать задержку между регулярными вызовами или гибко её менять, вместо <code>setInterval</code> используют рекурсивный <code>setTimeout</code>.</li>
+<li>Минимальная задержка по стандарту составляет <code>4 мс</code>. Браузеры соблюдают этот стандарт, но некоторые другие среды для выполнения JS, например Node.JS, могут предоставить и меньше задержки.</li>
+<li>В реальности срабатывания таймера могут быть гораздо реже, чем назначено, например если процессор перегружен, вкладка находится в фоновом режиме, ноутбук работает от батареи или по какой-то иной причине.</li>
+</ul>
+<p>Браузерных особенностей почти нет, разве что вызов <code>setInterval(..., 0)</code> с нулевой задержкой в IE недопустим, нужно указывать <code>setInterval(..., 1)</code>.</p>
+</cut></div></meta></article></main></div></body></html>

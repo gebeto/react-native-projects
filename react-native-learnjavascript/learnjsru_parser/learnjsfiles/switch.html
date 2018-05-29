@@ -1,0 +1,197 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Конструкция switch" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Конструкция <code>switch</code> заменяет собой сразу несколько <code>if</code>.</p>
+<p>Она представляет собой более наглядный способ сравнить выражение сразу с несколькими вариантами.</p>
+<cut>
+<h2><a class="main__anchor" href="#синтаксис" name="синтаксис">Синтаксис</a></h2><p>Выглядит она так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">switch(x) {
+  case 'value1':  // if (x === 'value1')
+    ...
+    [break]
+
+  case 'value2':  // if (x === 'value2')
+    ...
+    [break]
+
+  default:
+    ...
+    [break]
+}</code></pre>
+</div>
+</div>
+</div><ul>
+<li>Переменная <code>x</code> проверяется на строгое равенство первому значению <code>value1</code>, затем второму <code>value2</code> и так далее.</li>
+<li>Если соответствие установлено – switch начинает выполняться от соответствующей директивы <code>case</code> и далее, <em>до ближайшего <code>break</code></em> (или до конца <code>switch</code>).</li>
+<li>Если ни один <code>case</code> не совпал – выполняется (если есть) вариант <code>default</code>.</li>
+</ul>
+<p>При этом <code>case</code> называют <em>вариантами <code>switch</code></em>.</p>
+<h2><a class="main__anchor" href="#пример-работы" name="пример-работы">Пример работы</a></h2><p>Пример использования <code>switch</code> (сработавший код выделен):</p>
+<div class="code-example" data-highlight-block="6-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var a = 2 + 2;
+
+switch (a) {
+  case 3:
+    alert( 'Маловато' );
+    break;
+  case 4:
+    alert( 'В точку!' );
+    break;
+  case 5:
+    alert( 'Перебор' );
+    break;
+  default:
+    alert( 'Я таких значений не знаю' );
+}</code></pre>
+</div>
+</div>
+</div><p>Здесь оператор <code>switch</code> последовательно сравнит <code>a</code> со всеми вариантами из <code>case</code>.</p>
+<p>Сначала <code>3</code>, затем – так как нет совпадения – <code>4</code>. Совпадение найдено, будет выполнен этот вариант, со строки <code>alert('В точку!')</code> и далее, до ближайшего <code>break</code>, который прервёт выполнение.</p>
+<p><strong>Если <code>break</code> нет, то выполнение пойдёт ниже по следующим <code>case</code>, при этом остальные проверки игнорируются.</strong></p>
+<p>Пример без <code>break</code>:</p>
+<div class="code-example" data-highlight-block="5-10" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var a = 2 + 2;
+
+switch (a) {
+  case 3:
+    alert( 'Маловато' );
+  case 4:
+    alert( 'В точку!' );
+  case 5:
+    alert( 'Перебор' );
+  default:
+    alert( 'Я таких значений не знаю' );
+}</code></pre>
+</div>
+</div>
+</div><p>В примере выше  последовательно выполнятся три <code>alert</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 'В точку!' );
+alert( 'Перебор' );
+alert( 'Я таких значений не знаю' );</code></pre>
+</div>
+</div>
+</div><p>В <code>case</code> могут быть любые выражения, в том числе включающие в себя переменные и функции.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="4-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var a = 1;
+var b = 0;
+
+switch (a) {
+  case b + 1:
+    alert( 1 );
+    break;
+
+  default:
+    alert('нет-нет, выполнится вариант выше')
+}</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#группировка-case" name="группировка-case">Группировка case</a></h2><p>Несколько значений case можно группировать.</p>
+<p>В примере ниже <code>case 3</code> и <code>case 5</code>  выполняют один и тот же код:</p>
+<div class="code-example" data-highlight-block="7-11" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var a = 2+2;
+
+switch (a) {
+  case 4:
+    alert('Верно!');
+    break;
+
+  case 3:                    // (*)
+  case 5:                    // (**)
+    alert('Неверно!');
+    alert('Немного ошиблись, бывает.');
+    break;
+
+  default:
+    alert('Странный результат, очень странный');
+}</code></pre>
+</div>
+</div>
+</div><p>При <code>case 3</code> выполнение идёт со строки <code>(*)</code>, при <code>case 5</code> – со строки <code>(**)</code>.</p>
+<h2><a class="main__anchor" href="#тип-имеет-значение" name="тип-имеет-значение">Тип имеет значение</a></h2><p>Следующий пример принимает значение от посетителя.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var arg = prompt("Введите arg?")
+switch (arg) {
+  case '0':
+  case '1':
+    alert( 'Один или ноль' );
+
+  case '2':
+    alert( 'Два' );
+    break;
+
+  case 3:
+    alert( 'Никогда не выполнится' );
+
+  default:
+    alert('Неизвестное значение: ' + arg)
+}</code></pre>
+</div>
+</div>
+</div><p>Что оно выведет при вводе числа 0? Числа 1? 2? 3?</p>
+<p>Подумайте, выпишите свои ответы, исходя из текущего понимания работы <code>switch</code> и <em>потом</em> читайте дальше…</p>
+<ul>
+<li>При вводе <code>0</code> выполнится первый <code>alert</code>, далее выполнение продолжится вниз до первого <code>break</code> и выведет второй <code>alert('Два')</code>. Итого, два вывода <code>alert</code>.</li>
+<li>При вводе <code>1</code> произойдёт то же самое.</li>
+<li>При вводе <code>2</code>, <code>switch</code> перейдет к <code>case '2'</code>, и сработает единственный <code>alert('Два')</code>.</li>
+<li><strong>При вводе <code>3</code>, <code>switch</code> перейдет на <code>default</code>.</strong> Это потому, что <code>prompt</code> возвращает строку <code>'3'</code>, а не число. Типы разные. Оператор <code>switch</code> предполагает строгое равенство <code>===</code>, так что совпадения не будет.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

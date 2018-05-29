@@ -1,0 +1,135 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Метод document.write" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Метод <code>document.write</code> – один из наиболее древних методов добавления текста к документу.</p>
+<p>У него есть существенные ограничения, поэтому он используется редко, но по своей сути он совершенно уникален и иногда, хоть и редко, может быть полезен.</p>
+<cut>
+<h2><a class="main__anchor" href="#как-работает-document-write" name="как-работает-document-write">Как работает document.write</a></h2><p>Метод <code>document.write(str)</code> работает только пока HTML-страница находится в процессе загрузки. Он дописывает текст в текущее место HTML ещё до того, как браузер построит из него DOM.</p>
+<p>HTML-документ ниже будет содержать <code>1 2 3</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;body&gt;
+  1
+  &lt;script&gt;
+    document.write(2);
+  &lt;/script&gt;
+  3
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><p><strong>Нет никаких ограничений на содержимое <code>document.write</code></strong>.</p>
+<p>Строка просто пишется в HTML-документ без проверки структуры тегов, как будто она всегда там была.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script&gt;
+  document.write('&lt;style&gt; td { color: #F40 } &lt;/style&gt;');
+&lt;/script&gt;
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;script&gt;
+      document.write('&lt;td&gt;')
+    &lt;/script&gt;
+    Текст внутри TD.
+    &lt;script&gt;
+      document.write('&lt;/td&gt;')
+    &lt;/script&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+</div>
+</div>
+</div><p>Также существует метод <code>document.writeln(str)</code> – не менее древний, который добавляет после <code>str</code> символ перевода строки <code>"\n"</code>.</p>
+<h2><a class="main__anchor" href="#только-до-конца-загрузки" name="только-до-конца-загрузки">Только до конца загрузки</a></h2><p>Во время загрузки браузер читает документ и тут же строит из него DOM, по мере получения информации достраивая новые и новые узлы, и тут же отображая их. Этот процесс идет непрерывным потоком. Вы наверняка видели это, когда заходили на сайты в качестве посетителя – браузер зачастую отображает неполный документ, добавляя его новыми узлами по мере их получения.</p>
+<p><strong>Методы <code>document.write</code> и <code>document.writeln</code> пишут напрямую в текст документа, до того как браузер построит из него DOM, поэтому они могут записать в документ все, что угодно, любые стили и незакрытые теги.</strong></p>
+<p>Браузер учтёт их при построении DOM, точно так же, как учитывает очередную порцию HTML-текста.</p>
+<p>Технически, вызвать <code>document.write</code> можно в любое время, однако, когда HTML загрузился, и браузер полностью построил DOM, документ становится <em>«закрытым»</em>. Попытка дописать что-то в закрытый документ открывает его заново. При этом все текущее содержимое удаляется.</p>
+<p>Текущая страница, скорее всего, уже загрузилась, поэтому если вы нажмёте на эту кнопку – её содержимое удалится:</p>
+<input onclick='document.write("Пустая страница!");' type="button" value="Запустить document.write('Пустая страница!')">
+<p>Из-за этой особенности <code>document.write</code> для загруженных документов не используют.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">XHTML и <code>document.write</code></span></div>
+<div class="important__content"><p>В некоторых современных браузерах при получении страницы с заголовком <code>Content-Type: text/xml</code> или <code>Content-Type: text/xhtml+xml</code> включается «XML-режим» чтения документа. Метод <code>document.write</code> при этом не работает.</p>
+<p>Это лишь одна из причин, по которой XML-режим обычно не используют.</p>
+</div></div>
+<h2><a class="main__anchor" href="#преимущества-перед-innerhtml" name="преимущества-перед-innerhtml">Преимущества перед innerHTML</a></h2><p>Метод <code>document.write</code> – динозавр, он существовал десятки <strike>миллионов</strike> лет назад. С тех пор, как появился и стал стандартным метод <code>innerHTML</code>, нужда в нём возникает редко, но некоторые преимущества, всё же, есть.</p>
+<ul>
+<li>
+<p>Метод <code>document.write</code> работает быстрее, фактически это самый быстрый способ добавить на страницу текст, сгенерированный скриптом.</p>
+<p>Это естественно, ведь он не модифицирует существующий DOM, а пишет в текст страницы до его генерации.</p>
+</li>
+<li>
+<p>Метод <code>document.write</code> вставляет любой текст на страницу «как есть», в то время как <code>innerHTML</code> может вписать лишь валидный HTML (при попытке подсунуть невалидный – браузер скорректирует его).</p>
+</li>
+</ul>
+<p>Эти преимущества являются скорее средством оптимизации, которое нужно использовать именно там, где подобная оптимизация нужна или уместна.</p>
+<p>Однако, <code>document.write</code> по своей природе уникален: он добавляет текст «в текущее место документа», без всяких хитроумных DOM. Поэтому он бывает просто-напросто удобен, из-за чего его нередко используют не по назначению.</p>
+<h2><a class="main__anchor" href="#антипример-реклама" name="антипример-реклама">Антипример: реклама</a></h2><p>Например, <code>document.write</code> используют для вставки рекламных скриптов и различных счетчиков, когда URL скрипта необходимо генерировать динамически, добавляя в него параметры из JavaScript, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script&gt;
+  // в url указано текущее разрешение экрана посетителя
+  var url = 'http://ads.com/buyme?screen=' + screen.width + "x" + screen.height;
+
+  // загрузить такой скрипт прямо сейчас
+  document.write('&lt;script src="' + url + '"&gt;&lt;/scr' + 'ipt&gt;');
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">На заметку:</span></div>
+<div class="important__content"><p>Закрывающий тег <code>&lt;/script&gt;</code> в строке разделён, чтобы браузер не увидел <code>&lt;/script&gt;</code> и не посчитал его концом скрипта.</p>
+<p>Также используют запись:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">document.write('&lt;script src="' + url + '"&gt;&lt;\/script&gt;');</code></pre>
+</div>
+</div>
+</div><p>Здесь <code>&lt;\/script&gt;</code> вместо <code>&lt;/script&gt;</code>: обратный слеш <code>\</code> обычно используется для вставки спецсимволов типа <code>\n</code>, а если такого спецсимвола нет, в данном случае <code>\/</code> не является спецсимволом, то будет проигнорирован. Так что получается такой альтернативный способ безопасно вставить строку <code>&lt;/script&gt;</code>.</p>
+</div></div>
+<p>Сервер, получив запрос с такими параметрами, обрабатывает его и, учитывая переданную информацию, генерирует текст скрипта, в котором обычно есть какой-то другой <code>document.write</code>, рисующий на этом месте баннер.</p>
+<p><strong>Проблема здесь в том, что загрузка такого скрипта блокирует отрисовку всей страницы.</strong></p>
+<p>То есть, дело даже не в самом <code>document.write</code>, а в том, что в страницу вставляется сторонний скрипт, а браузер устроен так, что пока он его не загрузит и не выполнит – он не будет дальше строить DOM и показывать документ.</p>
+<p>Представим на минуту, что сервер <code>ads.com</code>, с которого грузится скрипт, работает медленно или вообще завис – зависнет и наша страница.</p>
+<p>Что делать?</p>
+<p>В современных браузерах у скриптов есть атрибуты <code>async</code> и <code>defer</code>, которые разрешают браузеру продолжать обработку страницы, но применить их здесь нельзя, так как рекламный скрипт захочет вызвать <code>document.write</code> именно на этом месте, и браузер не должен двигаться вперёд по документу.</p>
+<p>Альтернатива – использовать другие техники вставки рекламы и счётчиков. Примеры вы можете увидеть в коде Google Analytics, Яндекс.Метрики и других.</p>
+<p>Если это невозможно – применяют всякие хитрые оптимизации, например заменяют метод <code>document.write</code> своей функцией, и она уже разбирается со скриптами и баннерами.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Метод <code>document.write</code> (или <code>writeln</code>) пишет текст прямо в HTML, как будто он там всегда был.</p>
+<ul>
+<li>
+<p>Этот метод редко используется, так как работает только из скриптов, выполняемых в процессе загрузки страницы.</p>
+<p>Запуск после загрузки приведёт к очистке документа.</p>
+</li>
+<li>
+<p>Метод <code>document.write</code> очень быстр.</p>
+<p>В отличие от установки <code>innerHTML</code> и DOM-методов, он не изменяет существующий документ, а работает на стадии текста, до того как DOM-структура сформирована.</p>
+</li>
+<li>
+<p>Иногда <code>document.write</code> используют для добавления скриптов с динамическим URL.</p>
+<p>Рекомендуется избегать этого, так как браузер остановится на месте добавления скрипта и будет ждать его загрузки. Если скрипт будет тормозить, то и страница – тоже.</p>
+<p>Поэтому желательно подключать внешние скрипты, используя вставку скрипта через DOM или <code>async/defer</code>. Современные системы рекламы и статистики так и делают.</p>
+</li>
+</ul>
+</input></cut></div></meta></article></main></div></body></html>

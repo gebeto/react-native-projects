@@ -1,0 +1,149 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Свойство "overflow"' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Свойство <code>overflow</code> управляет тем, как ведёт себя содержимое блочного элемента, если его размер превышает допустимую длину/ширину.</p>
+<cut>
+<p>Обычно блок увеличивается в размерах при добавлении в него элементов, заключая в себе всех потомков.</p>
+<p>Но что, если высота/ширина указаны явно? Тогда блок не может увеличиться, и содержимое «переполняет» блок. Его отображение в этом случае задаётся свойством <code>overflow</code>.</p>
+<p>Возможные значения</p>
+<ul>
+<li><code>visible</code> (по умолчанию)</li>
+<li><code>hidden</code></li>
+<li><code>scroll</code></li>
+<li><code>auto</code></li>
+</ul>
+<h2><a class="main__anchor" href="#visible" name="visible">visible</a></h2><p>Если не ставить <code>overflow</code> явно или поставить <code>visible</code>, то содержимое отображается за границами блока.</p>
+<p>Например:</p>
+<div class="code-example" data-autorun="true" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  .overflow {
+    /* overflow не задан */
+    width: 200px;
+    height: 80px;
+    border: 1px solid black;
+  }
+&lt;/style&gt;
+
+&lt;div class="overflow"&gt;
+  visible ЭтотТекстВылезаетСправаЭтотТекстВылезаетСправа
+  Этот текст вылезает снизу Этот текст вылезает снизу
+  Этот текст вылезает снизу Этот текст вылезает снизу
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-ffsp6w" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><p>Как правило, такое переполнение указывает на ошибку в вёрстке. Если содержимое может быть больше контейнера – используют другие значения.</p>
+<h2><a class="main__anchor" href="#hidden" name="hidden">hidden</a></h2><p>Переполняющее содержимое не отображается.</p>
+<div class="code-example" data-autorun="true" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  .overflow {
+    overflow: hidden;
+    width: 200px;
+    height: 80px;
+    border: 1px solid black;
+  }
+&lt;/style&gt;
+
+&lt;div class="overflow"&gt;
+  hidden ЭтотТекстОбрезанСправаЭтотТекстОбрезанСправа
+  Этот текст будет обрезан снизу Этот текст будет обрезан снизу
+  Этот текст будет обрезан снизу Этот текст будет обрезан снизу
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-gfj0ds" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><p>Вылезающее за границу содержимое становится недоступно.</p>
+<p>Это свойство иногда используют от лени, когда какой-то элемент дизайна немного вылезает за границу, и вместо исправления вёрстки его просто скрывают. Как правило, долго оно не живёт, вёрстку всё равно приходится исправлять.</p>
+<h2><a class="main__anchor" href="#auto" name="auto">auto</a></h2><p>При переполнении отображается полоса прокрутки.</p>
+<div class="code-example" data-autorun="true" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  .overflow {
+    overflow: auto;
+    width: 200px;
+    height: 100px;
+    border: 1px solid black;
+  }
+&lt;/style&gt;
+
+&lt;div class="overflow"&gt;
+  auto ЭтотТекстДастПрокруткуСправаЭтотТекстДастПрокруткуСправа
+  Этот текст даст прокрутку снизу Этот текст даст прокрутку снизу
+  Этот текст даст прокрутку снизу
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-4q5ewg" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><h2><a class="main__anchor" href="#scroll" name="scroll">scroll</a></h2><p>Полоса прокрутки отображается всегда.</p>
+<div class="code-example" data-autorun="true" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  .overflow {
+    overflow: scroll;
+    width: 200px;
+    height: 80px;
+    border: 1px solid black;
+  }
+&lt;/style&gt;
+
+&lt;div class="overflow"&gt;
+  scroll
+  Переполнения нет.
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-ajxj4" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><p>То же самое, что <code>auto</code>, но полоса прокрутки видна всегда, даже если переполнения нет.</p>
+<h2><a class="main__anchor" href="#overflow-x-overflow-y" name="overflow-x-overflow-y">overflow-x, overflow-y</a></h2><p>Можно указать поведение блока при переполнении по ширине в <code>overflow-x</code> и высоте – в <code>overflow-y</code>:</p>
+<div class="code-example" data-autorun="true" data-highlight-block="2-3" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  .overflow {
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 200px;
+    height: 80px;
+    border: 1px solid black;
+  }
+&lt;/style&gt;
+
+&lt;div class="overflow"&gt;
+  ПоШиринеПолосаПрокруткиAutoПоШиринеПолосаПрокруткиAuto
+  Этот текст вылезает снизу Этот текст вылезает снизу
+  Этот текст вылезает снизу Этот текст вылезает снизу
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-g7hk9g" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Свойства <code>overflow-x/overflow-y</code> (или оба одновременно: <code>overflow</code>) задают поведение контейнера при переполнении:</p>
+<dl>
+<dt><code>visible</code></dt>
+<dd>По умолчанию, содержимое вылезает за границы блока.</dd>
+<dt><code>hidden</code></dt>
+<dd>Переполняющее содержимое невидимо.</dd>
+<dt><code>auto</code></dt>
+<dd>Полоса прокрутки при переполнении.</dd>
+<dt><code>scroll</code></dt>
+<dd>Полоса прокрутки всегда.</dd>
+</dl>
+<p>Кроме того, значение <code>overflow: auto | hidden</code> изменяет поведение контейнера, содержащего <code>float'ы</code>. Так как элемент с <code>float</code> находится вне потока, то обычно контейнер не выделяет под него место. Но если стоит такой <code>overflow</code>, то место выделяется, т.е. контейнер растягивается. Более подробно этот вопрос рассмотрен в статье <a href="/float">Свойство "float"</a>.</p>
+</cut></div></meta></article></main></div></body></html>

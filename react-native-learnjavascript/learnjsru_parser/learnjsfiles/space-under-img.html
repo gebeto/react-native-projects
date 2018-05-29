@@ -1,0 +1,137 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Лишнее место под IMG" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Иногда под <code>IMG</code> «вдруг» появляется лишнее место. Посмотрим на эти грабли внимательнее, почему такое бывает и как этого избежать.</p>
+<cut>
+<h2><a class="main__anchor" href="#демонстрация-проблемы" name="демонстрация-проблемы">Демонстрация проблемы</a></h2><p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  * {
+    margin: 0;
+    padding: 0;
+  }
+&lt;/style&gt;
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;td style="border:1px red solid"&gt;
+      &lt;img src="square.png"&gt;
+    &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+</div>
+</div>
+</div><div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/space-under-img/inline/" style="height:80px"></iframe>
+</div><p>Посмотрите внимательно! Вы видите расстояние между рамками снизу? Это потому, что <strong>браузер резервирует дополнительное место под инлайновым элементом, чтобы туда выносить «хвосты» букв</strong>.</p>
+<p>Вот так выглядит та же картинка с выступающим вниз символом рядом:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/space-under-img/inline-p/" style="height:80px"></iframe>
+</div><p>В примере картинка обёрнута в красный <code>TD</code>. Таблица подстраивается под размер содержимого, так что проблема явно видна. Но она касается не только таблицы. Аналогичная ситуация возникнет, если вокруг <code>IMG</code> будет другой элемент с явно указанным размером, «облегающий» картинку по высоте. Браузер постарается зарезервировать место под <code>IMG</code>, хотя оно там не нужно.</p>
+<h2><a class="main__anchor" href="#решение-сделать-элемент-блочным" name="решение-сделать-элемент-блочным">Решение: сделать элемент блочным</a></h2><p>Самый лучший способ избежать этого – поставить <code>display: block</code> таким картинкам:</p>
+<div class="code-example" data-highlight-block="6-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  * {
+    margin: 0;
+    padding: 0;
+  }
+
+  img {
+    display: block
+  }
+&lt;/style&gt;
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;td style="border:1px red solid"&gt;
+      &lt;img src="square.png"&gt;
+    &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+</div>
+</div>
+</div><div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/space-under-img/block/" style="height:80px"></iframe>
+</div><p>Под блочным элементом ничего не резервируется. Проблема исчезла.</p>
+<h2><a class="main__anchor" href="#решение-задать-vertical-align" name="решение-задать-vertical-align">Решение: задать vertical-align</a></h2><p>А что, если мы, по каким-то причинам, <em>не хотим</em> делать элемент блочным?</p>
+<p>Существует ещё один способ избежать проблемы – использовать свойство <a href="http://www.w3.org/TR/CSS2/visudet.html#propdef-vertical-align">vertical-align</a>.</p>
+<p><strong>Если установить <code>vertical-align</code> в <code>top</code>, то инлайн-элемент будет отпозиционирован по верхней границе текущей строки.</strong></p>
+<p>При этом браузер не будет оставлять место под изображением, так как запланирует продолжение строки сверху, а не снизу:</p>
+<div class="code-example" data-highlight-block="6-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  * {
+    margin: 0;
+    padding: 0;
+  }
+
+  img {
+    vertical-align: top
+  }
+&lt;/style&gt;
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;td style="border:1px red solid"&gt;
+      &lt;img src="square.png"&gt;
+    &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+</div>
+</div>
+</div><div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/space-under-img/valign/" style="height:80px"></iframe>
+</div><p>А вот, как браузер отобразит соседние символы в этом случае: <code>p&lt;img src="square.png"&gt;p</code></p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/space-under-img/valign-p/" style="height:80px"></iframe>
+</div><p>С другой стороны, сама строка никуда не делась, изображение по-прежнему является её частью, а браузер планирует разместить другое текстовое содержимое рядом, хоть и сверху. Поэтому если изображение маленькое, то произойдёт дополнение пустым местом до высоты строки:</p>
+<p>Например, для <code>&lt;img src="square.png" style="height:10px"&gt;</code>:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/space-under-img/valign-small/" style="height:80px"></iframe>
+</div><p>Таким образом, требуется уменьшить еще и <code>line-height</code> контейнера. Окончательное решение для маленьких изображений с <code>vertical-align</code>:</p>
+<div class="code-example" data-highlight-block="6-12" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  * {
+    margin: 0;
+    padding: 0;
+  }
+
+  td {
+    line-height: 1px
+  }
+
+  img {
+    vertical-align: top
+  }
+&lt;/style&gt;
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;td style="border:1px red solid"&gt;
+      &lt;img src="square.png" style="height:10px"&gt;
+    &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+</div>
+</div>
+</div><p>Результат:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/space-under-img/valign-small-lh/" style="height:80px"></iframe>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Пробелы под картинками появляются, чтобы оставить место под «хвосты» букв в строке. Строка «подразумевается», т.к. <code>display:inline</code>.</li>
+<li>Можно избежать пробела, если изменить <code>display</code>, например, на <code>block</code>.</li>
+<li>Альтернатива: <code>vertical-align:top</code> (или <code>bottom</code>), но для маленьких изображений может понадобиться уменьшить <code>line-height</code>, чтобы контейнер не оставлял место под строку.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

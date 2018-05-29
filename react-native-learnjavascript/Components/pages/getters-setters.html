@@ -1,0 +1,179 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Геттеры и сеттеры" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Для <em>управляемого</em> доступа к состоянию объекта используют специальные функции, так называемые «геттеры» и «сеттеры».</p>
+<cut>
+<h2><a class="main__anchor" href="#геттер-и-сеттер-для-воды" name="геттер-и-сеттер-для-воды">Геттер и сеттер для воды</a></h2><p>На текущий момент количество воды в кофеварке является публичным свойством <code>waterAmount</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function CoffeeMachine(power) {
+  // количество воды в кофеварке
+  this.waterAmount = 0;
+
+  ...
+}</code></pre>
+</div>
+</div>
+</div><p>Это немного опасно. Ведь в это свойство можно записать произвольное количество воды, хоть весь мировой океан.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// не помещается в кофеварку!
+coffeeMachine.waterAmount = 1000000;</code></pre>
+</div>
+</div>
+</div><p>Это ещё ничего, гораздо хуже, что можно наоборот – вылить больше, чем есть:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// и не волнует, было ли там столько воды вообще!
+coffeeMachine.waterAmount -= 1000000;</code></pre>
+</div>
+</div>
+</div><p>Так происходит потому, что свойство полностью доступно снаружи.</p>
+<p>Чтобы не было таких казусов, нам нужно ограничить контроль над свойством со стороны внешнего кода.</p>
+<p><strong>Для лучшего контроля над свойством его делают приватным, а запись значения осуществляется через специальный метод, который называют <em>«сеттер»</em> (setter method).</strong></p>
+<p>Типичное название для сеттера – <code>setСвойство</code>, например, в случае с кофеваркой таким сеттером будет метод <code>setWaterAmount</code>:</p>
+<div class="code-example" data-highlight-block="9-19" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function CoffeeMachine(power, capacity) { // capacity - ёмкость кофеварки
+  var waterAmount = 0;
+
+  var WATER_HEAT_CAPACITY = 4200;
+
+  function getTimeToBoil() {
+    return waterAmount * WATER_HEAT_CAPACITY * 80 / power;
+  }
+
+  // "умная" установка свойства
+  this.setWaterAmount = function(amount) {
+    if (amount &lt; 0) {
+      throw new Error("Значение должно быть положительным");
+    }
+    if (amount &gt; capacity) {
+      throw new Error("Нельзя залить воды больше, чем " + capacity);
+    }
+
+    waterAmount = amount;
+  };
+
+  function onReady() {
+    alert( 'Кофе готов!' );
+  }
+
+  this.run = function() {
+    setTimeout(onReady, getTimeToBoil());
+  };
+
+}
+
+var coffeeMachine = new CoffeeMachine(1000, 500);
+coffeeMachine.setWaterAmount(600); // упс, ошибка!</code></pre>
+</div>
+</div>
+</div><p>Теперь <code>waterAmount</code> – внутреннее свойство, его можно записать (через сеттер), но, увы, нельзя прочитать.</p>
+<p><strong>Для того, чтобы дать возможность внешнему коду узнать его значение, создадим специальную функцию – «геттер» (getter method).</strong></p>
+<p>Геттеры обычно имеют название вида <code>getСвойство</code>, в данном случае <code>getWaterAmount</code>:</p>
+<div class="code-example" data-highlight-block="13-15" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function CoffeeMachine(power, capacity) {
+  //...
+  this.setWaterAmount = function(amount) {
+    if (amount &lt; 0) {
+      throw new Error("Значение должно быть положительным");
+    }
+    if (amount &gt; capacity) {
+      throw new Error("Нельзя залить воды больше, чем " + capacity);
+    }
+
+    waterAmount = amount;
+  };
+
+  this.getWaterAmount = function() {
+    return waterAmount;
+  };
+}
+
+var coffeeMachine = new CoffeeMachine(1000, 500);
+coffeeMachine.setWaterAmount(450);
+alert( coffeeMachine.getWaterAmount() ); // 450</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#единый-геттер-сеттер" name="единый-геттер-сеттер">Единый геттер-сеттер</a></h2><p>Для большего удобства иногда делают единый метод, который называется так же, как свойство и отвечает <em>и за запись и за чтение</em>.</p>
+<p>При вызове без параметров такой метод возвращает свойство, а при передаче параметра – назначает его.</p>
+<p>Выглядит это так:</p>
+<div class="code-example" data-highlight-block="3-3,23-24" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function CoffeeMachine(power, capacity) {
+  var waterAmount = 0;
+
+  this.waterAmount = function(amount) {
+    // вызов без параметра, значит режим геттера, возвращаем свойство
+    if (!arguments.length) return waterAmount;
+
+    // иначе режим сеттера
+    if (amount &lt; 0) {
+      throw new Error("Значение должно быть положительным");
+    }
+    if (amount &gt; capacity) {
+      throw new Error("Нельзя залить воды больше, чем " + capacity);
+    }
+
+    waterAmount = amount;
+  };
+
+}
+
+var coffeeMachine = new CoffeeMachine(1000, 500);
+
+// пример использования
+coffeeMachine.waterAmount(450);
+alert( coffeeMachine.waterAmount() ); // 450</code></pre>
+</div>
+</div>
+</div><p>Единый геттер-сеттер используется реже, чем две отдельные функции, но в некоторых JavaScript-библиотеках, например <a href="http://jquery.com">jQuery</a> и <a href="http://d3js.org">D3</a> подобный подход принят на уровне концепта.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Для большего контроля над присвоением и чтением значения, вместо свойства делают «функцию-геттер» и «функцию-сеттер», геттер возвращает значение, сеттер – устанавливает.</li>
+<li>Если свойство предназначено только для чтения, то может быть только геттер, только для записи – только сеттер.</li>
+<li>В качестве альтернативы паре геттер/сеттер применяют единую функцию, которая без аргументов ведёт себя как геттер, а с аргументом – как сеттер.</li>
+</ul>
+<p>Также можно организовать геттеры/сеттеры для свойства, не меняя структуры кода, через <a href="/descriptors-getters-setters">дескрипторы свойств</a>.</p>
+</cut></div></meta></article></main></div></body></html>

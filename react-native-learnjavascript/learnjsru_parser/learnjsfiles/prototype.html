@@ -1,0 +1,253 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Прототип объекта" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Объекты в JavaScript можно организовать в цепочки так, чтобы свойство, не найденное в одном объекте, автоматически искалось бы в другом.</p>
+<p>Связующим звеном выступает специальное свойство <code>__proto__</code>.</p>
+<cut>
+<h2><a class="main__anchor" href="#прототип-proto" name="прототип-proto">Прототип <strong>proto</strong></a></h2><p>Если один объект имеет специальную ссылку <code>__proto__</code> на другой объект, то при чтении свойства из него, если свойство отсутствует в самом объекте, оно ищется в объекте <code>__proto__</code>.</p>
+<p>Свойство <code>__proto__</code> доступно во всех браузерах, кроме IE10-, а в более старых IE оно, конечно же, тоже есть, но напрямую к нему не обратиться, требуются чуть более сложные способы, которые мы рассмотрим позднее.</p>
+<p>Пример кода (кроме IE10-):</p>
+<div class="code-example" data-highlight-block="7-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var animal = {
+  eats: true
+};
+var rabbit = {
+  jumps: true
+};
+
+rabbit.__proto__ = animal;
+
+// в rabbit можно найти оба свойства
+alert( rabbit.jumps ); // true
+alert( rabbit.eats ); // true</code></pre>
+</div>
+</div>
+</div><ol>
+<li>Первый <code>alert</code> здесь работает очевидным образом – он выводит свойство <code>jumps</code> объекта <code>rabbit</code>.</li>
+<li>Второй <code>alert</code> хочет вывести <code>rabbit.eats</code>, ищет его в самом объекте <code>rabbit</code>, не находит – и продолжает поиск в объекте <code>rabbit.__proto__</code>, то есть, в данном случае, в <code>animal</code>.</li>
+</ol>
+<p>Иллюстрация происходящего при чтении <code>rabbit.eats</code> (поиск идет снизу вверх):</p>
+<figure><div class="image" style="width:161px">
+<div class="image__ratio" style="padding-top:93.16770186335404%"></div>
+<img alt="" class="image__image" height="150" src="article/prototype/proto-animal-rabbit.png" width="161">
+</img></div></figure><p><strong>Объект, на который указывает ссылка <code>__proto__</code>, называется <em>«прототипом»</em>. В данном случае получилось, что <code>animal</code> является прототипом для <code>rabbit</code>.</strong></p>
+<p><strong>Также говорят, что объект <code>rabbit</code> <em>«прототипно наследует»</em> от <code>animal</code>.</strong></p>
+<p>Обратим внимание – прототип используется исключительно при чтении. Запись значения, например, <code>rabbit.eats = value</code> или удаление <code>delete rabbit.eats</code> – работает напрямую с объектом.</p>
+<p>В примере ниже мы записываем свойство в сам <code>rabbit</code>, после чего <code>alert</code> перестаёт брать его у прототипа, а берёт уже из самого объекта:</p>
+<div class="code-example" data-highlight-block="10-10" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var animal = {
+  eats: true
+};
+var rabbit = {
+  jumps: true,
+  eats: false
+};
+
+rabbit.__proto__ = animal;
+
+alert( rabbit.eats ); // false, свойство взято из rabbit</code></pre>
+</div>
+</div>
+</div><p><strong>Другими словами, прототип – это «резервное хранилище свойств и методов» объекта, автоматически используемое при поиске.</strong></p>
+<p>У объекта, который является <code>__proto__</code>, может быть свой <code>__proto__</code>, у того – свой, и так далее. При этом свойства будут искаться по цепочке.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Ссылка <strong>proto</strong> в спецификации</span></div>
+<div class="important__content"><p>Если вы будете читать спецификацию ECMAScript – свойство <code>__proto__</code> обозначено в ней как <code>[[Prototype]]</code>.</p>
+<p>Двойные квадратные скобки здесь важны, чтобы не перепутать его с совсем другим свойством, которое называется <code>prototype</code>, и которое мы рассмотрим позже.</p>
+</div></div>
+<h2><a class="main__anchor" href="#метод-hasownproperty" name="метод-hasownproperty">Метод hasOwnProperty</a></h2><p>Обычный цикл <code>for..in</code> не делает различия между свойствами объекта и его прототипа.</p>
+<p>Он перебирает всё, например:</p>
+<div class="code-example" data-highlight-block="9-11" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var animal = {
+  eats: true
+};
+
+var rabbit = {
+  jumps: true,
+  __proto__: animal
+};
+
+for (var key in rabbit) {
+  alert( key + " = " + rabbit[key] ); // выводит и "eats" и "jumps"
+}</code></pre>
+</div>
+</div>
+</div><p>Иногда хочется посмотреть, что находится именно в самом объекте, а не в прототипе.</p>
+<p><strong>Вызов <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/HasOwnProperty">obj.hasOwnProperty(prop)</a> возвращает <code>true</code>, если свойство <code>prop</code> принадлежит самому объекту <code>obj</code>, иначе <code>false</code>.</strong></p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="9-11" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var animal = {
+  eats: true
+};
+
+var rabbit = {
+  jumps: true,
+  __proto__: animal
+};
+
+alert( rabbit.hasOwnProperty('jumps') ); // true: jumps принадлежит rabbit
+
+alert( rabbit.hasOwnProperty('eats') ); // false: eats не принадлежит</code></pre>
+</div>
+</div>
+</div><p>Для того, чтобы перебрать свойства самого объекта, достаточно профильтровать <code>key</code> через <code>hasOwnProperty</code>:</p>
+<div class="code-example" data-highlight-block="10-10" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var animal = {
+  eats: true
+};
+
+var rabbit = {
+  jumps: true,
+  __proto__: animal
+};
+
+for (var key in rabbit) {
+  if (!rabbit.hasOwnProperty(key)) continue; // пропустить "не свои" свойства
+  alert( key + " = " + rabbit[key] ); // выводит только "jumps"
+}</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#object-create-null" name="object-create-null">Object.create(null)</a></h2><p>Зачастую объекты используют для хранения произвольных значений по ключу, как коллекцию:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var data = {};
+data.text = "Привет";
+data.age = 35;
+// ...</code></pre>
+</div>
+</div>
+</div><p>При дальнейшем поиске в этой коллекции мы найдём не только <code>text</code> и <code>age</code>, но и встроенные функции:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var data = {};
+alert(data.toString); // функция, хотя мы её туда не записывали</code></pre>
+</div>
+</div>
+</div><p>Это может быть неприятным сюрпризом и приводить к ошибкам, если названия свойств приходят от посетителя и могут быть произвольными.</p>
+<p>Чтобы этого избежать, мы можем исключать свойства, не принадлежащие самому объекту:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var data = {};
+
+// выведет toString только если оно записано в сам объект
+alert(data.hasOwnProperty('toString') ? data.toString : undefined);</code></pre>
+</div>
+</div>
+</div><p>Однако, есть путь и проще:</p>
+<div class="code-example" data-highlight-block="0-0,4-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var data = Object.create(null);
+data.text = "Привет";
+
+alert(data.text); // Привет
+alert(data.toString); // undefined</code></pre>
+</div>
+</div>
+</div><p>Объект, создаваемый при помощи <code>Object.create(null)</code> не имеет прототипа, а значит в нём нет лишних свойств. Для коллекции – как раз то, что надо.</p>
+<h2><a class="main__anchor" href="#методы-для-работы-с-proto" name="методы-для-работы-с-proto">Методы для работы с <strong>proto</strong></a></h2><p>В современных браузерах есть два дополнительных метода для работы с <code>__proto__</code>. Зачем они нужны, если есть <code>__proto__</code>? В общем-то, не очень нужны, но по историческим причинам тоже существуют.</p>
+<dl>
+<dt>Чтение: <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/getPrototypeOf">Object.getPrototypeOf(obj)</a></dt>
+<dd>Возвращает <code>obj.__proto__</code> (кроме IE8-)</dd>
+<dt>Запись: <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/setPrototypeOf">Object.setPrototypeOf(obj, proto)</a></dt>
+<dd>Устанавливает <code>obj.__proto__ = proto</code> (кроме IE10-).</dd>
+</dl>
+<p>Кроме того, есть ещё один вспомогательный метод:</p>
+<dl>
+<dt>Создание объекта с прототипом: <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/create">Object.create(proto, descriptors)</a></dt>
+<dd>Создаёт пустой объект с <code>__proto__</code>, равным первому аргументу (кроме IE8-), второй необязательный аргумент может содержать <a href="/descriptors-getters-setters">дескрипторы свойств</a>.</dd>
+</dl>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>В JavaScript есть встроенное «наследование» между объектами при помощи специального свойства <code>__proto__</code>.</li>
+<li>При установке свойства <code>rabbit.__proto__ = animal</code> говорят, что объект <code>animal</code> будет «прототипом» <code>rabbit</code>.</li>
+<li>При чтении свойства из объекта, если его в нём нет, оно ищется в <code>__proto__</code>. Прототип задействуется только при чтении свойства. Операции присвоения <code>obj.prop =</code> или удаления <code>delete obj.prop</code> совершаются всегда над самим объектом <code>obj</code>.</li>
+</ul>
+<p>Несколько прототипов одному объекту присвоить нельзя, но можно организовать объекты в цепочку, когда один объект ссылается на другой при помощи <code>__proto__</code>, тот ссылается на третий, и так далее.</p>
+<p>В современных браузерах есть методы для работы с прототипом:</p>
+<ul>
+<li><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/getPrototypeOf">Object.getPrototypeOf(obj)</a> (кроме IE8-)</li>
+<li><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/setPrototypeOf">Object.setPrototypeOf(obj, proto)</a> (кроме IE10-)</li>
+<li><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/create">Object.create(proto, descriptors)</a> (кроме IE8-)</li>
+</ul>
+<p>Возможно, вас смущает недостаточная поддержка <code>__proto__</code> в старых IE. Но это не страшно. В последующих главах мы рассмотрим дополнительные методы работы с <code>__proto__</code>, включая те, которые работают везде.</p>
+<p>Также мы рассмотрим, как свойство <code>__proto__</code> используется внутри самого языка JavaScript и как организовать классы с его помощью.</p>
+</cut></div></meta></article></main></div></body></html>

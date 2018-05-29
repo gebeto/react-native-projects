@@ -1,0 +1,468 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="GCC: продвинутые оптимизации" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Продвинутый режим оптимизации google closure compiler включается опцией <code>–compilation_level ADVANCED_OPTIMIZATIONS.</code></p>
+<p>Слово «продвинутый» (advanced) здесь, пожалуй, не совсем подходит. Было бы более правильно назвать его «супер-агрессивный-ломающий-ваш-неподготовленный-код-режим». Кардинальное отличие применяемых оптимизаций от обычных (simple) – в том, что они небезопасны.</p>
+<p>Чтобы им пользоваться – надо уметь это делать.</p>
+<cut>
+<h2><a class="main__anchor" href="#основной-принцип-продвинутого-режима" name="основной-принцип-продвинутого-режима">Основной принцип продвинутого режима</a></h2><ul>
+<li>Если в обычном режиме переименовываются только локальные переменные внутри функций, то в «продвинутом» – на более короткие имена заменяется все.</li>
+<li>Если в обычном режиме удаляется недостижимый код после <code>return</code>, то в продвинутом – вообще весь код, который не вызывается в явном виде.</li>
+</ul>
+<p>Например, если запустить продвинутую оптимизацию на таком коде:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// my.js
+function test(node) {
+  node.innerHTML = "newValue"
+}</code></pre>
+</div>
+</div>
+</div><p>Строка запуска компилятора:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">java -jar compiler.jar --compilation_level ADVANCED_OPTIMIZATIONS --js my.js</code></pre>
+</div>
+</div>
+</div><p>…То результат будет – пустой файл. Google Closure Compiler увидит, что функция <code>test</code> не используется, и с чистой совестью вырежет ее.</p>
+<p>А в следующем скрипте функция сохранится:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function test(n) {
+  alert( "this is my test number " + n );
+}
+test(1);
+test(2);</code></pre>
+</div>
+</div>
+</div><p>После сжатия:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function a(b) {
+  alert("this is my test number " + b)
+}
+a(1);
+a(2);</code></pre>
+</div>
+</div>
+</div><p>Здесь в скрипте присутствует явный вызов функции, поэтому она сохранилась.</p>
+<p>Конечно, есть способы, чтобы сохранить функции, вызов которых происходит вне скрипта, и мы их обязательно рассмотрим.</p>
+<p><strong>Продвинутый режим сжатия не предусматривает сохранения глобальных переменных. Он  переименовывает, инлайнит, удаляет вообще все символы, кроме зарезервированных.</strong></p>
+<p>Иначе говоря, продвинутый режим (ADVANCED_OPTIMIZATIONS), в отличие от простого (SIMPLE_OPTIMIZATIONS – по умолчанию), вообще не заботится о доступности кода извне и сохранении ссылочной целостности относительно внешних скриптов.</p>
+<p>Единственное, что он гарантирует – это внутреннюю ссылочную целостность, и то – при соблюдении ряда условий и практик программирования.</p>
+<p>Собственно, за счет такого агрессивного подхода и достигается дополнительный эффект оптимизации и сжатия скриптов.</p>
+<div class="summary"><div class="summary__content"><p>То есть, продвинутый режим – это не просто «улучшенный обычный», а принципиально другой, небезопасный и обфусцирующий подход к сжатию.</p>
+<p>Этот режим является «фирменной фишкой» Google Closure Compiler, недоступной при использовании других компиляторов.</p>
+</div></div>
+<p>Для того, чтобы эффективно сжимать Google Closure Compiler в продвинутом режиме, нужно понимать, что и как он делает. Это мы сейчас обсудим.</p>
+<h3><a class="main__anchor" href="#сохранение-ссылочной-целостности" name="сохранение-ссылочной-целостности">Сохранение ссылочной целостности</a></h3><p>Чтобы использовать сжатый скрипт, мы должны иметь возможность вызывать функции под теми именами, которые им дали.</p>
+<p>То есть, перед нами стоит задача <em>сохранения ссылочной целостности</em>, которая заключается в том, чтобы обеспечить доступность нужных функций для обращений по исходному имени извне скрипта.</p>
+<p>Существует два способа сохранения внешней ссылочной целостности: экстерны и экспорты. Мы в подробностях рассмотрим оба, но перед этим необходимо упомянуть о модулях – другой важнейшей возможности GCC.</p>
+<h3><a class="main__anchor" href="#модули" name="модули">Модули</a></h3><p>При сжатии GCC можно указать одновременно много JavaScript-файлов. "Эка невидаль, " – скажете вы, и будете правы. Да, пока что ничего особого.</p>
+<p>Но в дополнение к этому можно явно указать, какие исходные файлы сжать в какие файлы результата. То есть, разбить итоговую сборку на модули.</p>
+<p>Так что страницы могут грузить модули по мере надобности. Например, по умолчанию – главный, а дополнительная функциональность – загружаться лишь там, где она нужна.</p>
+<p>Для такой сборки используется флаг компилятора <code>--module имя:количество файлов</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">java -jar compiler.jar --js base.js --js main.js  --js admin.js --module
+first:2 --module second:1:first</code></pre>
+</div>
+</div>
+</div><p>Эта команда создаст модули: first.js и second.js.</p>
+<p>Первый модуль, который назван «first», создан из объединённого и оптимизированного кода первых двух файлов (<code>base.js</code> и <code>main.js</code>).</p>
+<p>Второй модуль, который назван «second», создан из <code>admin.js</code> – это следующий аргумент <code>--js</code> после включенных в первый модуль.</p>
+<p>Второй модуль в нашем случае зависит от первого. Флаг <code>--module second:1:first</code> как раз означает, что модуль <code>second</code> будет создан из одного файла после вошедших в предыдущий модуль (<code>first</code>) и зависит от модуля <code>first</code>.</p>
+<p>А теперь – самое вкусное.</p>
+<p><strong>Ссылочная целостность между всеми получившимися файлами гарантируется.</strong></p>
+<p>Если в одном функция <code>doFoo</code> заменена на <code>b</code>, то и в другом тоже будет использоваться <code>b</code>.</p>
+<p>Это означает, что проблем между JS-файлами не будет. Они могут свободно вызывать друг друга без экспорта, пока находятся в единой модульной сборке.</p>
+<h3><a class="main__anchor" href="#экстерны" name="экстерны">Экстерны</a></h3><p>Экстерн (extern) – имя, которое числится в специальном списке компилятора. Он должен быть определен вне скрипта, в файле экстернов.</p>
+<p><strong>Компилятор никогда не переименовывает экстерны.</strong></p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">document.onkeyup = function(event) {
+  alert(event.type)
+}</code></pre>
+</div>
+</div>
+</div><p>После продвинутого сжатия:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">document.onkeyup = function(a) {
+  alert(a.type)
+}</code></pre>
+</div>
+</div>
+</div><p>Как видите, переименованной оказалась только переменная <code>event</code>. Такое переименование заведомо безопасно, т.к. <code>event</code> – локальная переменная.</p>
+<p>Почему компилятор не тронул остального? Попробуем другой вариант:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">document.blabla = function(event) {
+  alert(event.megaProperty)
+}</code></pre>
+</div>
+</div>
+</div><p>После компиляции:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">document.a = function(a) {
+  alert(a.b)
+}</code></pre>
+</div>
+</div>
+</div><p>Теперь компилятор переименовал и <code>blabla</code> и <code>megaProperty</code>.</p>
+<p>Дело в том, что названия, использованные до этого, были во внутреннем списке экстернов компилятора. Этот список охватывает основные объекты браузеров и находится (под именем <code>externs.zip</code>) в корне архива <code>compiler.jar</code>.</p>
+<p><strong>Компилятор переименовывает имя списка экстернов только когда так названа локальная переменная.</strong></p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">window.resetNode = function(node) {
+  var innerHTML = "test";
+  node.innerHTML = innerHTML;
+}</code></pre>
+</div>
+</div>
+</div><p>На выходе:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">window.a = function(a) {
+  a.innerHTML = "test"
+};</code></pre>
+</div>
+</div>
+</div><p>Как видите, внутренняя переменная <code>innerHTML</code> не просто переименована – она заинлайнена (заменена на значение). Так как переменная локальна, то любые действия внутри функции с ней безопасны.</p>
+<p>А свойство <code>innerHTML</code> не тронуто, как и объект <code>window</code> – так как они в списке экстернов и не являются локальными переменными.</p>
+<p>Это приводит к следующему побочному эффекту. Иногда свойства, которые следовало бы сжать, не сжимаются. Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">window['User'] = function(name, type, age) {
+  this.name = name
+  this.type = type
+  this.age = age
+}</code></pre>
+</div>
+</div>
+</div><p>После сжатия:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">window.User = function(a, b, c) {
+  this.name = a;
+  this.type = b;
+  this.a = c
+};</code></pre>
+</div>
+</div>
+</div><p>Как видно, свойство <code>age</code> сжалось, а <code>name</code> и <code>type</code> – нет. Это побочный эффект экстернов:  <code>name</code> и <code>type</code> – в списке объектов браузера, и компилятор просто старается не наломать дров.</p>
+<p>Поэтому отметим еще одно полезное правило оптимизации:</p>
+<p><strong>Названия своих свойств не должны совпадать с зарезервированными словами (экстернами). Тогда они будут хорошо сжиматься.</strong></p>
+<p>Для задания списка экстернов их достаточно перечислить в файле и указать этот файл флагом <code>–externs &lt;файл экстернов.js&gt;</code>.</p>
+<p>При перечислении объектов в файле экстернов – объявляйте их и перечисляйте свойства. Все эти объявления никуда не идут, они используются только для создания списка, который обрабатывается компилятором.</p>
+<p>Например, файл <code>myexterns.js</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var dojo = {}
+dojo._scopeMap;</code></pre>
+</div>
+</div>
+</div><p>Использование такого файла при сжатии (опция <code>–externs myexterns.js</code>) приведет к тому, что все обращения к символам <code>dojo</code> и к <code>dojo._scopeMap</code> будут не сжаты, а оставлены «как есть».</p>
+<h3><a class="main__anchor" href="#экспорт" name="экспорт">Экспорт</a></h3><p><em>Экспорт</em> – программный ход, основанный на следующем правиле поведения компилятора.</p>
+<p><strong>Компилятор заменяет обращения к свойствам через кавычки на точку, и при этом не трогает название свойства.</strong></p>
+<p>Например, <code>window[„User“]</code> превратится в <code>window.User</code>, но не дальше.</p>
+<p>Таким образом можно <em>«экспортировать»</em> нужные функции и объекты:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function SayWidget(elem) {
+  this.elem = elem
+  this.init()
+}
+window['SayWidget'] = SayWidget;</code></pre>
+</div>
+</div>
+</div><p>На выходе:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function a(b) {
+  this.a = b;
+  this.b()
+}
+window.SayWidget = a;</code></pre>
+</div>
+</div>
+</div><p>Обратим внимание – сама функция <code>SayWidget</code> была переименована в <code>a</code>. Но затем – экспортирована как <code>window.SayWidget</code>, и таким образом доступна внешним скриптам.</p>
+<p>Добавим пару методов в прототип:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function SayWidget(elem) {
+  this.elem = elem;
+  this.init();
+}
+
+SayWidget.prototype = {
+  init: function() {
+    this.elem.style.display = 'none'
+  },
+
+  setSayHandler: function() {
+    this.elem.onclick = function() {
+      alert("hi")
+    };
+  }
+}
+
+window['SayWidget'] = SayWidget;
+SayWidget.prototype['setSayHandler'] = SayWidget.prototype.setSayHandler;</code></pre>
+</div>
+</div>
+</div><p>После сжатия:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function a(b) {
+  this.a = b;
+  this.b()
+}
+a.prototype = {b:function() {
+  this.a.style.display = "none"
+}, c:function() {
+  this.a.onclick = function() {
+    alert("hi")
+  }
+}};
+window.SayWidget = a;
+a.prototype.setSayHandler = a.prototype.c;</code></pre>
+</div>
+</div>
+</div><p>Благодаря строке</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">SayWidget.prototype['setSayHandler'] = SayWidget.prototype.setSayHandler</code></pre>
+</div>
+</div>
+</div><p>метод <code>setSayHandler</code> экспортирован и доступен для внешнего вызова.</p>
+<p>Сама строка экспорта выглядит довольно глупо. По виду – присваиваем свойство самому себе.</p>
+<p>Но логика сжатия GCC работает так, что такая конструкция является экспортом. Справа переименование свойства <code>setSayHandler</code> происходит, а слева – нет.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Планируйте жизнь после сжатия</span></div>
+<div class="important__content"><p>Рассмотрим следующий код:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">window['Animal'] = function() {
+  this.blabla = 1;
+  this['blabla'] = 2;
+}</code></pre>
+</div>
+</div>
+</div><p>После сжатия:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">window.Animal = function() {
+  this.a = 1;
+  this.blabla = 2
+};</code></pre>
+</div>
+</div>
+</div><p>Как видно, первое обращение к свойству <code>blabla</code> сжалось, а второе (как и все аналогичные) – преобразовалось в синтаксис через точку.
+В результате получили некорректное поведение кода.</p>
+<p>Так что, используя продвинутый режим оптимизации, планируйте поведение кода после сжатия.</p>
+<p><strong>Если где-то возможно обращение к свойствам через квадратные скобки по полному имени – такое свойство должно быть экспортировано.</strong></p>
+</div></div>
+<h3><a class="main__anchor" href="#goog-exportsymbol-и-goog-exportproperty" name="goog-exportsymbol-и-goog-exportproperty">goog.exportSymbol и goog.exportProperty</a></h3><p>В библиотеке <a href="https://developers.google.com/closure/library/">Google Closure Library</a> для экспорта есть специальная функция <code>goog.exportSymbol</code>. Вызывается так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">goog.exportSymbol('my.SayWidget', SayWidget)</code></pre>
+</div>
+</div>
+</div><p>Эта функция по сути работает также, как и рассмотренная выше строка с присвоением свойства, но при необходимости создает нужные объекты.</p>
+<p>Она аналогична коду:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">window['my'] = window['my'] || {}
+window['my']['SayWidget'] = SayWidget</code></pre>
+</div>
+</div>
+</div><p>То есть, если путь к объекту не существует – <code>exportSymbol</code> создаст нужные пустые объекты.</p>
+<p>Функция <code>goog.exportProperty</code> экспортирует свойство объекта:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">goog.exportProperty(SayWidget.prototype, 'setSayHandler', SayWidget.prototype.setSayHandler)</code></pre>
+</div>
+</div>
+</div><p>Строка выше – то же самое, что и:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">SayWidget.prototype['setSayHandler'] = SayWidget.prototype.setSayHandler</code></pre>
+</div>
+</div>
+</div><p>Зачем они нужны, если все можно сделать простым присваиванием?</p>
+<p>Основная цель этих функций – во взаимодействии с Google Closure Compiler. Они дают информацию компилятору об экспортах, которую он может использовать.</p>
+<p>Например, есть недокументированная внутренняя опция <code>externExportsPath</code>, которая генерирует из всех экспортов файл экстернов. Таким образом можно распространять откомпилированный JavaScript-файл как внешнюю библиотеку, с файлом экстернов для удобного внешнего связывания.</p>
+<p>Кроме того, экспорт через эти функциями удобен и нагляден.</p>
+<p>Если вы используете продвинутый режим оптимизации, то можно взять их из файла base.js Google Closure Library. Можно и подключить этот файл целиком – оптимизатор при продвинутом сжатии вырежет из него почти всё лишнее, так что overhead будет минимальным.</p>
+<h3><a class="main__anchor" href="#отличия-экспорта-от-экстерна" name="отличия-экспорта-от-экстерна">Отличия экспорта от экстерна</a></h3><p>Между экспортом и экстерном есть кое-что общее. И то и другое дает возможность доступа к объектам под исходным именем, до переименования.</p>
+<p>Но, в остальном, это совершенно разные вещи.</p>
+<table>
+<thead>
+<tr>
+<th>Экстерн</th>
+<th>Экспорт</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Служит для тотального запрета на переименование всех обращений к свойству.
+Задумано для сохранения обращений к стандартным объектам браузера, внешним библиотекам.</td>
+<td>Служит для открытия доступа к свойству извне под указанным именем.
+Задумано для открытия внешнего интерфейса к сжатому скрипту.</td>
+</tr>
+<tr>
+<td>Работает со свойством, объявленным вне скрипта.
+Вы не можете объявить новое свойство в скрипте и сделать его экстерном.</td>
+<td>Создает ссылку на свойство, объявленное в скрипте.</td>
+</tr>
+<tr>
+<td>Если <code>window</code> - экстерн, то все обращения к  <code>window</code> в скрипте останутся как есть.</td>
+<td>Если <code>user</code> экспортируется, то создается только одна ссылка под полным именем, а все остальные обращения будут сокращены.</td>
+</tr>
+</tbody>
+</table>
+<h2><a class="main__anchor" href="#стиль-разработки" name="стиль-разработки">Стиль разработки</a></h2><p>Посмотрим, как сжиматель поведёт себя на следующем, типичном, объявлении библиотеки:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">(function(window, undefined) {
+
+  // пространство имен и локальная переменная для него
+  var MyFramework = window.MyFramework = {};
+
+  // функция фреймворка, доступная снаружи
+  MyFramework.publicOne = function() {
+    makeElem();
+  };
+
+  // приватная функция фреймворка
+  function makeElem() {
+    var div = document.createElement('div');
+    document.body.appendChild(div);
+  }
+
+  // еще какая-то функция
+  MyFramework.publicTwo = function() {};
+
+})(window);
+
+// использование
+MyFramework.publicOne();</code></pre>
+</div>
+</div>
+</div><p>Результат компиляции в обычном режиме:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// java -jar compiler.jar --js myframework.js --formatting PRETTY_PRINT
+(function(a) {
+  a = a.MyFramework = {};
+  a.publicOne = function() {
+    var a = document.createElement("div");
+    document.body.appendChild(a)
+  };
+  a.publicTwo = function() {
+  }
+})(window);
+MyFramework.publicOne();</code></pre>
+</div>
+</div>
+</div><p>Это – примерно то, что мы ожидали. Неиспользованный метод <code>publicTwo</code> остался, локальные свойства переименованы и заинлайнены.</p>
+<p>А теперь продвинутый режим:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// --compilation_level ADVANCED_OPTIMIZATIONS
+window.a = {};
+MyFramework.b();</code></pre>
+</div>
+</div>
+</div><p>Оно не работает! Компилятор попросту не разобрался, что и как вызывается, и превратил рабочий JS-файл в один сплошной баг.</p>
+<p>В зависимости от версии GCC у вас может быть и что-то другое.</p>
+<p>Всё дело в том, что такой стиль объявления нетипичен для инструментов, которые в самом Google разрабатываются и сжимаются этим минификатором.</p>
+<p>Типичный правильный стиль:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// пространство имен и локальная переменная для него
+var MyFramework = {};
+
+MyFrameWork._makeElem = function() {
+  var div = document.createElement('div');
+  document.body.appendChild(div);
+};
+
+MyFramework.publicOne = function() {
+  MyFramework._makeElem();
+};
+
+MyFramework.publicTwo = function() {};
+
+// использование
+MyFramework.publicOne();</code></pre>
+</div>
+</div>
+</div><p>Обычное сжатие здесь будет бесполезно, а вот продвинутый режим идеален:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// в зависимости от версии GCC результат может отличаться
+MyFrameWork.a = function() {
+  var a = document.createElement("div");
+  document.body.appendChild(a)
+};
+MyFrameWork.a();</code></pre>
+</div>
+</div>
+</div><p>Google Closure Compiler не только разобрался в структуре и удалил лишний метод – он заинлайнил функции, чтобы итоговый размер получился минимальным.</p>
+<p>Как говорится, преимущества налицо.</p>
+<h2><a class="main__anchor" href="#резюме" name="резюме">Резюме</a></h2><p>Продвинутый режим оптимизации сжимает, оптимизирует и, при возможности, удаляет все свойства и методы, за исключением экстернов.</p>
+<p>Это является принципиальным отличием, по сравнению с другими упаковщиками.</p>
+<p>Отказ от сохранения внешней ссылочной целостности с одной стороны позволяет увеличить уровень сжатия, но требует поддержки со стороны разработчика.</p>
+<p>Основная проблема этого сжатия – усложнение разработки. Добавляется дополнительный уровень возможных проблем: сжатие. Конечно, можно отлаживать и сжатый код, для этого придуманы <a href="http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/">Source Maps</a>, но клиентская разработка и без того достаточно сложна.</p>
+<p>Поэтому его используют редко.</p>
+<p>Как правило, есть две причины для использования продвинутого режима:</p>
+<ol>
+<li>
+<p><strong>Обфускация кода.</strong></p>
+<p>Если в коде после обычного сжатия ещё как-то можно разобраться, то после продвинутого – уже нет. Всё переименовано и заинлайнено. В теории это, конечно, возможно, но «порог входа» в такой код несоизмеримо выше.</p>
+<p>Судя по виду скриптов на сайтах, созданных Google, сам Google жмет свои скрипты именно продвинутым режимом оптимизации. И библиотека Google Closure Library тоже рассчитана на него.</p>
+</li>
+<li>
+<p><strong>Хорошие сжатие виджетов, счётчиков.</strong></p>
+<p>Небольшой код, который отдаётся наружу, может быть сжат в продвинутом режиме. Так как он небольшой – все ошибки можно легко исправить, а продвинутый режим гарантирует наилучшее сжатие.</p>
+</li>
+</ol>
+</cut></div></meta></article></main></div></body></html>

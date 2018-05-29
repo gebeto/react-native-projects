@@ -1,0 +1,73 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Полезные расширения Firefox и Chrome" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Здесь мы посмотрим ряд полезных расширений, которые, надеюсь, смогут вам пригодиться.</p>
+<cut>
+<p>Если какое-то из расширений вас заинтересует – его можно поставить. В Firefox расширения устанавливаются из меню «Инструменты → Дополнения», в Chrome – через меню «Настройки → Расширения → (внизу) Ещё расширения» или напрямую из «магазина» <code>https://chrome.google.com/webstore/category/home</code>.</p>
+<p>Для расширений других браузеров такого единого способа нет.</p>
+<h2><a class="main__anchor" href="#web-developer-ff-ch" name="web-developer-ff-ch">Web Developer (FF, Ch)</a></h2><p>Это расширение добавляет наверх браузера панель с разнообразными инструментами:</p>
+<figure><div class="image" style="width:644px">
+<div class="image__ratio" style="padding-top:9.627329192546584%"></div>
+<img alt="" class="image__image" height="62" src="article/tools-browser-extensions/webdeveloper.png" width="644">
+</img></div></figure><p>Большинство возможностей, скорее, полезны для верстальщиков, но и для  разработчиков кое-что есть.</p>
+<p>Например:</p>
+<ul>
+<li><strong>Disable Cache</strong> – полностью отключает кэш браузера</li>
+<li><strong>Disable Cookies</strong> – браузер перестанет посылать и принимать Cookie. Впрочем, Firebug это тоже умеет (вкладка Cookie)</li>
+<li><strong>Disable JavaScript</strong> – нужно редко, но иногда полезно</li>
+<li><strong>Resize</strong> на нужное разрешение – у разработчиков мониторы большие, а у пользователей разные. Можно добавить своё разрешение.</li>
+</ul>
+<p>Иконок там много, поэтому наверняка вы чем-то не будете пользоваться. Лишние иконки можно убрать. В Firefox(Win) это делается так: Правый клик на панель → Настроить → Перетащить лишние иконки с панели.</p>
+<h2><a class="main__anchor" href="#dns-flusher-ff-dns-flusher-for-chrome" name="dns-flusher-ff-dns-flusher-for-chrome">DNS Flusher (FF) / DNS Flusher for Chrome</a></h2><p>Это расширение позволяет сбросить кэш DNS одним кликом.</p>
+<p>Оно нужно в тех случаях, когда вы меняете адреса в файле <code>hosts</code> и хотите, чтобы изменения вступили в действие тут же.</p>
+<p>При установке в статусной строке, снизу, появляется кнопочка с IP-адресом. По клику на ней кэш DNS сбрасывается.</p>
+<figure><div class="image" style="width:118px">
+<div class="image__ratio" style="padding-top:42.3728813559322%"></div>
+<img alt="" class="image__image" height="50" src="article/tools-browser-extensions/dnsflusher.png" width="118">
+</img></div></figure><h2><a class="main__anchor" href="#более-удобный-firebug-ff" name="более-удобный-firebug-ff">Более удобный Firebug (FF)</a></h2><p>Здесь собраны расширения, улучшающие работу отладчика Firebug для Firefox.</p>
+<dl>
+<dt>Fire Rainbow</dt>
+<dd>Подсветка кода для Firebug</dd>
+<dt>FireQuery</dt>
+<dd>Для разработки под jQuery – выводит в разных местах вспомогательную информацию.</dd>
+<dt>Firebug Autocompleter</dt>
+<dd>Включает автодополнение для консоли, когда она в многострочном режиме.</dd>
+<dt><a href="http://code.google.com/p/css-x-fire/">CSS-X-Fire</a></dt>
+<dd>Позволяет редактировать CSS в Firebug и сохранять изменения, интегрировано с редакторами от JetBrains (IntelliJ IDEA и другие).</dd>
+</dl>
+<h2><a class="main__anchor" href="#jsonview-ff-ch" name="jsonview-ff-ch">JsonView (FF,Ch)</a></h2><p>Даёт возможность открыть JSON-документ прямо в браузере.</p>
+<p>Обычно браузер не понимает <code>Content-Type: application/json</code> и пытается сохранить JSON-файлы.</p>
+<p>Но если в нём стоит это расширение, то он покажет файл в удобном виде, с возможностью навигации:</p>
+<figure><div class="image" style="width:354px">
+<div class="image__ratio" style="padding-top:95.76271186440678%"></div>
+<img alt="" class="image__image" height="339" src="article/tools-browser-extensions/jsonview.png" width="354">
+</img></div></figure><h2><a class="main__anchor" href="#xml-tree-ch" name="xml-tree-ch">Xml Tree (Ch)</a></h2><p>Расширение для просмотра XML для Chrome.</p>
+<p>Остальные браузеры умеют это делать «из коробки».</p>
+<h2><a class="main__anchor" href="#yslow-pagespeed-insights-ff-ch" name="yslow-pagespeed-insights-ff-ch">YSlow, PageSpeed Insights (FF, Ch)</a></h2><p>Эти два расширения позволяют по-быстрому оценить скорость загрузки страницы, проанализировать массу возможных причин тормозов и получить советы по улучшению производительности.</p>
+<p>Они очень похожи, но не идентичны, так что можно поставить оба.</p>
+<figure><div class="image" style="width:658px">
+<div class="image__ratio" style="padding-top:56.079027355623104%"></div>
+<img alt="" class="image__image" height="369" src="article/tools-browser-extensions/pageinsight.png" width="658">
+</img></div></figure><h2><a class="main__anchor" href="#adblock-ff-ch" name="adblock-ff-ch">AdBlock (FF, Ch)</a></h2><p>Расширение для отключения назойливой рекламы и баннеров.</p>
+<p>Режет не всё, но многое. Да, оно не для разработки, но настолько полезное, что я не смог удержаться и опубликовал его здесь.</p>
+<p>Кстати, насчёт разработки… Бывает так, что AdBlock прячет рекламу на сайтах, которые мы разрабатываем. К хорошему быстро привыкаешь, и если юзер будет слать вам ошибки на страницах (а у вас их нет) – проверьте! Может быть, стоит отключить AdBlock для конкретной страницы и посмотреть без него? Исключения можно поставить в настройках расширения.</p>
+<h2><a class="main__anchor" href="#downloadhelper-ff" name="downloadhelper-ff">DownloadHelper (FF)</a></h2><p>Расширение для скачивания видео из Youtube, Blip TV и других хостингов.</p>
+<p>С одной стороны, это расширение тоже напрямую не связано с разработкой…</p>
+<p>…Но с другой – бывает ли, что работая на компьютере вы получаете ссылку на интересное видео с конференции? Или заходите на сайт и видите там набор прекрасных выступлений, которые хочется скачать и посмотреть в более удобное время с планшетника. Скажем, во время поездки, когда нет интернет.</p>
+<p>Если бывает, то это расширение – для вас. Скачиваем отличные видео и смотрим, когда захотим.</p>
+<p>Способ использования:</p>
+<ol>
+<li>Зайти на страницу.</li>
+<li>Начать смотреть видео.</li>
+<li>Увидеть, как иконка расширения «ожила», кликнуть на нее и выбрать видео в нужном разрешении (если есть несколько).</li>
+<li>Файл будет скачан в папку <code>dwhelper</code> (по умолчанию), место можно поменять в настройках.</li>
+</ol>
+<figure><div class="image" style="width:636px">
+<div class="image__ratio" style="padding-top:98.27044025157232%"></div>
+<img alt="" class="image__image" height="625" src="article/tools-browser-extensions/downloadhelper.jpg" width="636">
+</img></div></figure><h2><a class="main__anchor" href="#p-s" name="p-s">P.S.</a></h2><p>В этот список расширений я включил самое любимое и полезное, что связано именно с расширениями браузера.</p>
+<p>Есть дополнительные инструменты, которые становятся в систему, они идут в отдельном разделе.</p>
+<p>У вас есть, что добавить? Расширения, которые вам очень помогли? Укажите их в комментариях.</p>
+</cut></div></meta></article></main></div></body></html>

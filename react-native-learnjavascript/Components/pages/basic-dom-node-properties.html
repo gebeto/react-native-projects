@@ -1,0 +1,582 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Свойства узлов: тип, тег и содержимое" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В этой главе мы познакомимся с основными, самыми важными свойствами, которые отвечают за тип DOM-узла, тег и содержимое.</p>
+<cut>
+<h2><a class="main__anchor" href="#классы-иерархия-dom" name="классы-иерархия-dom">Классы, иерархия DOM</a></h2><p>Самое главное различие между DOM-узлами – разные узлы являются объектами различных классов.</p>
+<p>Поэтому, к примеру, у узла, соответствующего тегу <code>&lt;td&gt;</code> – одни свойства, у <code>&lt;form&gt;</code> – другие, у <code>&lt;a&gt;</code> – третьи.</p>
+<p>Есть и кое-что общее, за счёт наследования.</p>
+<p>Классы DOM образуют иерархию.</p>
+<p>Основной объект в ней: <a href="http://dom.spec.whatwg.org/#interface-node">Node</a>, от которого наследуют остальные:</p>
+<figure><div class="image" style="width:558px">
+<div class="image__ratio" style="padding-top:52.32974910394266%"></div>
+<img alt="" class="image__image" height="292" src="article/basic-dom-node-properties/hierarchy.png" width="558">
+</img></div></figure><p>На рисунке выше изображены основные классы:</p>
+<ul>
+<li>Прямо от <code>Node</code> наследуют текстовые узлы <code>Text</code>, комментарии <code>Comment</code> и элементы <code>Element</code>.</li>
+<li>Элементы <code>Element</code> – это ещё не HTML-элементы, а более общий тип, который используется в том числе в XML. От него наследует <code>SVGElement</code> для SVG-графики и, конечно, <code>HTMLElement</code>.</li>
+<li>От <code>HTMLElement</code> уже наследуют разнообразные узлы HTML:
+<ul>
+<li>Для <code>&lt;input&gt;</code> – <code>HTMLInputElement</code></li>
+<li>Для <code>&lt;body&gt;</code> – <code>HTMLBodyElement</code></li>
+<li>Для <code>&lt;a&gt;</code> – <code>HTMLAnchorElement</code>… и так далее.</li>
+</ul>
+</li>
+</ul>
+<p>Узнать класс узла очень просто – достаточно привести его к строке, к примеру, вывести:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( document.body ); // [object HTMLBodyElement]</code></pre>
+</div>
+</div>
+</div><p>Можно и проверить при помощи <code>instanceof</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( document.body instanceof HTMLBodyElement ); // true
+alert( document.body instanceof HTMLElement ); // true
+alert( document.body instanceof Element ); // true
+alert( document.body instanceof Node ); // true</code></pre>
+</div>
+</div>
+</div><p>Как видно, DOM-узлы – обычные JavaScript-объекты. Их классы заданы в прототипном стиле. В этом легко убедиться, если вывести в консоли любой элемент через <code>console.dir(elem)</code>. Или даже можно напрямую обратиться к методам, которые хранятся в <code>Node.prototype</code>, <code>Element.prototype</code> и так далее.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type"><code>console.dir(elem)</code> против <code>console.log(elem)</code></span></div>
+<div class="important__content"><p>Вывод <code>console.log(elem)</code> и <code>console.dir(elem)</code> различен.</p>
+<ul>
+<li><code>console.log</code> выводит элемент в виде, удобном для исследования HTML-структуры.</li>
+<li><code>console.dir</code> выводит элемент в виде JavaScript-объекта, удобно для анализа его свойств.</li>
+</ul>
+<p>Попробуйте сами на <code>document.body</code>.</p>
+</div></div>
+<p>Детальное описание свойств и методов каждого DOM-класса дано в <a href="https://html.spec.whatwg.org/multipage/">спецификации</a>.</p>
+<p>Например, <a href="https://html.spec.whatwg.org/multipage/forms.html#the-input-element">The input element</a> описывает класс, соответствующий <code>&lt;input&gt;</code>, включая <a href="https://html.spec.whatwg.org/multipage/forms.html#htmlinputelement">interface HTMLInputElement</a>, который нас как раз и интересует.</p>
+<p>При описании свойств и методов используется не JavaScript, а специальный язык <a href="https://ru.wikipedia.org/wiki/%D0%AF%D0%B7%D1%8B%D0%BA_%D0%BE%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D1%8F_%D0%B8%D0%BD%D1%82%D0%B5%D1%80%D1%84%D0%B5%D0%B9%D1%81%D0%BE%D0%B2">IDL</a> (Interface Definition Language), который достаточно легко понять «с ходу».</p>
+<p>Вот из него выдержка, с комментариями:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// Объявлен HTMLInputElement
+// двоеточие означает, что он наследует от HTMLElement
+interface HTMLInputElement: HTMLElement {
+
+  // у всех таких элементов есть строковые свойства
+  // accept, alt, autocomplete, value
+  attribute DOMString accept;
+  attribute DOMString alt;
+  attribute DOMString autocomplete;
+  attribute DOMString value;
+
+  // и логическое свойство autofocus
+  attribute boolean autofocus;
+  ...
+  // а также метод select, который значение не возвращает (void)
+  void select();
+  ...
+}</code></pre>
+</div>
+</div>
+</div><p>Далее в этом разделе мы поговорим о самых главных свойствах узлов DOM, которые используются наиболее часто.</p>
+<h2><a class="main__anchor" href="#тип-nodetype" name="тип-nodetype">Тип: nodeType</a></h2><p>Тип узла содержится в его свойстве <code>nodeType</code>.</p>
+<p>Как правило, мы работаем всего с двумя типами узлов:</p>
+<ul>
+<li>Элемент.</li>
+<li>Текстовый узел.</li>
+</ul>
+<p>На самом деле типов узлов гораздо больше. Строго говоря, их 12, и они описаны в спецификации с древнейших времён, см. <a href="http://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html#ID-1950641247">DOM Уровень 1</a>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">interface Node {
+  // Всевозможные значения nodeType
+  const unsigned short ELEMENT_NODE = 1;
+  const unsigned short ATTRIBUTE_NODE = 2;
+  const unsigned short TEXT_NODE = 3;
+  const unsigned short CDATA_SECTION_NODE = 4;
+  const unsigned short ENTITY_REFERENCE_NODE = 5;
+  const unsigned short ENTITY_NODE = 6;
+  const unsigned short PROCESSING_INSTRUCTION_NODE = 7;
+  const unsigned short COMMENT_NODE = 8;
+  const unsigned short DOCUMENT_NODE = 9;
+  const unsigned short DOCUMENT_TYPE_NODE = 10;
+  const unsigned short DOCUMENT_FRAGMENT_NODE = 11;
+  const unsigned short NOTATION_NODE = 12;
+  ...
+}</code></pre>
+</div>
+</div>
+</div><p>В частности, тип «Элемент» <code>ELEMENT_NODE</code> имеет номер 1, а «Текст» <code>TEXT_NODE</code> – номер 3.</p>
+<p>Например, выведем все узлы-потомки <code>document.body</code>, <em>являющиеся элементами</em>:</p>
+<div class="code-example" data-highlight-block="14-15" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;body&gt;
+  &lt;div&gt;Читатели:&lt;/div&gt;
+  &lt;ul&gt;
+    &lt;li&gt;Вася&lt;/li&gt;
+    &lt;li&gt;Петя&lt;/li&gt;
+  &lt;/ul&gt;
+
+  &lt;!-- комментарий --&gt;
+
+  &lt;script&gt;
+    var childNodes = document.body.childNodes;
+
+    for (var i = 0; i &lt; childNodes.length; i++) {
+
+      // отфильтровать не-элементы
+      if (childNodes[i].nodeType != 1) continue;
+
+      alert( childNodes[i] );
+
+    }
+  &lt;/script&gt;
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><p>Тип узла можно только читать, изменить его невозможно.</p>
+<h2><a class="main__anchor" href="#тег-nodename-и-tagname" name="тег-nodename-и-tagname">Тег: nodeName и tagName</a></h2><p>Существует целых два свойства: <code>nodeName</code> и <code>tagName</code>, которые содержат название(тег) элемента узла.</p>
+<p><strong>Название HTML-тега всегда находится в верхнем регистре.</strong></p>
+<p>Например, для <code>document.body</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( document.body.nodeName ); // BODY
+alert( document.body.tagName ); // BODY</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">В XHTML <code>nodeName</code> может быть не в верхнем регистре</span></div>
+<div class="important__content"><p>У браузера есть два режима обработки документа: HTML и XML-режим. Обычно используется режим HTML.</p>
+<p>XML-режим включается, когда браузер получает XML-документ через <code>XMLHttpRequest</code>(технология AJAX) или при наличии заголовка <code>Content-Type: application/xml+xhtml</code>.</p>
+<p>В XML-режиме сохраняется регистр и <code>nodeName</code> может выдать «body» или даже «bOdY» – в точности как указано в документе. XML-режим используют очень редко.</p>
+</div></div>
+<h3><a class="main__anchor" href="#какая-разница-между-tagname-и-nodename" name="какая-разница-между-tagname-и-nodename">Какая разница между tagName и nodeName ?</a></h3><p>Разница отражена в названиях свойств, но неочевидна.</p>
+<ul>
+<li>Свойство <code>tagName</code> есть только у элементов <code>Element</code> (в IE8- также у комментариев, но это ошибка в браузере).</li>
+<li>Свойство <code>nodeName</code> определено для любых узлов <code>Node</code>, для элементов оно равно <code>tagName</code>, а для не-элементов обычно содержит строку с типом узла.</li>
+</ul>
+<p>Таким образом, при помощи <code>tagName</code> мы можем работать только с элементами, а <code>nodeName</code> может что-то сказать и о других типах узлов.</p>
+<p>Например, сравним <code>tagName</code> и <code>nodeName</code> на примере узла-комментария и объекта <code>document</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;body&gt;
+  &lt;!-- комментарий --&gt;
+
+  &lt;script&gt;
+    // для комментария
+    alert( document.body.firstChild.nodeName ); // #comment
+    alert( document.body.firstChild.tagName ); // undefined (в IE8- воскл. знак "!")
+
+    // для документа
+    alert( document.nodeName ); // #document, т.к. корень DOM -- не элемент
+    alert( document.tagName ); // undefined
+  &lt;/script&gt;
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><p>При работе с элементами, как это обычно бывает, имеет смысл использовать свойство <code>tagName</code> – оно короче.</p>
+<h2><a class="main__anchor" href="#innerhtml-содержимое-элемента" name="innerhtml-содержимое-элемента">innerHTML: содержимое элемента</a></h2><p>Свойство <code>innerHTML</code> описано в спецификации HTML 5 – <a href="http://www.w3.org/TR/html5/embedded-content-0.html">embedded content</a>.</p>
+<p>Оно позволяет получить HTML-содержимое элемента в виде строки. В <code>innerHTML</code> можно и читать и писать.</p>
+<p>Пример выведет на экран все содержимое <code>document.body</code>, а затем заменит его на другое:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;body&gt;
+  &lt;p&gt;Параграф&lt;/p&gt;
+  &lt;div&gt;Div&lt;/div&gt;
+
+  &lt;script&gt;
+    alert( document.body.innerHTML ); // читаем текущее содержимое
+    document.body.innerHTML = 'Новый BODY!'; // заменяем содержимое
+  &lt;/script&gt;
+
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><p>Значение, возвращаемое <code>innerHTML</code> – всегда валидный HTML-код. При записи можно попробовать записать  что угодно, но браузер исправит ошибки:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;body&gt;
+
+  &lt;script&gt;
+    document.body.innerHTML = '&lt;b&gt;тест'; // незакрытый тег
+    alert( document.body.innerHTML ); // &lt;b&gt;тест&lt;/b&gt; (исправлено)
+  &lt;/script&gt;
+
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><p>Свойство <code>innerHTML</code> – одно из самых часто используемых.</p>
+<h3><a class="main__anchor" href="#тонкости-innerhtml" name="тонкости-innerhtml">Тонкости innerHTML</a></h3><p><code>innerHTML</code> не так прост, как может показаться, и таит в себе некоторые тонкости, которые могут сбить с толку новичка, а иногда и опытного программиста.</p>
+<p>Ознакомьтесь с ними. Даже если этих сложностей у вас <em>пока</em> нет, эта информация отложится где-то в голове и поможет, когда проблема появится.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Для таблиц в IE9- – <code>innerHTML</code> только для чтения</span></div>
+<div class="important__content"><p>В Internet Explorer версии 9 и ранее, <a href="http://msdn.microsoft.com/en-us/library/ms533897.aspx">innerHTML</a> доступно только для чтения для элементов <code>COL</code>, <code>COLGROUP</code>, <code>FRAMESET</code>, <code>HEAD</code>, <code>HTML</code>, <code>STYLE</code>, <code>TABLE</code>, <code>TBODY</code>, <code>TFOOT</code>, <code>THEAD</code>, <code>TITLE</code>, <code>TR</code>.</p>
+<p>В частности, в IE9- запрещена запись в <code>innerHTML</code> для любых табличных элементов, кроме ячеек (<code>TD/TH</code>).</p>
+</div></div>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Добавление <code>innerHTML+=</code> осуществляет перезапись</span></div>
+<div class="important__content"><p>Синтаксически, можно добавить текст к <code>innerHTML</code> через <code>+=</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">chatDiv.innerHTML += "&lt;div&gt;Привет&lt;img src='smile.gif'/&gt; !&lt;/div&gt;";
+chatDiv.innerHTML += "Как дела?";</code></pre>
+</div>
+</div>
+</div><p>На практике этим следует пользоваться с большой осторожностью, так как фактически происходит не добавление, а перезапись:</p>
+<ol>
+<li>Удаляется старое содержание</li>
+<li>На его место становится новое значение <code>innerHTML</code>.</li>
+</ol>
+<p>Так как новое значение записывается с нуля, то <strong>все изображения и другие ресурсы будут перезагружены</strong>. В примере выше вторая строчка перезагрузит <code>smile.gif</code>, который был до неё. Если в <code>chatDiv</code> много текста, то эта перезагрузка будет очень заметна.</p>
+<p>Есть и другие побочные эффекты, например если существующий текст был выделен мышкой, то в большинстве браузеров это выделение пропадёт. Если в HTML был <code>&lt;input&gt;</code>, в который посетитель что-то ввёл, то введённое значение пропадёт. И тому подобное.</p>
+<p>К счастью, есть и другие способы добавить содержимое, не использующие <code>innerHTML</code>.</p>
+</div></div>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Скрипты не выполняются</span></div>
+<div class="important__content"><p>Если в <code>innerHTML</code> есть тег <code>script</code> – он не будет выполнен.</p>
+<p>К примеру:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div id="my"&gt;&lt;/div&gt;
+
+&lt;script&gt;
+  var elem = document.getElementById('my');
+  elem.innerHTML = 'ТЕСТ&lt;script&gt;alert( 1 );&lt;/scr' + 'ipt&gt;';
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>В примере закрывающий тег <code>&lt;/scr'+'ipt&gt;</code> разбит на две строки, т.к. иначе браузер подумает, что это конец скрипта. Вставленный скрипт не выполнится.</p>
+<p>Исключение – IE9-, в нем вставляемый скрипт выполняется, если у него есть атрибут <code>defer</code>. Но это нестандартная возможность, которой не следует пользоваться.</p>
+</div></div>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">IE8- обрезает <code>style</code> и <code>script</code> в начале <code>innerHTML</code></span></div>
+<div class="important__content"><p>Если в начале <code>innerHTML</code> находятся стили <code>&lt;style&gt;</code>, то старый IE проигнорирует их. То есть, иными словами, они не применятся.</p>
+<p>Смотрите также <a href="http://msdn.microsoft.com/en-us/library/ms533897%28v=vs.85%29.aspx">innerHTML на MSDN</a> на эту тему.</p>
+</div></div>
+<h2><a class="main__anchor" href="#outerhtml-html-элемента-целиком" name="outerhtml-html-элемента-целиком">outerHTML: HTML элемента целиком</a></h2><p>Свойство <code>outerHTML</code> содержит HTML элемента целиком.</p>
+<p>Пример чтения <code>outerHTML</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div&gt;Привет &lt;b&gt;Мир&lt;/b&gt;&lt;/div&gt;
+
+&lt;script&gt;
+  var div = document.body.children[0];
+
+  alert( div.outerHTML ); // &lt;div&gt;Привет &lt;b&gt;Мир&lt;/b&gt;&lt;/div&gt;
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p><strong>Изменить <code>outerHTML</code> элемента невозможно.</strong></p>
+<p>Здесь мы остановимся чуть подробнее. Дело в том, что технически свойство <code>outerHTML</code> доступно на запись. Но при этом элемент не меняется, а <em>заменяется на новый</em>, который тут же создаётся из нового <code>outerHTML</code>.</p>
+<p>При этом переменная, в которой изначально был старый элемент, и в которой мы «перезаписали» <code>outerHTML</code>, остаётся со старым элементом.</p>
+<p>Это легко может привести к ошибкам, что видно на примере:</p>
+<div class="code-example" data-highlight-block="5-5,8-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div&gt;Привет, Мир!&lt;/div&gt;
+
+&lt;script&gt;
+  var div = document.body.children[0];
+
+  // заменяем div.outerHTML на &lt;p&gt;...&lt;/p&gt;
+  div.outerHTML = '&lt;p&gt;Новый элемент!&lt;/p&gt;';
+
+  // ... но содержимое div.outerHTML осталось тем же, несмотря на "перезапись"
+  alert( div.outerHTML ); // &lt;div&gt;Привет, Мир!&lt;/div&gt;
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>То, что произошло в примере выше – так это замена <code>div</code> в документе на новый узел <code>&lt;p&gt;...&lt;/p&gt;</code>. При этом переменная <code>div</code> не получила этот новый узел! Она сохранила старое значение, чтение из неё это отлично показывает.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Записал <code>outerHTML</code>? Понимай последствия!</span></div>
+<div class="important__content"><p>Иногда начинающие делают здесь ошибку: сначала заменяют <code>div.outerHTML</code>, а потом продолжают работать с <code>div</code>, как будто это изменившийся элемент. Такое возможно с <code>innerHTML</code>, но не с <code>outerHTML</code>.</p>
+<p>Записать новый HTML в <code>outerHTML</code> можно, но нужно понимать, что это никакое не изменение свойств узла, а создание нового.</p>
+<p>Новосозданный узел не доступен сразу в переменной, хотя его, конечно, можно получить из DOM.</p>
+</div></div>
+<h2><a class="main__anchor" href="#nodevalue-data-содержимое-текстового-узла" name="nodevalue-data-содержимое-текстового-узла">nodeValue/data: содержимое текстового узла</a></h2><p>Свойство <code>innerHTML</code> есть только у узлов-элементов.</p>
+<p><strong>Содержимое других узлов, например, текстовых или комментариев, доступно на чтение и запись через свойство <code>data</code>.</strong></p>
+<p>Его тоже можно читать и обновлять. Следующий пример демонстрирует это:</p>
+<div class="code-example" data-demo-height="50" data-highlight-block="5-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;body&gt;
+  Привет
+  &lt;!-- Комментарий --&gt;
+  &lt;script&gt;
+    for (var i = 0; i &lt; document.body.childNodes.length; i++) {
+      alert( document.body.childNodes[i].data );
+    }
+  &lt;/script&gt;
+  Пока
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><p>Если вы запустите этот пример, то увидите, как выводятся последовательно:</p>
+<ol>
+<li><code>Привет</code> – это содержимое первого узла (текстового).</li>
+<li><code>Комментарий</code> – это содержимое второго узла (комментария).</li>
+<li><code>Пробелы</code> – это содержимое небольшого пробельного узла после комментария до скрипта.</li>
+<li><code>undefined</code> – далее цикл дошёл до <code>&lt;script&gt;</code>, но это узел-элемент, у него нет <code>data</code>.</li>
+</ol>
+<p>Вообще говоря, после <code>&lt;script&gt;…&lt;/script&gt;</code> и до закрытия <code>&lt;/body&gt;</code> в документе есть еще один текстовый узел. Однако, на момент работы скрипта браузер ещё не знает о нём, поэтому не выведет.</p>
+<p><strong>Свойство <code>nodeValue</code> мы использовать не будем.</strong></p>
+<p>Оно работает так же, как <code>data</code>, но на некоторых узлах, где <code>data</code> нет, <code>nodeValue</code> есть и имеет значение <code>null</code>. Как-то использовать это тонкое отличие обычно нет причин.</p>
+<p><strong>Два свойства существуют по историческим причинам, мы будем использовать лишь <code>data</code>, поскольку оно короче.</strong></p>
+<h2><a class="main__anchor" href="#текст-textcontent" name="текст-textcontent">Текст: textContent</a></h2><p>Свойство <code>textContent</code> содержит только текст внутри элемента, за вычетом всех <code>&lt;тегов&gt;</code>.</p>
+<p>Оно поддерживается везде, кроме IE8-.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div&gt;
+  &lt;h1&gt;Срочно в номер!&lt;/h1&gt;
+  &lt;p&gt;Марсиане атакуют людей!&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  var news = document.body.children[0];
+
+  // \n  Срочно в номер!\n  Марсиане атакуют людей!\n
+  alert( news.textContent );
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Как видно из примера выше, возвращается в точности весь текст, включая переводы строк и пробелы, но без тегов.</p>
+<p><strong>Иными словами, <code>elem.textContent</code> возвращает конкатенацию всех текстовых узлов внутри <code>elem</code>.</strong></p>
+<p>Не сказать, чтобы эта информация была часто востребована.</p>
+<p><strong>Гораздо полезнее возможность записать текст в элемент, причём именно как текст!</strong></p>
+<p>В этом примере имя посетителя попадёт в первый <code>div</code> как <code>innerHTML</code>, а во второй – как текст:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div&gt;&lt;/div&gt;
+&lt;div&gt;&lt;/div&gt;
+
+&lt;script&gt;
+  var name = prompt("Введите имя?", "&lt;b&gt;Винни-пух&lt;/b&gt;");
+
+  document.body.children[0].innerHTML = name;
+  document.body.children[1].textContent = name;
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>При запуске примера мы увидим, что в первый <code>DIV</code> текст от посетителя вставился именно как HTML, то есть теги стали именно тегами, а во второй – как обычный текст.</p>
+<p>Вряд ли мы <em>действительно</em> хотим, чтобы посетители вставляли в наш сайт произвольный HTML-код. Присваивание через <code>textContent</code> – один из способов от этого защититься.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Нестандартное свойство <code>innerText</code></span></div>
+<div class="important__content"><p>Всеми браузерами, кроме Firefox 44- (согласно <a href="http://caniuse.com/#feat=innertext">CanIUse.Com</a>), поддерживается нестандартное свойство <a href="http://msdn.microsoft.com/en-us/library/ie/ms533899.aspx">innerText</a>.</p>
+<p>У него, в некотором роде, преимущество перед <code>textContent</code> в том, что оно по названию напоминает <code>innerHTML</code>, его проще запомнить.</p>
+<p>Однако, свойство <code>innerText</code> не следует использовать, так как оно не стандартное и не будет стандартным.</p>
+<p>Это свойство возвращает текст не в том виде, в котором он в DOM, а в том, в котором он виден – как если бы мы выбрали содержимое элемента мышкой и скопировали его. В частности, если элемент невидим, то его текст возвращён не будет. Это довольно странная особенность существует по историческим причинам и скорее мешает, чем помогает.</p>
+<p>Впрочем, при записи значения <code>innerText</code> работает так же, как и <code>textContent</code>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#свойство-hidden" name="свойство-hidden">Свойство hidden</a></h2><p>Как правило, видим или невидим узел, определяется через CSS, свойствами <code>display</code> или <code>visibility</code>.</p>
+<p>В стандарте HTML5 предусмотрен специальный атрибут и свойство для этого: <code>hidden</code>.</p>
+<p>Его поддерживают все современные браузеры, кроме IE10-.</p>
+<p>В примере ниже второй и третий <code>&lt;div&gt;</code> скрыты:</p>
+<div class="code-example" data-demo-height="80" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div&gt;Текст&lt;/div&gt;
+&lt;div hidden&gt;С атрибутом hidden&lt;/div&gt;
+&lt;div&gt;Со свойством hidden&lt;/div&gt;
+
+&lt;script&gt;
+  var lastDiv = document.body.children[2];
+  lastDiv.hidden = true;
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Технически, атрибут <code>hidden</code> работает так же, как <code>style="display:none"</code>. Но его проще поставить через JavaScript (меньше букв), и могут быть преимущества для скринридеров и прочих нестандартных браузеров.</p>
+<p>Для старых IE тоже можно сделать, чтобы свойство поддерживалось, мы ещё вернёмся к этому далее в учебнике.</p>
+<h2><a class="main__anchor" href="#исследование-элементов" name="исследование-элементов">Исследование элементов</a></h2><p>У DOM-узлов есть и другие свойства, зависящие от типа, например:</p>
+<ul>
+<li><code>value</code> – значение для <code>INPUT</code>, <code>SELECT</code> или <code>TEXTAREA</code></li>
+<li><code>id</code> – идентификатор</li>
+<li><code>href</code> – адрес ссылки</li>
+<li>…многие другие…</li>
+</ul>
+<p>Например:</p>
+<div class="code-example" data-demo-height="80" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="text" id="elem" value="значение"&gt;
+
+&lt;script&gt;
+  var input = document.body.children[0];
+
+  alert( input.type ); // "text"
+  alert( input.id ); // "elem"
+  alert( input.value ); // значение
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Как узнать, какие свойства есть у данного типа элементов?</p>
+<p>Это просто. Нужно либо посмотреть <a href="http://dev.w3.org/html5/markup/elements.html">список элементов HTML5</a> и найти в нём интересующий вас элемент и прочитать секцию с <code>interface</code>.</p>
+<p>Если же недосуг или интересуют особенности конкретного браузера – элемент всегда можно вывести в консоль вызовом <code>console.dir(элемент)</code>.</p>
+<p>Метод <code>console.dir</code> выводит аргумент не в «красивом» виде, а как объект, который можно развернуть и исследовать.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// в консоли можно будет увидеть все свойства DOM-объекта document
+console.dir(document);</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Основные свойства DOM-узлов:</p>
+<dl>
+<dt><code>nodeType</code></dt>
+<dd>Тип узла. Самые популярные типы: <code>"1"</code> – для элементов и <code>"3"</code> – для текстовых узлов. Только для чтения.</dd>
+<dt><code>nodeName/tagName</code></dt>
+<dd>Название тега заглавными буквами. <code>nodeName</code> имеет специальные значения для узлов-неэлементов. Только для чтения.</dd>
+<dt><code>innerHTML</code></dt>
+<dd>Внутреннее содержимое узла-элемента в виде HTML. Можно изменять.</dd>
+<dt><code>outerHTML</code></dt>
+<dd>Полный HTML узла-элемента. При записи в <code>elem.outerHTML</code> переменная <code>elem</code> сохраняет старый узел.</dd>
+<dt><code>nodeValue/data</code></dt>
+<dd>Содержимое текстового узла или комментария. Свойство <code>nodeValue</code> также определено и для других типов узлов. Можно изменять. На некоторых узлах, где <code>data</code> нет, <code>nodeValue</code> есть и имеет значение null, поэтому лучше использовать <code>data</code>.</dd>
+<dt><code>textContent</code></dt>
+<dd>Содержит только текст внутри элемента, за вычетом всех тегов. Можно использовать для защиты от вставки произвольного HTML кода</dd>
+<dt>Свойство и атрибут <code>hidden</code></dt>
+<dd>Скрыть элемент можно с помощью установки свойства <code>hidden</code> в <code>true</code> или с помощью атрибута</dd>
+</dl>
+<p>Узлы DOM также имеют другие свойства, в зависимости от тега. Например, у <code>INPUT</code> есть свойства <code>value</code> и <code>checked</code>, а у <code>A</code> есть <code>href</code> и т.д. Мы рассмотрим их далее.</p>
+</cut></div></meta></article></main></div></body></html>

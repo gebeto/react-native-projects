@@ -1,0 +1,241 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Особенности регулярных выражений в Javascript" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Регулярные выражения в javascript немного странные. Вроде – перловые, обычные, но с подводными камнями, на которые натыкаются даже опытные javascript-разработчики.</p>
+<p>Эта статья ставит целью перечислить неожиданные фишки и особенности <code>RegExp</code> в краткой и понятной форме.</p>
+<cut>
+<h2><a class="main__anchor" href="#точка-и-перенос-строки" name="точка-и-перенос-строки">Точка и перенос строки</a></h2><p>Для поиска в многострочном режиме почти все модификации перловых регэкспов используют специальный multiline-флаг.</p>
+<p>И javascript здесь не исключение.</p>
+<p>Попробуем же сделать поиск и замену многострочного вхождения. Скажем, будем заменять <code>[u] … [/u]</code> на тэг подчеркивания: <code>&lt;u&gt;</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function bbtagit(text) {
+  text = text.replace(/\[u\](.*?)\[\/u\]/gim, '&lt;u&gt;$1&lt;/u&gt;')
+
+  return text
+}
+
+var line = "[u]мой\n текст[/u]"
+alert(bbtagit(line))</code></pre>
+</div>
+</div>
+</div><p>Попробуйте запустить. Заменяет? Как бы не так!</p>
+<p>Дело в том, что в javascript мультилайн режим (флаг <code>m</code>) влияет только на символы ^ и $, которые начинают матчиться с началом и концом строки, а не всего текста.</p>
+<p>Точка по-прежнему – любой символ, кроме новой строки. В javascript нет флага, который устанавливает мультилайн-режим для точки. Для того, чтобы заматчить совсем что угодно – используйте <code>[\s\S]</code>.</p>
+<p>Работающий вариант:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function bbtagit(text) {
+  text = text.replace(/\[u\]([\s\S]*)\[\/u\]/gim, '&lt;u&gt;$1&lt;/u&gt;')
+
+  return text
+}
+
+var line = "[u]мой\n текст[/u]"
+alert(bbtagit(line))</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#жадность" name="жадность">Жадность</a></h2><p>Это не совсем особенность, скорее фича, но все же достойная отдельного абзаца.</p>
+<p>Все регулярные выражения в javascript – жадные. То есть, выражение старается отхватить как можно больший кусок строки.</p>
+<p>Например, мы хотим заменить все открывающие тэги <code>&lt;a&gt;</code>. На что и почему – не так важно.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var text = '1 &lt;A href="#"&gt;...&lt;/A&gt; 2'
+text = text.replace(/&lt;A(.*)&gt;/, 'TEST')
+alert(text)</code></pre>
+</div>
+</div>
+</div><p>При запуске вы увидите, что заменяется не открывающий тэг, а вся ссылка, выражение матчит ее от начала и до конца.</p>
+<p>Это происходит из-за того, что точка-звездочка в «жадном» режиме пытается захватить как можно больше, в нашем случае – это как раз до последнего <code>&gt;</code>.</p>
+<p>Последний символ <code>&gt;</code> точка-звездочка не захватывает, т.к. иначе не будет совпадения.</p>
+<p>Как вариант решения используют квадратные скобки: <code>[^&gt;]</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var text = '1 &lt;A href="#"&gt;...&lt;/A&gt; 2'
+text = text.replace(/&lt;A([^&gt;]*)&gt;/, 'TEST')
+alert(text)</code></pre>
+</div>
+</div>
+</div><p>Это работает. Но самым удобным вариантом является переключение точки-звездочки в нежадный режим. Это осуществляется простым добавлением знака «<code>?</code>» после звездочки.</p>
+<p>В нежадном режиме точка-звездочка пустит поиск дальше сразу, как только нашла совпадение:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var text = '1 &lt;A href="#"&gt;...&lt;/A&gt; 2'
+text = text.replace(/&lt;A(.*?)&gt;/, 'TEST')
+alert(text)</code></pre>
+</div>
+</div>
+</div><p>В некоторых языках программирования можно переключить жадность на уровне всего регулярного выражения, флагом.</p>
+<p>В javascript это сделать нельзя… Вот такая особенность. А вопросительный знак после звездочки рулит – честное слово.</p>
+<h2><a class="main__anchor" href="#backreferences-в-паттерне-и-при-замене" name="backreferences-в-паттерне-и-при-замене">Backreferences в паттерне и при замене</a></h2><p>Иногда нужно в самом паттерне поиска обратиться к предыдущей его части.</p>
+<p>Например, при поиске BB-тагов, то есть строк вида <code>[u]…[/u]</code>, <code>[b]…[/b]</code> и <code>[s]…[/s]</code>. Или при поиске атрибутов, которые могут быть в одинарных кавычках или двойных.</p>
+<p>Обращение к предыдущей части паттерна в javascript осуществляется как \1, \2 и т.п., бэкслеш + номер скобочной группы:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var text = ' [b]a [u]b[/u] c [/b] ';
+
+var reg = /\[([bus])\](.*?)\[\/\1\] /;
+text = text.replace(reg, '&lt;$1&gt;$2&lt;/$1&gt;');  // &lt;b&gt;a [u]b[/u] c &lt;/b&gt;
+alert(text);</code></pre>
+</div>
+</div>
+</div><p>Обращение к скобочной группе в строке замены идет уже через доллар: <code>$1</code>. Не знаю, почему, наверное так удобнее…</p>
+<p>P.S. Понятно, что при таком способе поиска bb-тагов придется пропустить текст через замену несколько раз – пока результат не перестанет отличаться от оригинала.</p>
+<h2><a class="main__anchor" href="#найти-все-заменить-все" name="найти-все-заменить-все">Найти все / Заменить все</a></h2><p>Эти две задачи решаются в javascript принципиально по-разному.</p>
+<p>Начнем с «простого».</p>
+<h3><a class="main__anchor" href="#заменить-все" name="заменить-все">Заменить все</a></h3><p>Для замены всех вхождений используется метод <a href="https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/String/replace">String#replace</a>.
+Он интересен тем, что допускает первый аргумент – регэксп или строку.</p>
+<p>Если первый аргумент – строка, то будет осуществлен поиск подстроки, без преобразования в регулярное выражение.</p>
+<p>Попробуйте:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert("2 ++ 1".replace("+", "*"))</code></pre>
+</div>
+</div>
+</div><p>Как видите, заменился только один плюс, а не оба.</p>
+<p><strong>Чтобы заменить все вхождения, <a href="https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/String/replace">String#replace</a> обязательно нужно использовать с регулярным выражением.</strong></p>
+<p>В режиме регулярного выражения плюс придётся экранировать, но зато <code>replace</code> заменит все вхождения (при указании флага <code>g</code>):</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert("2 ++ 1".replace(/\+/g, "*"))</code></pre>
+</div>
+</div>
+</div><p>Вот такая особенность работы со строкой.</p>
+<h3><a class="main__anchor" href="#заменить-функцией" name="заменить-функцией">Заменить функцией</a></h3><p>Очень полезной особенностью <code>replace</code> является возможность работать с функцией вместо строки замены. Такая функция получает первым аргументом – все совпадения, а последующими аргументами – скобочные группы.</p>
+<p>Следующий пример произведет операции вычитания:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "count 36 - 26, 18 - 9"
+str = str.replace(/(\d+) - (\d+)/g, function(a,b,c) { return b-c })
+alert(str)</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#найти-всё" name="найти-всё">Найти всё</a></h3><p>В javascript нет одного универсального метода для поиска всех совпадений.
+Для поиска без запоминания скобочных групп – можно использовать <a href="https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/String/match">String#match</a>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "count 36-26, 18-9";
+var re = /(\d+)-(\d+)/g;
+var result = str.match(re);
+for (var i = 0; i &lt; result.length; i++) {
+  alert(result[i]);
+}</code></pre>
+</div>
+</div>
+</div><p>Как видите, оно исправно ищет все совпадения (флаг <code>„g“</code> у регулярного выражения обязателен), но при этом не запоминает скобочные группы. Эдакий «облегченный вариант».</p>
+<h3><a class="main__anchor" href="#найти-всё-с-учётом-скобочных-групп" name="найти-всё-с-учётом-скобочных-групп">Найти всё с учётом скобочных групп</a></h3><p>В сколько-нибудь сложных задачах важны не только совпадения, но и скобочные группы. Чтобы их найти, предлагается использовать многократный вызов <a href="https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec">RegExp#exec</a>.</p>
+<p>Для этого регулярное выражение должно использовать флаг <code>„g“</code>. Тогда результат поиска, запомненный в свойстве <code>lastIndex</code> объекта <code>RegExp</code> используется как точка отсчета для следующего поиска:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "count 36-26, 18-9"
+var re = /(\d+)-(\d+)/g
+var res
+while ((res = re.exec(str)) != null) {
+  alert("Найдено " + res[0] + ":  (" + res[1] + ") и (" + res[2] + ")")
+  alert("Дальше ищу с позиции " + re.lastIndex)
+}</code></pre>
+</div>
+</div>
+</div><p>Проверка <code>while( (res = re.exec(str)) != null)</code> нужна т.к. значение <code>res = 0</code> является хорошим и означает, что вхождение найдено в самом начале строки (поиск успешен). Поэтому необходимо сравнивать именно с <code>null</code>.</p>
+</cut></div></meta></article></main></div></body></html>

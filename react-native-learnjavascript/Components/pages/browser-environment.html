@@ -1,0 +1,78 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Окружение: DOM, BOM и JS" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Сам по себе язык JavaScript не предусматривает работы с браузером.</p>
+<p>Он вообще не знает про HTML. Но позволяет легко расширять себя новыми функциями и объектами.</p>
+<cut>
+<p>На рисунке ниже схематически отображена структура, которая получается если посмотреть на совокупность браузерных объектов с «высоты птичьего полёта».</p>
+<figure><div class="image" style="width:354px">
+<div class="image__ratio" style="padding-top:87.00564971751412%"></div>
+<img alt="" class="image__image" height="308" src="article/browser-environment/windowObjects.png" width="354">
+</img></div></figure><p>Как видно из рисунка, на вершине стоит <code>window</code>.</p>
+<p>У этого объекта двоякая позиция – он с одной стороны является глобальным объектом в JavaScript, с другой – содержит свойства и методы для управления окном браузера, открытия новых окон, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// открыть новое окно/вкладку с URL http://ya.ru
+window.open('http://ya.ru');</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#объектная-модель-документа-dom" name="объектная-модель-документа-dom">Объектная модель документа (DOM)</a></h2><p>Глобальный объект <code>document</code> даёт возможность взаимодействовать с содержимым страницы.</p>
+<p>Пример использования:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">document.body.style.background = 'red';
+alert( 'Элемент BODY стал красным, а сейчас обратно вернётся' );
+document.body.style.background = '';</code></pre>
+</div>
+</div>
+</div><p>Он и громадное количество его свойств и методов описаны в <a href="http://www.w3.org/DOM/DOMTR">стандарте W3C DOM</a>.</p>
+<p>По историческим причинам когда-то появилась первая версия стандарта DOM Level 1, затем придумали ещё свойства и методы, и появился DOM Level 2, на текущий момент поверх них добавили ещё DOM Level 3 и готовится DOM 4.</p>
+<p>Современные браузеры также поддерживают некоторые возможности, которые не вошли в стандарты, но де-факто существуют давным-давно и отказываться от них никто не хочет. Их условно называют «DOM Level 0».</p>
+<p>Также информацию по работе с элементами страницы можно найти в стандарте <a href="http://www.w3.org/TR/html5/Overview.html">HTML 5</a>.</p>
+<p>Мы подробно ознакомимся с DOM далее в этой части учебника.</p>
+<h2><a class="main__anchor" href="#объектная-модель-браузера-bom" name="объектная-модель-браузера-bom">Объектная модель браузера (BOM)</a></h2><p>BOM – это объекты для работы с чем угодно, кроме документа.</p>
+<p>Например:</p>
+<ul>
+<li>Объект <a href="https://developer.mozilla.org/en/DOM/window.navigator">navigator</a> содержит общую информацию о браузере и операционной системе. Особенно примечательны два свойства: <code>navigator.userAgent</code> – содержит информацию о браузере и <code>navigator.platform</code> – содержит информацию о платформе, позволяет различать Windows/Linux/Mac и т.п.</li>
+<li>Объект <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window.location">location</a> содержит информацию о текущем URL страницы и позволяет перенаправить посетителя на новый URL.</li>
+<li>Функции <code>alert/confirm/prompt</code> – тоже входят в BOM.</li>
+</ul>
+<p>Пример использования:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( location.href ); // выведет текущий адрес</code></pre>
+</div>
+</div>
+</div><p>Большинство возможностей BOM стандартизированы в <a href="http://www.w3.org/TR/html5/Overview.html">HTML 5</a>, хотя различные браузеры и предоставляют зачастую что-то своё, в дополнение к стандарту.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Итак, у нас есть DOM, BOM и, собственно, язык JavaScript, который даёт возможность управлять всем этим.</p>
+<p>Далее мы приступим к изучению DOM, поскольку именно документ занимает центральную роль в организации интерфейса, и работа с ним – сложнее всего.</p>
+</cut></div></meta></article></main></div></body></html>

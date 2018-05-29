@@ -1,0 +1,251 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Эволюция шаблонных систем для JavaScript" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Различных шаблонных систем – много.</p>
+<p>Они постепенно эволюционировали и развивались.</p>
+<p>В этой главе мы разберём, как шёл этот процесс, какие шаблонки «родились», какие бонусы нам даёт использование той или иной шаблонной системы.</p>
+<cut>
+<h2><a class="main__anchor" href="#микрошаблоны" name="микрошаблоны">Микрошаблоны</a></h2><p><em>Микрошаблоны</em> (англ. microtemplate) мы уже видели на примере <code>_.template</code>.</p>
+<p>Это HTML со вставками переменных и произвольным JS.</p>
+<p>Пример:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div class="menu"&gt;
+  &lt;span class="title"&gt;&lt;%-title%&gt;&lt;/span&gt;
+  &lt;ul&gt;
+    &lt;% items.forEach(function(item) { %&gt;
+    &lt;li&gt;&lt;%-item%&gt;&lt;/li&gt;
+    &lt;% }); %&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</div><p>Шаблонная система компилирует этот код в JavaScript-функцию с минимальными модификациями, и она уже, запустившись с данными, генерирует результат.</p>
+<p>Достоинства и недостатки такого подхода:</p>
+<div class="balance"><div class="balance__minuses">
+<div class="balance__content">
+<div class="balance__title">Недостатки</div><ul class="balance__list"><li>Жёстко привязан к языку JavaScript.</li>
+<li>При ошибке в шаблоне приходится лезть внутрь «страшной» функции</li>
+</ul></div></div><div class="balance__pluses">
+<div class="balance__content">
+<div class="balance__title">Достоинства</div><ul class="balance__list"><li>Простая и быстрая шаблонная система</li>
+<li>Внутри JS-функции доступен полноценный браузерный отладчик, функция хоть и страшна, но понятна.</li>
+</ul></div></div></div><h3><a class="main__anchor" href="#код-в-шаблоне" name="код-в-шаблоне">Код в шаблоне</a></h3><p>Включение произвольного JS-кода в шаблон, в теории, позволяет делать в нём всё, что угодно. Но обратная сторона медали – шаблон вместо внятного HTML может стать адским нагромождением разделителей вперемешку с вычислениями. Что рекомендуется делать в шаблонах, а что нет?</p>
+<p>Можно разделить код на два типа с точки зрения шаблонизации:</p>
+<ul>
+<li><strong>Бизнес-логика</strong> – код, <em>формирующий данные</em>, основной код приложения.</li>
+<li><strong>Презентационная логика</strong> – код, описывающий, как <em>показываются данные</em>.</li>
+</ul>
+<p>Например, код, получающий данные с сервера для вывода в таблице – бизнес-логика, а код, форматирующий даты для вывода – презентационная логика.</p>
+<p>В шаблонах допустима лишь презентационная логика.</p>
+<h3><a class="main__anchor" href="#кросс-платформенность" name="кросс-платформенность">Кросс-платформенность</a></h3><p>Зачастую, нужно использовать один и тот же шаблон и в браузере и на сервере.</p>
+<p>Например, серверный код генерирует HTML со списком сообщений, а JavaScript на клиенте добавляет к нему новые по мере появления.</p>
+<p>…Но как использовать на сервере шаблон с JavaScript, если его основной язык – PHP, Ruby, Java?</p>
+<p>Эту проблему можно обойти. На сервер, использующем PHP, Ruby, Java или какой-то другой язык, дополнительно ставится виртуальная машина <a href="http://code.google.com/p/v8/">V8</a> и настраивается интеграция с ней. Почти все платформы это умеют.</p>
+<p>После этого становится возможным запускать JavaScript-шаблоны и передавать им данные в виде объектов, массивов и так далее.</p>
+<p>Этот подход может показаться искусственным, но на самом деле он вполне жизнеспособен и используется в ряде крупных проектов.</p>
+<h3><a class="main__anchor" href="#прекомпиляция" name="прекомпиляция">Прекомпиляция</a></h3><p>Эта шаблонка и большинство других систем, которые мы рассмотрим далее, допускают <em>прекомпиляцию</em>.</p>
+<p>То есть, можно заранее, до выкладывания сайта на «боевой сервер», обработать шаблоны, создать из них JS-функции, объединить их в единый файл и далее, в «боевом окружении» использовать уже их.</p>
+<p>Современные системы сборки (<a href="http://brunch.io/">brunch</a>, <a href="http://gruntjs.com/">grunt</a> с плагинами и другие) позволяют делать это удобно, а также хранить шаблоны в разных файлах, каждый – в нужной директории с JS-кодом для виджета.</p>
+<h2><a class="main__anchor" href="#хелперы-и-фильтры" name="хелперы-и-фильтры">Хелперы и фильтры</a></h2><p>JavaScript-вставки не всегда просты и элегантны. Иногда, чтобы что-то сделать, нужно написать порядочно кода.</p>
+<p><strong>Для того, чтобы сделать шаблоны компактнее и проще, в них стали добавлять фильтры и хелперы.</strong></p>
+<ul>
+<li>
+<p><strong>Хелпер</strong> (англ. helper) – вспомогательная функция, которая доступна в шаблонах и используется для решения часто возникающих задач.</p>
+<p>В <code>_.template</code>, чтобы объявить хелпер, можно просто сделать глобальную функцию. Но это слишком грубо, так не делают. Гораздо лучше – использовать объект <code>_.templateSettings.imports</code>, в котором можно указать, какие функции добавлять в шаблоны, или опцию <code>imports</code> для <code>_.template</code>.</p>
+<p>Пример хелпера – функция <code>t(phrase)</code>, которая переводит <code>phrase</code> на текущий язык:</p>
+<div class="code-example" data-highlight-block="5-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">_.templateSettings.imports.t = function(phrase) {
+  // обычно функция перевода немного сложнее, но здесь это не важно
+  if (phrase == "Hello") return "Привет";
+}
+
+// в шаблоне используется хелпер t для перевода
+var compiled = _.template("&lt;div&gt;&lt;%=t('Hello')%&gt;&lt;/div&gt;");
+alert( compiled() ); // &lt;div&gt;Привет&lt;/div&gt;</code></pre>
+</div>
+</div>
+</div><p>Такой хелпер очень полезен для мультиязычных сайтов, когда один шаблон нужно выводить на десяти языках. Нечто подобное используется почти во всех языках и платформах, не только в JavaScript.</p>
+</li>
+<li>
+<p><strong>Фильтр</strong> – это функция, которая трансформирует данные, например, форматирует дату, сортирует элементы массива и так далее.</p>
+<p>Обычно для фильтров предусмотрен специальный «особо простой и короткий» синтаксис.</p>
+<p>Например, в системе шаблонизации <a href="https://github.com/visionmedia/ejs">EJS</a>, которая по сути такая же, но мощнее, чем <code>_.template</code>, фильтры задаются через символ <code>|</code>, внутри разделителя <code>&lt;%=: ... %&gt;</code>.</p>
+<p>Чтобы вывести <code>item</code> с большой буквы, можно вместо <code>&lt;%=item%&gt;</code> написать <code>&lt;%=: item | capitalize %&gt;</code>. Чтобы выводить отсортированный массив, можно использовать <code>&lt;%=: items | sort %&gt;</code> и так далее.</p>
+</li>
+</ul>
+<h2><a class="main__anchor" href="#свой-язык" name="свой-язык">Свой язык</a></h2><p>Для того, чтобы сделать шаблон ещё короче, а также с целью «отвязать» их от JavaScript, ряд шаблонных систем предлагают свой язык.</p>
+<p>Например:</p>
+<ul>
+<li><a href="http://mustache.github.com/">Mustache</a></li>
+<li><a href="http://handlebarsjs.com/">Handlebars</a></li>
+<li><a href="https://developers.google.com/closure/templates/docs/javascript_usage">Closure Templates</a></li>
+<li>…тысячи их…</li>
+</ul>
+<p>Шаблон для меню в Handlerbars, к примеру, будет выглядеть так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div class="menu"&gt;
+  &lt;span class="title"&gt;{{title}}&lt;/span&gt;
+  &lt;ul&gt;
+    {{#each items}}
+    &lt;li&gt;{{item}}&lt;/li&gt;
+    {{/each}}
+  &lt;/ul&gt;
+&lt;div&gt;</code></pre>
+</div>
+</div>
+</div><p>Как видно, <em>вместо</em> JavaScript-конструкций здесь используются хелперы. В примере выше <code>{{#each}} ... {{/each}</code> – «блочный» хелпер: он показывает своё содержимое для каждого элемента <code>items</code> и является альтернативой <code>forEach</code>.</p>
+<p>Есть и другие встроенные в шаблонизатор хелперы, можно легко делать свои.</p>
+<p>Использование такого шаблона:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// текст шаблона должен быть в переменной tmpl
+var compiled = Handlebars.compile(tmpl);
+
+var result = compiled({
+  title: "Сладости",
+  items: ["Торт", "Пирожное", "Пончик"]
+});</code></pre>
+</div>
+</div>
+</div><p>Библиотека шаблонизации <a href="http://handlebarsjs.com/">Handlebars</a> «понимает» этот язык. Вызов <code>Handlebars.compile</code> принимает строку шаблона, разбивает по разделителям и, аналогично предыдущему виду шаблонов, делает JavaScript-функцию, которая затем по данным выдаёт строку-результат.</p>
+<h3><a class="main__anchor" href="#запрет-на-встроенный-js" name="запрет-на-встроенный-js">Запрет на встроенный JS</a></h3><p>Если «свой язык шаблонизатора» очень прост, то библиотеку для его поддержки можно легко написать под PHP, Ruby, Java и других языках, которые тем самым научатся понимать такие шаблоны.</p>
+<p><strong>Если шаблонка действительна нацелена на кросс-платформенность, то явные JS-вызовы в ней запрещены. Всё делается через хелперы.</strong></p>
+<p>Если же нужна какая-то логика, то она либо выносится во внешний код, либо делается через новый хелпер –  он отдельно пишется на JavaScript (для клиента) и для сервера (на его языке). Получается полная совместимость.</p>
+<p>Это создаёт определённые сложности. Например, в Handlebars есть хелпер <code>{{#if cond}} ... {{/if}}</code>, который выводит содержимое, если истинно условие <code>cond</code>. При этом вместо <code>cond</code> нельзя поставить, к примеру, <code>a &gt; b</code> или вызов <code>str.toUpperCase()</code>, будет ошибка. Все вычисления должны быть сделаны на этапе передачи данных в шаблон.</p>
+<p>Так сделано как раз для переносимости шаблонной системы на другие языки, но на практике не очень-то удобно.</p>
+<p>Продвинутые кросс-платформенные шаблонизаторы, в частности, <a href="https://developers.google.com/closure/templates/docs/javascript_usage">Closure Templates</a>, обладают более мощным языком и умеют самостоятельно разбирать и компилировать многие выражения.</p>
+<h2><a class="main__anchor" href="#шаблонизация-компонент" name="шаблонизация-компонент">Шаблонизация компонент</a></h2><p>До этого мы говорили о шаблонных системах «общего назначения». По большому счёту, это всего лишь механизмы для преобразования одной строки в другую. Но при описании шаблона для компоненты мы хотим сгенерировать не просто строку, а DOM-элемент, и не просто генерировать, а в дальнейшем – с ним работать.</p>
+<p>Современные шаблонные системы «заточены» на это. Они умеют создавать по шаблону DOM-элементы и автоматически выполнять после этого разные полезные действия.</p>
+<p>Например:</p>
+<ul>
+<li>Можно сохранить важные подэлементы в свойства компоненты, чтобы было проще к ним обращаться из JavaScript.</li>
+<li>Можно автоматически назначать обработчики из методов компонента.</li>
+<li>Можно запомнить, какие данные относятся к каким элементам и в дальнейшем, при изменении данных автоматически обновлять DOM («привязка данных» – англ. data binding).</li>
+</ul>
+<p>Одной из первых систем шаблонизации, которая поддерживает подобные возможности была <a href="http://knockoutjs.com">Knockout.JS</a>.</p>
+<p>Попробуйте поменять значение <code>&lt;input&gt;</code> в примере ниже и вы увидите двухстороннюю привязку данных в действии:</p>
+<div class="code-example" data-autorun="true" data-demo-height="120" data-highlight-inline="2:22-67,4:18-40" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js"&gt;&lt;/script&gt;
+
+Поменяйте имя: &lt;input data-bind="value: name, valueUpdate: 'input'"&gt;
+&lt;hr&gt;
+&lt;h1&gt;Привет, &lt;span data-bind="text: name"&gt;&lt;/span&gt;!&lt;/h1&gt;
+
+&lt;script&gt;
+var user = {
+  name: ko.observable("Вася")
+};
+
+ko.applyBindings(user, document.body);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-50jrc" src="about:blank" style="height:120px"></iframe>
+</div>
+</div><p>Библиотека Knockout.JS создаёт объект <code>ko</code>, который и содержит все её возможности.</p>
+<p>В этом примере работу начинает вызов <code>ko.applyBindings(user, document.body)</code>.</p>
+<p>Его аргументы:</p>
+<ul>
+<li><code>user</code> – объект с данными.</li>
+<li><code>document.body</code> – DOM-элемент, который будет использован в качестве шаблона.</li>
+</ul>
+<p>Он пробегает по всем подэлементам <code>document.body</code> и, если видит атрибут <code>data-bind</code>, то читает его и выполняет привязку данных.</p>
+<p>Значение <code>&lt;input data-bind="value: name, ..."&gt;</code> означает, что нужно привязать <code>input.value</code> к свойству <code>name</code> объекта данных.</p>
+<p>Привязка осуществляется в две стороны:</p>
+<ol>
+<li>
+<p>Во-первых, библиотека ставит на <code>input</code> свой обработчик <code>oninput</code> (можно выбрать другие события, см. <a href="http://knockoutjs.com/documentation/value-binding.html">документацию</a>), который будет обновлять <code>user.name</code>. То есть, изменение <code>input</code> автоматически меняет <code>user.name</code></p>
+</li>
+<li>
+<p>Во-вторых, свойство <code>user.name</code> создано как <code>ko.observable(...)</code>. Технически, <code>ko.observable(value)</code> – это функция-обёртка вокруг значения: геттер-сеттер, который умеет рассылать события при изменении.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="5-5,8-8,13-13" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js"&gt;&lt;/script&gt;
+
+&lt;script&gt;
+var user = ko.observable("Вася");
+
+// вызов user() возвращает значение
+alert( user() ); // Вася
+
+// вызов user.subscribe(func) ставит обработчик на изменение значения
+user.subscribe(function(newValue) {
+  alert("Новое значение: " + newValue);
+});
+
+// вызов user(newValue) меняет значение
+user("Петя"); // сработает обработчик, назначенный выше
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Библиотека Knockout.JS ставит свой обработчик на изменение значения и при этом обновляет все привязки. Так что при изменении <code>user.name</code> меняется и <code>input.value</code>.</p>
+</li>
+</ol>
+<p>Далее в том же примере находится <code>&lt;span data-bind="text: name"&gt;</code> – здесь атрибут означает привязку текста к <code>name</code>. Так как <code>&lt;span&gt;</code> по своей инициативе меняться не может, то привязка односторонняя, но если бы мог, то можно сделать и двухстороннюю, это несложно.</p>
+<p><strong>Вызов <code>ko.applyBindings</code> можно делать внутри компоненты, и таким образом устанавливать соответствия между её объектом и DOM.</strong></p>
+<p>Библиотека также поддерживает хранение шаблонов в <code>&lt;script type="text/template"&gt;</code> – см. документацию <a href="http://knockoutjs.com/documentation/template-binding.html">template-binding</a>, можно организовать прекомпиляцию, добавлять свои привязки и так далее.</p>
+<h3><a class="main__anchor" href="#другие-библиотеки" name="другие-библиотеки">Другие библиотеки</a></h3><p>Есть другие библиотеки «продвинутой шаблонизации», которые добавляют свои возможности по работе с DOM, например:</p>
+<ul>
+<li><a href="http://www.ractivejs.org">Ractive.JS</a></li>
+<li><a href="http://www.rivetsjs.com/">Rivets.JS</a></li>
+</ul>
+<p>Подобная шаблонная система является частью многих фреймворков, например:</p>
+<ul>
+<li><a href="http://facebook.github.io/react/">React.JS</a></li>
+<li><a href="http://angularjs.org">Angular.JS</a></li>
+<li><a href="http://emberjs.com/">Ember.JS</a></li>
+</ul>
+<p>Все эти фреймворки разные:</p>
+<ul>
+<li>Ember использует надстройку над Handlebars.</li>
+<li>React использует JSX (<a href="http://facebook.github.io/react/docs/jsx-in-depth.html">JavaScript XML syntax transform</a>) – свой особый способ вставки разметки в JS-код, который нужно обязательно прекомпилировать перед запуском.</li>
+<li>Angular вместо работы со строками использует клонирование DOM-узлов.</li>
+</ul>
+<p>При разработке современного веб-приложения имеет смысл выбрать продвинутую шаблонную систему или даже один из этих архитектурных фреймворков.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Системы шаблонизации, в порядке развития и усложнения:</p>
+<ul>
+<li>Микрошаблонизация – строка с JS-вставками, которая компилируется в функцию – самый простой вариант, минимальная работа для шаблонизатора.</li>
+<li>Собственный язык шаблонов – «особо простой» синтаксис для частых операций, с запретом на JS в случае, если нужна кросс-платформенность.</li>
+<li>Шаблонизация для компонентов – современные системы, которые умеют не только генерировать DOM, но и помогать с дальнейшей работой с ним.</li>
+</ul>
+<p>Для того, чтобы использовать одни и те же шаблоны на клиенте и сервере, применяют либо кросс-платформенную систему шаблонизации, либо, чаще – интегрируют серверную часть с V8 и, возможно, с сервером Node.JS.</p>
+<p>В главе было много ссылок на шаблонные системы. Все они достаточно современные, поддерживаемые и используются во многих проектах. Среди них вы наверняка найдёте нужную вам.</p>
+</cut></div></meta></article></main></div></body></html>

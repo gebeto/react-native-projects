@@ -1,0 +1,399 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Замыкания, функции изнутри" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В этой главе мы продолжим рассматривать, как работают переменные, и, как следствие, познакомимся с замыканиями. От глобального объекта мы переходим к работе внутри функций.</p>
+<cut>
+<h2><a class="main__anchor" href="#лексическое-окружение" name="лексическое-окружение">Лексическое окружение</a></h2><p>Все переменные внутри функции – это свойства специального внутреннего объекта <code>LexicalEnvironment</code>, который создаётся при её запуске.</p>
+<p>Мы будем называть этот объект «лексическое окружение» или просто «объект переменных».</p>
+<p>При запуске функция создает объект <code>LexicalEnvironment</code>, записывает туда аргументы, функции и переменные. Процесс инициализации выполняется в том же порядке, что и для глобального объекта, который, вообще говоря, является частным случаем лексического окружения.</p>
+<p>В отличие от <code>window</code>, объект <code>LexicalEnvironment</code> является внутренним, он скрыт от прямого доступа.</p>
+<h3><a class="main__anchor" href="#пример" name="пример">Пример</a></h3><p>Посмотрим пример, чтобы лучше понимать, как это работает:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sayHi(name) {
+  var phrase = "Привет, " + name;
+  alert( phrase );
+}
+
+sayHi('Вася');</code></pre>
+</div>
+</div>
+</div><p>При вызове функции:</p>
+<ol>
+<li>
+<p>До выполнения первой строчки её кода, на стадии инициализации, интерпретатор создает пустой объект <code>LexicalEnvironment</code> и заполняет его.</p>
+<p>В данном случае туда попадает аргумент <code>name</code> и единственная переменная <code>phrase</code>:</p>
+<div class="code-example" data-highlight-block="1-1" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sayHi(name) {
+  // LexicalEnvironment = { name: 'Вася', phrase: undefined }
+  var phrase = "Привет, " + name;
+  alert( phrase );
+}
+
+sayHi('Вася');</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Функция выполняется.</p>
+<p>Во время выполнения происходит присвоение локальной переменной <code>phrase</code>, то есть, другими словами, присвоение свойству <code>LexicalEnvironment.phrase</code> нового значения:</p>
+<div class="code-example" data-highlight-block="4-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sayHi(name) {
+  // LexicalEnvironment = { name: 'Вася', phrase: undefined }
+  var phrase = "Привет, " + name;
+
+  // LexicalEnvironment = { name: 'Вася', phrase: 'Привет, Вася'}
+  alert( phrase );
+}
+
+sayHi('Вася');</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>В конце выполнения функции объект с переменными обычно выбрасывается и память очищается. В примерах выше так и происходит. Через некоторое время мы рассмотрим более сложные ситуации, при которых объект с переменными сохраняется и после завершения функции.</p>
+</li>
+</ol>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Тонкости спецификации</span></div>
+<div class="important__content"><p>Если почитать спецификацию ECMA-262, то мы увидим, что речь идёт о двух объектах: <code>VariableEnvironment</code> и <code>LexicalEnvironment</code>.</p>
+<p>Но там же замечено, что в реализациях эти два объекта могут быть объединены. Так что мы избегаем лишних деталей и используем везде термин <code>LexicalEnvironment</code>, это достаточно точно позволяет описать происходящее.</p>
+<p>Более формальное описание находится в спецификации ECMA-262, секции 10.2-10.5 и 13.</p>
+</div></div>
+<h2><a class="main__anchor" href="#доступ-ко-внешним-переменным" name="доступ-ко-внешним-переменным">Доступ ко внешним переменным</a></h2><p>Из функции мы можем обратиться не только к локальной переменной, но и к внешней:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var userName = "Вася";
+
+function sayHi() {
+  alert( userName ); // "Вася"
+}</code></pre>
+</div>
+</div>
+</div><p><strong>Интерпретатор, при доступе к переменной, сначала пытается найти переменную в текущем <code>LexicalEnvironment</code>, а затем, если её нет – ищет во внешнем объекте переменных. В данном случае им является <code>window</code>.</strong></p>
+<p>Такой порядок поиска возможен благодаря тому, что ссылка на внешний объект переменных хранится в специальном внутреннем свойстве функции, которое называется <code>[[Scope]]</code>. Это свойство закрыто от прямого доступа, но знание о нём очень важно для понимания того, как работает JavaScript.</p>
+<p><strong>При создании функция получает скрытое свойство <code>[[Scope]]</code>, которое ссылается на лексическое окружение, в котором она была создана.</strong></p>
+<p>В примере выше таким окружением является <code>window</code>, так что создаётся свойство:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">sayHi.[[Scope]] = window</code></pre>
+</div>
+</div>
+</div><p>Это свойство никогда не меняется. Оно всюду следует за функцией, привязывая её, таким образом, к месту своего рождения.</p>
+<p>При запуске функции её объект переменных <code>LexicalEnvironment</code> получает ссылку на «внешнее лексическое окружение» со значением из <code>[[Scope]]</code>.</p>
+<p>Если переменная не найдена в функции – она будет искаться снаружи.</p>
+<p>Именно благодаря этой механике в примере выше <code>alert(userName)</code> выводит внешнюю переменную. На уровне кода это выглядит как поиск во внешней области видимости, вне функции.</p>
+<p>Если обобщить:</p>
+<ul>
+<li>Каждая функция при создании получает ссылку <code>[[Scope]]</code> на объект с переменными, в контексте которого была создана.</li>
+<li>При запуске функции создаётся новый объект с переменными <code>LexicalEnvironment</code>. Он получает ссылку на внешний объект переменных из <code>[[Scope]]</code>.</li>
+<li>При поиске переменных он осуществляется сначала в текущем объекте переменных, а потом – по этой ссылке.</li>
+</ul>
+<p>Выглядит настолько просто, что непонятно – зачем вообще говорить об этом <code>[[Scope]]</code>, об объектах переменных. Сказали бы: «Функция читает переменные снаружи» – и всё. Но знание этих деталей позволит нам легко объяснить и понять более сложные ситуации, с которыми мы столкнёмся далее.</p>
+<h2><a class="main__anchor" href="#всегда-текущее-значение" name="всегда-текущее-значение">Всегда текущее значение</a></h2><p>Значение переменной из внешней области берётся всегда текущее. Оно может быть уже не то, что было на момент создания функции.</p>
+<p>Например, в коде ниже функция <code>sayHi</code> берёт <code>phrase</code> из внешней области:</p>
+<div class="code-example" data-highlight-block="6-6,10-10" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var phrase = 'Привет';
+
+function sayHi(name) {
+  alert(phrase + ', ' + name);
+}
+
+sayHi('Вася');  // Привет, Вася (*)
+
+phrase = 'Пока';
+
+sayHi('Вася'); // Пока, Вася (**)</code></pre>
+</div>
+</div>
+</div><p>На момент первого запуска <code>(*)</code>, переменная <code>phrase</code> имела значение <code>'Привет'</code>, а ко второму <code>(**)</code> изменила его на <code>'Пока'</code>.</p>
+<p>Это естественно, ведь для доступа к внешней переменной функция по ссылке <code>[[Scope]]</code> обращается во внешний объект переменных и берёт то значение, которое там есть на момент обращения.</p>
+<h2><a class="main__anchor" href="#вложенные-функции" name="вложенные-функции">Вложенные функции</a></h2><p>Внутри функции можно объявлять не только локальные переменные, но и другие функции.</p>
+<p>К примеру, вложенная функция может помочь лучше организовать код:</p>
+<div class="code-example" data-highlight-block="5-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sayHiBye(firstName, lastName) {
+
+  alert( "Привет, " + getFullName() );
+  alert( "Пока, " + getFullName() );
+
+  function getFullName() {
+      return firstName + " " + lastName;
+    }
+
+}
+
+sayHiBye("Вася", "Пупкин"); // Привет, Вася Пупкин ; Пока, Вася Пупкин</code></pre>
+</div>
+</div>
+</div><p>Здесь, для удобства, создана вспомогательная функция <code>getFullName()</code>.</p>
+<p>Вложенные функции получают <code>[[Scope]]</code> так же, как и глобальные. В нашем случае:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">getFullName.[[Scope]] = объект переменных текущего запуска sayHiBye</code></pre>
+</div>
+</div>
+</div><p>Благодаря этому <code>getFullName()</code> получает снаружи <code>firstName</code> и <code>lastName</code>.</p>
+<p>Заметим, что если переменная не найдена во внешнем объекте переменных, то она ищется в ещё более внешнем (через <code>[[Scope]]</code> внешней функции), то есть, такой пример тоже будет работать:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var phrase = 'Привет';
+
+function say() {
+
+  function go() {
+    alert( phrase ); // найдёт переменную снаружи
+  }
+
+  go();
+}
+
+say();</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#возврат-функции" name="возврат-функции">Возврат функции</a></h2><p>Рассмотрим более «продвинутый» вариант, при котором внутри одной функции создаётся другая и возвращается в качестве результата.</p>
+<p>В разработке интерфейсов это совершенно стандартный приём, функция затем может назначаться как обработчик действий посетителя.</p>
+<p>Здесь мы будем создавать функцию-счётчик, которая считает свои вызовы и возвращает их текущее число.</p>
+<p>В примере ниже <code>makeCounter</code> создает такую функцию:</p>
+<div class="code-example" data-highlight-block="1-1" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function makeCounter() {
+  var currentCount = 1;
+
+  return function() { // (**)
+    return currentCount++;
+  };
+}
+
+var counter = makeCounter(); // (*)
+
+// каждый вызов увеличивает счётчик и возвращает результат
+alert( counter() ); // 1
+alert( counter() ); // 2
+alert( counter() ); // 3
+
+// создать другой счётчик, он будет независим от первого
+var counter2 = makeCounter();
+alert( counter2() ); // 1</code></pre>
+</div>
+</div>
+</div><p>Как видно, мы получили два независимых счётчика <code>counter</code> и <code>counter2</code>, каждый из которых незаметным снаружи образом сохраняет текущее количество вызовов.</p>
+<p>Где? Конечно, во внешней переменной <code>currentCount</code>, которая у каждого счётчика своя.</p>
+<p>Если подробнее описать происходящее:</p>
+<ol>
+<li>
+<p>В строке <code>(*)</code> запускается <code>makeCounter()</code>. При этом создаётся <code>LexicalEnvironment</code> для переменных текущего вызова. В функции есть одна переменная <code>var currentCount</code>, которая станет свойством этого объекта. Она изначально инициализуется в <code>undefined</code>, затем, в процессе  выполнения, получит значение <code>1</code>:</p>
+<div class="code-example" data-highlight-block="1-1,5-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function makeCounter() {
+  // LexicalEnvironment = { currentCount: undefined }
+
+  var currentCount = 1;
+
+  // LexicalEnvironment = { currentCount: 1 }
+
+  return function() { // [[Scope]] -&gt; LexicalEnvironment (**)
+    return currentCount++;
+  };
+}
+
+var counter = makeCounter(); // (*)</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>В процессе выполнения <code>makeCounter()</code> создаёт функцию в строке <code>(**)</code>. При создании эта функция получает внутреннее свойство <code>[[Scope]]</code> со ссылкой на текущий <code>LexicalEnvironment</code>.</p>
+</li>
+<li>
+<p>Далее вызов <code>makeCounter()</code> завершается и функция <code>(**)</code> возвращается и сохраняется во внешней переменной <code>counter</code> <code>(*)</code>.</p>
+</li>
+</ol>
+<p>На этом создание «счётчика» завершено.</p>
+<p>Итоговым значением, записанным в переменную <code>counter</code>, является функция:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function() { // [[Scope]] -&gt; {currentCount: 1}
+  return currentCount++;
+};</code></pre>
+</div>
+</div>
+</div><p>Возвращённая из <code>makeCounter()</code> функция <code>counter</code> помнит (через <code>[[Scope]]</code>) о том, в каком окружении была создана.</p>
+<p>Это и используется для хранения текущего значения счётчика.</p>
+<p>Далее, когда-нибудь, функция <code>counter</code> будет вызвана. Мы не знаем, когда это произойдёт. Может быть, прямо  сейчас, но, вообще говоря, совсем не факт.</p>
+<p>Эта функция состоит из одной строки: <code>return currentCount++</code>, ни переменных ни параметров в ней нет, поэтому её собственный объект переменных, для краткости назовём его <code>LE</code> –  будет пуст.</p>
+<p>Однако, у неё есть свойство <code>[[Scope]]</code>, которое указывает на внешнее окружение. Чтобы увеличить и вернуть <code>currentCount</code>, интерпретатор ищет в текущем объекте переменных <code>LE</code>, не находит, затем идёт во внешний объект, там находит, изменяет и возвращает новое значение:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function makeCounter() {
+  var currentCount = 1;
+
+  return function() {
+    return currentCount++;
+  };
+}
+
+var counter = makeCounter(); // [[Scope]] -&gt; {currentCount: 1}
+
+alert( counter() ); // 1, [[Scope]] -&gt; {currentCount: 1}
+alert( counter() ); // 2, [[Scope]] -&gt; {currentCount: 2}
+alert( counter() ); // 3, [[Scope]] -&gt; {currentCount: 3}</code></pre>
+</div>
+</div>
+</div><p><strong>Переменную во внешней области видимости можно не только читать, но и изменять.</strong></p>
+<p>В примере выше было создано несколько счётчиков. Все они взаимно независимы:</p>
+<div class="code-example" data-highlight-inline="8:27-46" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var counter = makeCounter();
+
+var counter2 = makeCounter();
+
+alert( counter() ); // 1
+alert( counter() ); // 2
+alert( counter() ); // 3
+
+alert( counter2() ); // 1, счётчики независимы</code></pre>
+</div>
+</div>
+</div><p>Они независимы, потому что при каждом запуске <code>makeCounter</code> создаётся свой объект переменных <code>LexicalEnvironment</code>, со своим свойством <code>currentCount</code>, на который новый счётчик получит ссылку <code>[[Scope]]</code>.</p>
+<h2><a class="main__anchor" href="#свойства-функции" name="свойства-функции">Свойства функции</a></h2><p>Функция в JavaScript является объектом, поэтому можно присваивать свойства прямо к ней, вот так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f() {}
+
+f.test = 5;
+alert( f.test );</code></pre>
+</div>
+</div>
+</div><p>Свойства функции не стоит путать с переменными и параметрами. Они совершенно никак не связаны. Переменные доступны только внутри функции, они создаются в процессе её выполнения. Это – использование функции «как функции».</p>
+<p>А свойство у функции – доступно отовсюду и всегда. Это – использование функции «как объекта».</p>
+<p>Если хочется привязать значение к функции, то можно им воспользоваться вместо внешних переменных.</p>
+<p>В качестве демонстрации, перепишем пример со счётчиком:</p>
+<div class="code-example" data-highlight-block="1-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function makeCounter() {
+  function counter() {
+    return counter.currentCount++;
+  };
+  counter.currentCount = 1;
+
+  return counter;
+}
+
+var counter = makeCounter();
+alert( counter() ); // 1
+alert( counter() ); // 2</code></pre>
+</div>
+</div>
+</div><p>При запуске пример работает также.</p>
+<p>Принципиальная разница – во внутренней механике и в том, что свойство функции, в отличие от переменной из замыкания – общедоступно, к нему имеет доступ любой, у кого есть объект функции.</p>
+<p>Например, можно взять и поменять счётчик из внешнего кода:</p>
+<div class="code-example" data-highlight-block="3-3" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var counter = makeCounter();
+alert( counter() ); // 1
+
+counter.currentCount = 5;
+
+alert( counter() ); // 5</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">Статические переменные</span></div>
+<div class="important__content"><p>Иногда свойства, привязанные к функции, называют «статическими переменными».</p>
+<p>В некоторых языках программирования можно объявлять переменную, которая сохраняет значение между вызовами функции. В JavaScript ближайший аналог – такое вот свойство функции.</p>
+</div></div>
+<h2><a class="main__anchor" href="#итого-замыкания" name="итого-замыкания">Итого: замыкания</a></h2><p><a href="http://en.wikipedia.org/wiki/Closure_(computer_science)">Замыкание</a> – это функция вместе со всеми внешними переменными, которые ей доступны.</p>
+<p>Таково стандартное определение, которое есть в Wikipedia и большинстве серьёзных источников по программированию. То есть, замыкание – это функция + внешние переменные.</p>
+<p>Тем не менее, в JavaScript есть небольшая терминологическая особенность.</p>
+<p><strong>Обычно, говоря «замыкание функции», подразумевают не саму эту функцию, а именно внешние переменные.</strong></p>
+<p>Иногда говорят «переменная берётся из замыкания». Это означает – из внешнего объекта переменных.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Что это такое – «понимать замыкания?»</span></div>
+<div class="important__content"><p>Иногда говорят «Вася молодец, понимает замыкания!». Что это такое – «понимать замыкания», какой смысл обычно вкладывают в эти слова?</p>
+<p>«Понимать замыкания» в JavaScript означает понимать следующие вещи:</p>
+<ol>
+<li>Все переменные и параметры функций являются свойствами объекта переменных <code>LexicalEnvironment</code>. Каждый запуск функции создает новый такой объект. На верхнем уровне им является «глобальный объект», в браузере – <code>window</code>.</li>
+<li>При создании функция получает системное свойство <code>[[Scope]]</code>, которое ссылается на <code>LexicalEnvironment</code>, в котором она была создана.</li>
+<li>При вызове функции, куда бы её ни передали в коде – она будет искать переменные сначала у себя, а затем во внешних <code>LexicalEnvironment</code> с места своего «рождения».</li>
+</ol>
+<p>В следующих главах мы углубим это понимание дополнительными примерами, а также рассмотрим, что происходит с памятью.</p>
+</div></div>
+</cut></div></meta></article></main></div></body></html>

@@ -1,0 +1,54 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Свойство "outline"' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Свойство <code>outline</code> задаёт дополнительную рамку вокруг элемента, <em>за пределами его CSS-блока</em>. Поддерживается во всех браузерах, IE8+.</p>
+<cut>
+<p>Для примера, рассмотрим его вместе с обычной рамкой <code>border</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-highlight-inline="0:35-57" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div style="border:3px solid blue; outline: 3px solid red"&gt;
+ Элемент
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-cp7igm" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><ul>
+<li><strong>В отличие от <code>border</code>, рамка <code>outline</code> не участвует в блочной модели CSS.</strong> Она не занимает места и не меняет размер элемента. Поэтому его используют, когда хотят добавить рамку без изменения других CSS-параметров.</li>
+<li>Также, в отличие от <code>border</code>, рамку <code>outline</code> можно задать только со всех сторон: свойств <code>outline-top</code>, <code>outline-left</code> не существует.</li>
+</ul>
+<p>Так как <code>outline</code> находится за границами элемента – <strong><code>outline</code>-рамки соседей могут перекрывать друг друга</strong>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-highlight-inline="0:12-36,3:12-34" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div style="outline: 3px solid green"&gt;
+ Элемент
+&lt;/div&gt;
+&lt;div style="outline: 3px solid red"&gt;
+ Элемент
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-9i7gz9" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><p>В примере выше верхняя рамка нижнего элемента находится на территории верхнего и наоборот.</p>
+<p>Все браузеры, кроме IE9-, также поддерживают свойство <code>outline-offset</code>, задающее отступ <code>outline</code> от внешней границы элемента:</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div style="border:3px solid blue; outline: 3px solid red; outline-offset:5px"&gt;
+ Везде, кроме IE9-, между рамками будет расстояние 5px
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-c7duwj" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><p>Ещё раз заметим, что основная особенность <code>outline</code> – в том, что при наличии  <code>outline-offset</code> или без него – он не занимает места в блоке.</p>
+<p>Поэтому его часто используют для стилей <code>:hover</code> и других аналогичных, когда нужно выделить элемент, но чтобы ничего при этом не прыгало.</p>
+</cut></div></meta></article></main></div></body></html>

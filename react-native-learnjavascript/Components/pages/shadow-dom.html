@@ -1,0 +1,99 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Shadow DOM" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Спецификация <a href="http://w3c.github.io/webcomponents/spec/shadow/">Shadow DOM</a> является отдельным стандартом. Частично он уже используется для обычных DOM-элементов, но также применяется для создания веб-компонентов.</p>
+<p><em>Shadow DOM</em> – это внутренний DOM элемента, который существует отдельно от внешнего документа. В нём могут быть свои ID, свои стили и так далее. Причём снаружи его, без применения специальных техник, не видно, поэтому не возникает конфликтов.</p>
+<cut>
+<h2><a class="main__anchor" href="#внутри-браузера" name="внутри-браузера">Внутри браузера</a></h2><p>Концепция Shadow DOM начала применяться довольно давно внутри самих браузеров. Когда браузер показывает сложные элементы управления, наподобие слайдера <code>&lt;input type="range"&gt;</code> или календаря <code>&lt;input type="date"&gt;</code> – внутри себя он конструирует их из самых обычных стилизованных <code>&lt;div&gt;</code>, <code>&lt;span&gt;</code> и так далее.</p>
+<p>С первого взгляда они незаметны, но если в настройках Chrome Development Tools выбрать показ Shadow DOM, то их можно легко увидеть.</p>
+<p>Например, вот такое содержимое будет у <code>&lt;input type="date"&gt;</code>:
+<img alt="" height="398" src="article/shadow-dom/shadow-dom-chrome.png" width="565"/></p>
+<p>То, что находится под <code>#shadow-root</code> – это и есть Shadow DOM.</p>
+<p><strong>Получить элементы из Shadow DOM можно только при помощи специальных JavaScript-вызовов или селекторов. Это не обычные дети, а намного более мощное средство отделения содержимого.</strong></p>
+<p>В Shadow DOM выше можно увидеть полезный атрибут <code>pseudo</code>. Он нестандартный, существует по историческим причинам. С его помощью можно стилизовать подэлементы через CSS, например, сделаем поле редактирования даты красным:</p>
+<div class="code-example" data-highlight-block="1-1" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+input::-webkit-datetime-edit {
+  background: red;
+}
+&lt;/style&gt;
+
+&lt;input type="date"&gt;</code></pre>
+</div>
+</div>
+</div><p>Ещё раз заметим, что <code>pseudo</code> – нестандартный атрибут. Если говорить хронологически, то сначала браузеры начали экспериментировать внутри себя с инкапсуляцией внутренних DOM-структур, а уже потом, через некоторое время, появился стандарт Shadow DOM, который позволяет делать то же самое разработчикам.</p>
+<p>Далее мы рассмотрим работу с Shadow DOM из JavaScript, по стандарту <a href="http://w3c.github.io/webcomponents/spec/shadow/">Shadow DOM</a>.</p>
+<h2><a class="main__anchor" href="#создание-shadow-dom" name="создание-shadow-dom">Создание Shadow DOM</a></h2><p>Shadow DOM можно создать внутри любого элемента вызовом <code>elem.createShadowRoot()</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-autorun="no-epub" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;p id="elem"&gt;Доброе утро, страна!&lt;/p&gt;
+
+&lt;script&gt;
+  var root = elem.createShadowRoot();
+  root.innerHTML = "&lt;p&gt;Привет из подполья!&lt;/p&gt;";
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-1pt5ru" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><p>Если вы запустите этот пример, то увидите, что изначальное содержимое элемента куда-то исчезло и показывается только «Привет из подполья!». Это потому, что у элемента есть Shadow DOM.</p>
+<p><strong>С момента создания Shadow DOM обычное содержимое (дети) элемента не отображается, а показывается только Shadow DOM.</strong></p>
+<p>Внутрь этого Shadow DOM, при желании, можно поместить обычное содержимое. Для этого нужно указать, куда. В Shadow DOM это делается через «точку вставки» (insertion point). Она объявляется при помощи тега <code>&lt;content&gt;</code>, например:</p>
+<div class="code-example" data-autorun="no-epub" data-highlight-inline="4:24-43" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;p id="elem"&gt;Доброе утро, страна!&lt;/p&gt;
+
+&lt;script&gt;
+  var root = elem.createShadowRoot();
+  root.innerHTML = "&lt;h3&gt;&lt;content&gt;&lt;/content&gt;&lt;/h3&gt; &lt;p&gt;Привет из подполья!&lt;/p&gt;";
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-annb7i" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><p>Теперь вы увидите две строчки: «Доброе утро, страна!» в заголовке, а затем «Привет из подполья».</p>
+<p>Shadow DOM примера выше в инструментах разработки:</p>
+<figure><div class="image" style="width:280px">
+<div class="image__ratio" style="padding-top:49.28571428571429%"></div>
+<img alt="" class="image__image" height="138" src="article/shadow-dom/shadow-content.png" width="280">
+</img></div></figure><p>Важные детали:</p>
+<ul>
+<li>Тег <code>&lt;content&gt;</code> влияет только на отображение, он не перемещает узлы физически. Как видно из картинки выше, текстовый узел  «Доброе утро, страна!» остался внутри <code>p#elem</code>. Его можно даже получить при помощи <code>elem.firstElementChild</code>.</li>
+<li>Внутри <code>&lt;content&gt;</code> показывается не элемент целиком <code>&lt;p id="elem"&gt;</code>, а его содержимое, то есть в данном случае текст «Доброе утро, страна!».</li>
+</ul>
+<p><strong>В <code>&lt;content&gt;</code> атрибутом <code>select</code> можно указать конкретный селектор содержимого, которое нужно переносить. Например, <code>&lt;content select="h3"&gt;&lt;/content&gt;</code> перенесёт только заголовки.</strong></p>
+<p>Внутри Shadow DOM можно использовать <code>&lt;content&gt;</code> много раз с разными значениями <code>select</code>, указывая таким образом, где конкретно какие части исходного содержимого разместить. Но при этом дублирование узлов невозможно. Если узел показан в одном <code>&lt;content&gt;</code>, то в следующем он будет пропущен.</p>
+<p>Например, если сначала идёт <code>&lt;content select="h3.title"&gt;</code>, а затем <code>&lt;content select="h3"&gt;</code>, то в первом <code>&lt;content&gt;</code> будут показаны заголовки <code>&lt;h3&gt;</code> с классом <code>title</code>, а во втором – все остальные, кроме уже показанных.</p></cut></div></meta></article></main></div></body></html>

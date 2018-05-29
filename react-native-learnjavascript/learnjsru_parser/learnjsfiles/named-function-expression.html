@@ -1,0 +1,167 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Именованные функциональные выражения" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Специально для работы с рекурсией в JavaScript существует особое расширение функциональных выражений, которое называется «Named Function Expression» (сокращённо NFE) или, по-русски, <em>«именованное функциональное выражение»</em>.</p>
+<cut>
+<h2><a class="main__anchor" href="#functions-nfe" name="functions-nfe">Named Function Expression</a></h2><p>Обычное функциональное выражение:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var f = function(...) { /* тело функции */ };</code></pre>
+</div>
+</div>
+</div><p>Именованное с именем <code>sayHi</code>:</p>
+<div class="code-example" data-highlight-inline="0:17-22" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var f = function sayHi(...) { /* тело функции */ };</code></pre>
+</div>
+</div>
+</div><p>Что же это за имя, которое идёт в дополнение к <code>f</code>, и зачем оно?</p>
+<p>Имя функционального выражения (<code>sayHi</code>) имеет особый смысл. Оно доступно только изнутри самой функции.</p>
+<p>Это ограничение видимости входит в стандарт JavaScript и поддерживается всеми браузерами, кроме IE8-.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var f = function sayHi(name) {
+  alert( sayHi ); // изнутри функции - видно (выведет код функции)
+};
+
+alert( sayHi ); // снаружи - не видно (ошибка: undefined variable 'sayHi')</code></pre>
+</div>
+</div>
+</div><p>Кроме того, имя NFE нельзя перезаписать:</p>
+<div class="code-example" data-highlight-block="1-1" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var test = function sayHi(name) {
+  sayHi = "тест"; // попытка перезаписи
+  alert( sayHi ); // function... (перезапись не удалась)
+};
+
+test();</code></pre>
+</div>
+</div>
+</div><p>В режиме <code>use strict</code> код выше выдал бы ошибку.</p>
+<p>Как правило, имя NFE используется для единственной цели – позволить изнутри функции вызвать саму себя.</p>
+<h2><a class="main__anchor" href="#пример-использования" name="пример-использования">Пример использования</a></h2><p>NFE используется в первую очередь в тех ситуациях, когда функцию нужно передавать в другое место кода или перемещать из одной переменной в другую.</p>
+<p><strong>Внутреннее имя позволяет функции надёжно обращаться к самой себе, где бы она ни находилась.</strong></p>
+<p>Вспомним, к примеру, функцию-факториал из задачи <a href="/task/factorial">Вычислить факториал</a>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f(n) {
+  return n ? n * f(n - 1) : 1;
+};
+
+alert( f(5) ); // 120</code></pre>
+</div>
+</div>
+</div><p>Попробуем перенести её в другую переменную <code>g</code>:</p>
+<div class="code-example" data-highlight-block="4-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f(n) {
+  return n ? n * f(n - 1) : 1;
+};
+
+var g = f;
+f = null;
+
+alert( g(5) ); // запуск функции с новым именем - ошибка при выполнении!</code></pre>
+</div>
+</div>
+</div><p>Ошибка возникла потому что функция из своего кода обращается к своему старому имени <code>f</code>. А этой функции уже нет, <code>f = null</code>.</p>
+<p>Для того, чтобы функция всегда надёжно работала, объявим её как Named Function Expression:</p>
+<div class="code-example" data-highlight-block="7-7" data-highlight-inline="0:17-26,1:15-24" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var f = function factorial(n) {
+  return n ? n*factorial(n-1) : 1;
+};
+
+var g = f;  // скопировали ссылку на функцию-факториал в g
+f = null;
+
+alert( g(5) ); // 120, работает!</code></pre>
+</div>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">В браузере IE8- создаются две функции</span></div>
+<div class="important__content"><p>Как мы говорили выше, в браузере IE до 9 версии имя NFE видно везде, что является ошибкой с точки зрения стандарта.</p>
+<p>…Но на самом деле ситуация ещё забавнее. Старый IE создаёт в таких случаях целых две функции: одна записывается в переменную <code>f</code>, а вторая – в переменную <code>factorial</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var f = function factorial(n) { /*...*/ };
+
+// в IE8- false
+// в остальных браузерах ошибка, т.к. имя factorial не видно
+alert( f === factorial );</code></pre>
+</div>
+</div>
+</div><p>Все остальные браузеры полностью поддерживают именованные функциональные выражения.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Устаревшее специальное значение <code>arguments.callee</code></span></div>
+<div class="important__content"><p>Если вы давно работаете с JavaScript, то, возможно, знаете, что раньше для этой цели также служило специальное значение <code>arguments.callee</code>.</p>
+<p>Если это название вам ни о чём не говорит – всё в порядке, читайте дальше, мы обязательно обсудим его <a href="/arguments-pseudoarray#arguments-callee">в отдельной главе</a>.</p>
+<p>Если же вы в курсе, то стоит иметь в виду, что оно официально исключено из современного стандарта. А NFE – это наше настоящее.</p>
+</div></div>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Если функция задана как Function Expression, ей можно дать имя.</p>
+<p>Оно будет доступно только внутри функции (кроме IE8-).</p>
+<p>Это имя предназначено для надёжного рекурсивного вызова функции, даже если она записана в другую переменную.</p>
+<p>Обратим внимание, что с Function Declaration так поступить нельзя. Такое «специальное» внутреннее имя функции задаётся только в синтаксисе Function Expression.</p>
+</cut></div></meta></article></main></div></body></html>

@@ -1,0 +1,137 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Правила форматирования CSS" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Для того, чтобы CSS легко читался, полезно соблюдать пять правил форматирования.</p>
+<cut>
+<h2><a class="main__anchor" href="#каждое-свойство-на-отдельной-строке" name="каждое-свойство-на-отдельной-строке">Каждое свойство – на отдельной строке</a></h2><p>Так – неверно:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+#snapshot-box h2 { padding: 0 0 6px 0; font-weight: bold; position: absolute; left: 0; top: 0; }</code></pre>
+</div>
+</div>
+</div><p>Так – правильно:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+#snapshot-box h2 {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 0 0 6px 0;
+  font-weight: bold;
+}</code></pre>
+</div>
+</div>
+</div><p>Цель – лучшая читаемость, проще найти и поправить свойство.</p>
+<h2><a class="main__anchor" href="#каждый-селектор-на-отдельной-строке" name="каждый-селектор-на-отдельной-строке">Каждый селектор – на отдельной строке</a></h2><p>Неправильно:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+#snapshot-box h2, #profile-box h2, #order-box h2 {
+  padding: 0 0 6px 0;
+  font-weight: bold;
+}</code></pre>
+</div>
+</div>
+</div><p>Правильно:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+#snapshot-box h2,
+#profile-box h2,
+#order-box h2 {
+  padding: 0 0 6px 0;
+  font-weight: bold;
+}</code></pre>
+</div>
+</div>
+</div><p>Цель – лучшая читаемость, проще найти селектор.</p>
+<h2><a class="main__anchor" href="#свойства-сильнее-влияющие-на-документ-идут-первыми" name="свойства-сильнее-влияющие-на-документ-идут-первыми">Свойства, сильнее влияющие на документ, идут первыми</a></h2><p>Рекомендуется располагать свойства в следующем порядке:</p>
+<ol>
+<li>Сначала положение элемента относительно других: <code>position</code>, <code>left/right/top/bottom</code>, <code>float</code>, <code>clear</code>, <code>z-index</code>.</li>
+<li>Затем размеры и отступы: <code>width</code>, <code>height</code>, <code>margin</code>, <code>padding</code>…</li>
+<li>Рамка <code>border</code>, она частично относится к размерам.</li>
+<li>Общее оформление содержимого: <code>list-style-type</code>, <code>overflow</code>…</li>
+<li>Цветовое и стилевое оформление: <code>background</code>, <code>color</code>, <code>font</code>…</li>
+</ol>
+<p><strong>Общая логика сортировки: «от общего – к локальному и менее важному».</strong></p>
+<p>При таком порядке свойства, определяющие структуру документа, будут видны наиболее отчётливо, в начале, а самые незначительно влияющие (например цвет) – в конце.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+#snapshot-box h2 {
+  position: absolute; /* позиционирование */
+  left: 0;
+  top: 0;
+
+  padding: 0 0 6px 0; /* размеры и отступы */
+
+  color: red;         /* стилевое оформление */
+  font-weight: bold;
+}</code></pre>
+</div>
+</div>
+</div><p><strong>Свойство без префикса пишется последним.</strong></p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">-webkit-box-shadow:0 0 100px 20px #000;
+box-shadow:0 0 100px 20px #000;</code></pre>
+</div>
+</div>
+</div><p>Это нужно, чтобы стандартная (окончательная) реализация всегда была важнее, чем временные браузерные.</p>
+<h2><a class="main__anchor" href="#организация-css-файлов-проекта" name="организация-css-файлов-проекта">Организация CSS-файлов проекта</a></h2><p>Стили можно разделить на две основные группы:</p>
+<ol>
+<li>
+<p><strong>Блоки-компоненты имеют свой CSS.</strong> Например, CSS для диалогового окна, CSS для профиля посетителя, CSS для меню.</p>
+<p>Такой CSS идёт «в комплекте» с модулем, его удобно выделять в отдельные файлы и подключать через <code>@import</code>.</p>
+<p>Конечно, при разработке будет много CSS-файлов, но при выкладке проекта система сборки и сжатия CSS заменит директивы <code>@import</code> на их содержимое, объединяя все CSS в один файл.</p>
+</li>
+<li>
+<p><strong>Страничный и интегрирующий CSS</strong>.</p>
+<p>Этот CSS описывает общий вид страницы, расположение компонент и их дополнительную стилизацию, зависящую от места на странице и т.п.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+.tab .profile { /* профиль внутри вкладки */
+  float: left;
+  width: 300px;
+  height: 200px;
+}</code></pre>
+</div>
+</div>
+</div><p>Важные страничные блоки можно выделять особыми комментариями:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/** ===========================
+ *  Профиль посетителя
+ *  ===========================
+*/
+
+.profile {
+  border: 1px solid gray;
+}
+
+.profile h2 {
+  color: blue;
+  font-size: 1.8em;
+}</code></pre>
+</div>
+</div>
+</div></li>
+</ol>
+<p>CSS-препроцессоры, такие как <a href="http://sass-lang.com/">SASS</a>, <a href="http://lesscss.org/">LESS</a>, <a href="http://learnboost.github.com/stylus/">Stylus</a>, <a href="https://github.com/postcss/autoprefixer">Autoprefixer</a> делают написание CSS сильно удобнее…</p>
+<p>Выберите один из них и используйте. Единственно, они добавляют дополнительную предобработку CSS, которую нужно учесть, и желательно, на сервере.</p>
+</cut></div></meta></article></main></div></body></html>

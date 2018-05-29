@@ -1,0 +1,428 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Введение в браузерные события" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Для реакции на действия посетителя и внутреннего взаимодействия скриптов существуют <em>события</em>.</p>
+<cut>
+<p><em>Событие</em> – это сигнал от браузера о том, что что-то произошло. Существует много видов событий. Посмотрим список самых часто используемых, пока просто для ознакомления:</p>
+<p><strong>События мыши:</strong></p>
+<ul>
+<li><code>click</code> – происходит, когда кликнули на элемент левой кнопкой мыши</li>
+<li><code>contextmenu</code> – происходит, когда кликнули на элемент правой кнопкой мыши</li>
+<li><code>mouseover</code> – возникает, когда на элемент наводится мышь</li>
+<li><code>mousedown</code> и <code>mouseup</code> – когда кнопку мыши нажали или отжали</li>
+<li><code>mousemove</code> – при движении мыши</li>
+</ul>
+<p><strong>События на элементах управления:</strong></p>
+<ul>
+<li><code>submit</code> – посетитель отправил форму <code>&lt;form&gt;</code></li>
+<li><code>focus</code> –  посетитель фокусируется на элементе, например нажимает на <code>&lt;input&gt;</code></li>
+</ul>
+<p><strong>Клавиатурные события:</strong></p>
+<ul>
+<li><code>keydown</code> – когда посетитель нажимает клавишу</li>
+<li><code>keyup</code> – когда посетитель отпускает клавишу</li>
+</ul>
+<p><strong>События документа:</strong></p>
+<ul>
+<li><code>DOMContentLoaded</code> – когда HTML загружен и обработан, DOM документа полностью построен и доступен.</li>
+</ul>
+<p><strong>События CSS:</strong></p>
+<ul>
+<li><code>transitionend</code> – когда CSS-анимация завершена.</li>
+</ul>
+<p>Также есть и много других событий.</p>
+<h2><a class="main__anchor" href="#назначение-обработчиков-событий" name="назначение-обработчиков-событий">Назначение обработчиков событий</a></h2><p>Событию можно назначить <em>обработчик</em>, то есть функцию, которая сработает, как только событие произошло.</p>
+<p>Именно благодаря обработчикам JavaScript-код может реагировать на действия посетителя.</p>
+<p>Есть несколько способов назначить событию обработчик. Сейчас мы их рассмотрим, начиная от самого простого.</p>
+<h3><a class="main__anchor" href="#использование-атрибута-html" name="использование-атрибута-html">Использование атрибута HTML</a></h3><p>Обработчик может быть назначен прямо в разметке, в атрибуте, который называется <code>on&lt;событие&gt;</code>.</p>
+<p>Например, чтобы прикрепить <code>click</code>-событие к <code>input</code> кнопке, можно присвоить обработчик <code>onclick</code>, вот так:</p>
+<div class="code-example" data-highlight-inline="0:26-50" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input value="Нажми меня" onclick="alert('Клик!')" type="button"&gt;</code></pre>
+</div>
+</div>
+</div><p>При клике мышкой на кнопке выполнится код, указанный в атрибуте <code>onclick</code>.</p>
+<p>В действии: <input onclick="alert('Клик!');" type="button" value="Нажми меня"/></p>
+<p>Обратите внимание, для содержимого атрибута <code>onclick</code> используются <em>одинарные кавычки</em>, так как сам атрибут находится в двойных.</p>
+<p>Частая ошибка новичков в том, что они забывают, что код находится внутри атрибута. Запись вида <code>onclick="alert("Клик!")"</code>, с двойными кавычки внутри, не будет работать. Если вам действительно нужно использовать именно двойные кавычки, то это можно сделать, заменив их на <code>&amp;quot;</code>, то есть так: <code>onclick="alert(&amp;quot;Клик!&amp;quot;)"</code>.</p>
+<p>Однако, обычно этого не требуется, так как прямо в разметке пишутся только очень простые обработчики. Если нужно сделать что-то сложное, то имеет смысл описать это в функции, и в обработчике вызвать уже её.</p>
+<p>Следующий пример по клику запускает функцию <code>countRabbits()</code>.</p>
+<div class="code-example" data-demo-height="80" data-highlight-inline="14:23-47" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+
+  &lt;script&gt;
+    function countRabbits() {
+      for(var i=1; i&lt;=3; i++) {
+        alert("Кролик номер " + i);
+      }
+    }
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;input type="button" onclick="countRabbits()" value="Считать кроликов!"/&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div><p>Как мы помним, атрибут HTML-тега не чувствителен к регистру, поэтому <code>ONCLICK</code> будет работать так же, как <code>onClick</code> или <code>onCLICK</code>… Но, как правило, атрибуты пишут в нижнем регистре: <code>onclick</code>.</p>
+<h3><a class="main__anchor" href="#использование-свойства-dom-объекта" name="использование-свойства-dom-объекта">Использование свойства DOM-объекта</a></h3><p>Можно назначать обработчик, используя свойство DOM-элемента <code>on&lt;событие&gt;</code>.</p>
+<p>Пример установки обработчика <code>click</code>:</p>
+<div class="code-example" data-highlight-block="2-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input id="elem" type="button" value="Нажми меня" /&gt;
+&lt;script&gt;
+  elem.onclick = function() {
+    alert( 'Спасибо' );
+  };
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Если обработчик задан через атрибут, то браузер читает HTML-разметку, создаёт новую функцию из содержимого атрибута и записывает в свойство <code>onclick</code>.</p>
+<p><strong>Этот способ, по сути, аналогичен предыдущему.</strong></p>
+<p>Обработчик хранится именно в DOM-свойстве, а атрибут – лишь один из способов его инициализации.</p>
+<p>Эти два примера кода работают одинаково:</p>
+<ol>
+<li>
+<p>Только HTML:</p>
+<div class="code-example" data-demo-height="50" data-highlight-inline="0:21-45" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="button" onclick="alert('Клик!')" value="Кнопка"/&gt;</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>HTML + JS:</p>
+<div class="code-example" data-demo-height="50" data-highlight-block="2-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="button" id="button" value="Кнопка" /&gt;
+&lt;script&gt;
+  button.onclick = function() {
+    alert( 'Клик!' );
+  };
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div></li>
+</ol>
+<p><strong>Так как DOM-свойство <code>onclick</code>, в итоге, одно, то назначить более одного обработчика так нельзя.</strong></p>
+<p>В примере ниже назначение через JavaScript перезапишет обработчик из атрибута:</p>
+<div class="code-example" data-autorun="true" data-demo-height="50" data-highlight-block="2-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="button" id="elem" onclick="alert('До')" value="Нажми меня" /&gt;
+&lt;script&gt;
+  elem.onclick = function() { // перезапишет существующий обработчик
+    alert( 'После' ); // выведется только это
+  };
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-cgslli" src="about:blank" style="height:50px"></iframe>
+</div>
+</div><p>Кстати, обработчиком можно назначить и уже существующую функцию:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sayThanks() {
+  alert( 'Спасибо!' );
+}
+
+elem.onclick = sayThanks;</code></pre>
+</div>
+</div>
+</div><p>Если обработчик надоел – его всегда можно убрать назначением <code>elem.onclick = null</code>.</p>
+<h2><a class="main__anchor" href="#доступ-к-элементу-через-this" name="доступ-к-элементу-через-this">Доступ к элементу через this</a></h2><p>Внутри обработчика события <code>this</code> ссылается на текущий элемент, то есть на тот, на котором он сработал.</p>
+<p>Это можно использовать, чтобы получить свойства или изменить элемент.</p>
+<p>В коде ниже <code>button</code> выводит свое содержимое, используя <code>this.innerHTML</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;button onclick="alert(this.innerHTML)"&gt;Нажми меня&lt;/button&gt;</code></pre>
+</div>
+</div>
+</div><p>В действии: <button onclick="alert(this.innerHTML)">Нажми меня</button></p>
+<h2><a class="main__anchor" href="#частые-ошибки" name="частые-ошибки">Частые ошибки</a></h2><p>Если вы только начинаете работать с событиями – обратите внимание на следующие особенности.</p>
+<p><strong>Функция должна быть присвоена как <code>sayThanks</code>, а не <code>sayThanks()</code>.</strong></p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">button.onclick = sayThanks;</code></pre>
+</div>
+</div>
+</div><p>Если добавить скобки, то <code>sayThanks()</code> –  будет уже <em>результат</em> выполнения функции (а так как в ней нет <code>return</code>, то в <code>onclick</code> попадёт <code>undefined</code>). Нам же нужна именно функция.</p>
+<p>…А вот в разметке как раз скобки нужны:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="button" id="button" onclick="sayThanks()" /&gt;</code></pre>
+</div>
+</div>
+</div><p>Это различие просто объяснить. При создании обработчика браузером из атрибута, он автоматически создает функцию из его содержимого. Поэтому последний пример – фактически то же самое, что:</p>
+<div class="code-example" data-highlight-block="1-1" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">button.onclick = function() {
+  sayThanks(); // содержимое атрибута
+};</code></pre>
+</div>
+</div>
+</div><p><strong>Используйте именно функции, а не строки.</strong></p>
+<p>Назначение обработчика строкой <code>elem.onclick = "alert(1)"</code> можно иногда увидеть в древнем коде. Это будет работать, но не рекомендуется, могут быть проблемы при сжатии JavaScript. Да и вообще, передавать код в виде строки по меньшей мере странно в языке, который поддерживает Function Expressions. Это возможно лишь по соображениям совместимости, не делайте так.</p>
+<p><strong>Не используйте <code>setAttribute</code>.</strong></p>
+<p>Такой вызов работать не будет:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// при нажатии на body будут ошибки
+// потому что при назначении в атрибут функция будет преобразована в строку
+document.body.setAttribute('onclick', function() { alert(1) });</code></pre>
+</div>
+</div>
+</div><p><strong>Регистр DOM-свойства имеет значение.</strong></p>
+<p>При назначении через DOM нужно использовать свойство <code>onclick</code>, а не <code>ONCLICK</code>.</p>
+<h2><a class="main__anchor" href="#недостаток-назначения-через-свойство" name="недостаток-назначения-через-свойство">Недостаток назначения через свойство</a></h2><p>Фундаментальный недостаток описанных выше способов назначения обработчика – невозможность повесить <em>несколько</em> обработчиков на одно событие.</p>
+<p>Например, одна часть кода хочет при клике на кнопку делать ее подсвеченной, а другая – выдавать сообщение. Нужно в разных местах два обработчика повесить.</p>
+<p>При этом новый обработчик будет затирать предыдущий. Например, следующий код на самом деле назначает один обработчик – последний:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">input.onclick = function() { alert(1); }
+// ...
+input.onclick = function() { alert(2); } // заменит предыдущий обработчик</code></pre>
+</div>
+</div>
+</div><p>Разработчики стандартов достаточно давно это поняли и предложили альтернативный способ назначения обработчиков при помощи специальных методов, которые свободны от указанного недостатка.</p>
+<h2><a class="main__anchor" href="#addeventlistener-и-removeeventlistener" name="addeventlistener-и-removeeventlistener">addEventListener и removeEventListener</a></h2><p>Методы <code>addEventListener</code> и <code>removeEventListener</code> являются современным способом назначить или удалить обработчик, и при этом позволяют использовать сколько угодно любых обработчиков.</p>
+<p>Назначение обработчика осуществляется вызовом <code>addEventListener</code> с тремя аргументами:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">element.addEventListener(event, handler[, phase]);</code></pre>
+</div>
+</div>
+</div><dl>
+<dt><code>event</code></dt>
+<dd>Имя события, например <code>click</code></dd>
+<dt><code>handler</code></dt>
+<dd>Ссылка на функцию, которую надо поставить обработчиком.</dd>
+<dt><code>phase</code></dt>
+<dd>Необязательный аргумент, «фаза», на которой обработчик должен сработать. Этот аргумент редко нужен, мы его рассмотрим позже.</dd>
+</dl>
+<p>Удаление обработчика осуществляется вызовом <code>removeEventListener</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// передать те же аргументы, что были у addEventListener
+element.removeEventListener(event, handler[, phase]);</code></pre>
+</div>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Удаление требует именно ту же функцию</span></div>
+<div class="important__content"><p>Для удаления нужно передать именно ту функцию-обработчик которая была назначена.</p>
+<p>Вот так <code>removeEventListener</code> не сработает:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">elem.addEventListener( "click" , function() {alert('Спасибо!')});
+// ....
+elem.removeEventListener( "click", function() {alert('Спасибо!')});</code></pre>
+</div>
+</div>
+</div><p>В <code>removeEventListener</code> передана не та же функция, а другая, с одинаковым кодом, но это не важно.</p>
+<p>Вот так правильно:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function handler() {
+  alert( 'Спасибо!' );
+}
+
+input.addEventListener("click", handler);
+// ....
+input.removeEventListener("click", handler);</code></pre>
+</div>
+</div>
+</div><p>Обратим внимание – если функцию не сохранить где-либо, а просто передать в <code>addEventListener</code>, как в предыдущем коде, то потом получить её обратно, чтобы снять обработчик, будет невозможно. Нет метода, который позволяет считать обработчики событий, назначенные через <code>addEventListener</code>.</p>
+</div></div>
+<p>Метод <code>addEventListener</code> позволяет добавлять несколько обработчиков на одно событие одного элемента, например:</p>
+<div class="code-example" data-highlight-block="11-13" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input id="elem" type="button" value="Нажми меня"/&gt;
+
+&lt;script&gt;
+  function handler1() {
+    alert('Спасибо!');
+  };
+
+  function handler2() {
+    alert('Спасибо ещё раз!');
+  }
+
+  elem.onclick = function() { alert("Привет"); };
+  elem.addEventListener("click", handler1); // Спасибо!
+  elem.addEventListener("click", handler2); // Спасибо ещё раз!
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Как видно из примера выше, можно одновременно назначать обработчики и через DOM-свойство и через <code>addEventListener</code>. Однако, во избежание путаницы, рекомендуется выбрать один способ.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type"><code>addEventListener</code> работает всегда, а DOM-свойство – нет</span></div>
+<div class="important__content"><p>У специальных методов есть ещё одно преимущество перед DOM-свойствами.</p>
+<p>Есть некоторые события, которые нельзя назначить через DOM-свойство, но можно через <code>addEventListener</code>.</p>
+<p>Например, таково событие <code>transitionend</code>, то есть окончание CSS-анимации. В большинстве браузеров оно требует назначения через <code>addEventListener</code>.</p>
+<p>Вы можете проверить это, запустив код в примере ниже. Как правило, сработает лишь второй обработчик, но не первый.</p>
+<div class="code-example" data-highlight-block="20-22" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  button {
+    transition: width 1s;
+    width: 100px;
+  }
+
+  .wide {
+    width: 300px;
+  }
+&lt;/style&gt;
+
+&lt;button id="elem" onclick="this.classList.toggle('wide');"&gt;
+  Нажми меня
+&lt;/button&gt;
+
+&lt;script&gt;
+  elem.ontransitionend = function() {
+    alert( "ontransitionend" ); // не сработает
+  };
+
+  elem.addEventListener("transitionend", function() {
+    alert( "addEventListener" ); // сработает по окончании анимации
+  });
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div></div></div>
+<h2><a class="main__anchor" href="#отличия-ie8" name="отличия-ie8">Отличия IE8-</a></h2><p>При работе с событиями в IE8- есть много отличий. Как правило, они формальны – некое свойство или метод называются по-другому. Начиная с версии 9, также работают и стандартные свойства и методы.</p>
+<p><strong>В IE8- вместо <code>addEventListener/removeEventListener</code> используются свои методы.</strong></p>
+<p>Назначение обработчика осуществляется вызовом <code>attachEvent</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">element.attachEvent("on" + event, handler);</code></pre>
+</div>
+</div>
+</div><p>Удаление обработчика – вызовом <code>detachEvent</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">element.detachEvent("on" + event, handler);</code></pre>
+</div>
+</div>
+</div><p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function handler() {
+  alert( 'Спасибо!' );
+}
+button.attachEvent("onclick", handler) // Назначение обработчика
+  // ....
+button.detachEvent("onclick", handler) // Удаление обработчика</code></pre>
+</div>
+</div>
+</div><p>Как видите, почти то же самое, только событие должно включать префикс <code>on</code>.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">У обработчиков, назначенных с <code>attachEvent</code>, нет <code>this</code></span></div>
+<div class="important__content"><p>Обработчики, назначенные с <code>attachEvent</code> не получают <code>this</code>!</p>
+<p>Это важная особенность и подводный камень старых IE.</p>
+</div></div>
+<p>Чтобы ваш код работал в старом IE, нужно либо использовать DOM-свойства, то есть <code>onclick</code>, либо подключить полифилл для современных методов, например <a href="https://gist.github.com/jonathantneal/3748027">такой</a> или с сервиса <a href="http://polyfill.webservices.ft.com/v1/docs/features/">polyfill.io</a> или какой-то другой.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Есть три способа назначения обработчиков событий:</p>
+<ol>
+<li>Атрибут HTML: <code>onclick="..."</code>.</li>
+<li>Свойство: <code>elem.onclick = function</code>.</li>
+<li>Специальные методы:</li>
+</ol>
+<ul>
+<li>Современные: <code>elem.addEventListener( событие, handler[, phase])</code>, удаление через <code>removeEventListener</code>.</li>
+<li>Для старых IE8-: <code>elem.attachEvent( on+событие, handler )</code>, удаление через <code>detachEvent</code>.</li>
+</ul>
+<p>Сравнение <code>addEventListener</code> и <code>onclick</code>:</p>
+<div class="balance"><div class="balance__pluses">
+<div class="balance__content">
+<div class="balance__title">Достоинства</div><ul class="balance__list"><li>Некоторые события можно назначить только через <code>addEventListener</code>.</li>
+<li>Метод <code>addEventListener</code> позволяет назначить много обработчиков на одно событие.</li>
+</ul></div></div><div class="balance__minuses">
+<div class="balance__content">
+<div class="balance__title">Недостатки</div><ul class="balance__list"><li>Обработчик, назначенный через <code>onclick</code>, проще удалить или заменить.</li>
+<li>Метод <code>onclick</code> кросс-браузерный.</li>
+</ul></div></div></div><p>Этим введением мы только открываем работу с событиями, но вы уже можете решать разнообразные задачи с их использованием.</p>
+</cut></div></meta></article></main></div></body></html>

@@ -1,0 +1,312 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Внутренний и внешний интерфейс" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Один из важнейших принципов ООП – отделение внутреннего интерфейса от внешнего.</p>
+<p>Это – обязательная практика в разработке чего угодно сложнее hello world.</p>
+<p>Чтобы это понять, отвлечемся от разработки и переведем взгляд на объекты реального мира.</p>
+<p>Как правило, устройства, с которыми мы имеем дело, весьма сложны. Но <em>разделение интерфейса на внешний и внутренний</em> позволяет использовать их без малейших проблем.</p>
+<cut>
+<h2><a class="main__anchor" href="#пример-из-жизни" name="пример-из-жизни">Пример из жизни</a></h2><p>Например, кофеварка. Простая снаружи: кнопка, индикатор, отверстия,… И, конечно, результат – кофе :)</p>
+<figure><div class="image" style="width:240px">
+<div class="image__ratio" style="padding-top:166.66666666666669%"></div>
+<img alt="" class="image__image" height="400" src="article/internal-external-interface/coffee.jpg" width="240">
+</img></div></figure><p>Но внутри… (картинка из пособия по ремонту)</p>
+<figure><div class="image" style="width:239px">
+<div class="image__ratio" style="padding-top:167.36401673640165%"></div>
+<img alt="" class="image__image" height="400" src="article/internal-external-interface/coffee-inside.jpg" width="239">
+</img></div></figure><p>Масса деталей. Но мы можем пользоваться ей, совершенно не зная об этом.</p>
+<p>Кофеварки – довольно-таки надежны, не правда ли? Можно пользоваться годами, и только когда что-то пойдет не так – придется нести к мастеру.</p>
+<p>Секрет надежности и простоты кофеварки – в том, что все детали отлажены и <em>спрятаны</em> внутри.</p>
+<p>Если снять с кофеварки защитный кожух, то использование её будет более сложным (куда нажимать?) и опасным (током ударить может).</p>
+<p>Как мы увидим, объекты очень схожи с кофеварками.</p>
+<p>Только для того, чтобы прятать внутренние детали, используется не кожух, а специальные средства языка и соглашения.</p>
+<h2><a class="main__anchor" href="#внутренний-и-внешний-интерфейс" name="внутренний-и-внешний-интерфейс">Внутренний и внешний интерфейс</a></h2><p>В программировании мы будем разделять методы и свойства объекта на две группы:</p>
+<ul>
+<li><em>Внутренний интерфейс</em> – это свойства и методы, доступ к которым может быть осуществлен только из других методов объекта, их также называют «приватными» (есть и другие термины, встретим их далее).</li>
+<li><em>Внешний интерфейс</em> – это свойства и методы, доступные снаружи объекта, их называют «публичными».</li>
+</ul>
+<p>Если продолжить аналогию с кофеваркой – то, что спрятано внутри кофеварки: трубка кипятильника, нагревательный элемент, тепловой предохранитель и так далее – это её внутренний интерфейс.</p>
+<p>Внутренний интерфейс используется для обеспечения работоспособности объекта, его детали используют друг друга. Например, трубка кипятильника подключена к нагревательному элементу.</p>
+<p>Но снаружи кофеварка закрыта специальным кожухом, чтобы никто к ним не подобрался. Детали скрыты и недоступны. Виден лишь внешний интерфейс.</p>
+<p>Получив объект, всё, что нужно для пользования им – это знать внешний интерфейс. О внутреннем же знать вообще не обязательно.</p>
+<p>Это были общие слова по теории программирования.</p>
+<p>Далее мы реализуем кофеварку на JavaScript с приватными и публичными свойствами. В кофеварке много деталей, мы конечно, не будем моделировать каждый винтик, а сосредоточимся на основных приёмах разработки.</p>
+<h2><a class="main__anchor" href="#шаг-1-публичное-и-приватное-свойство" name="шаг-1-публичное-и-приватное-свойство">Шаг 1: публичное и приватное свойство</a></h2><p>Конструктор кофеварок будет называться <code>CoffeeMachine</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function CoffeeMachine(power) {
+  this.waterAmount = 0; // количество воды в кофеварке
+
+  alert( 'Создана кофеварка мощностью: ' + power + ' ватт' );
+}
+
+// создать кофеварку
+var coffeeMachine = new CoffeeMachine(100);
+
+// залить воды
+coffeeMachine.waterAmount = 200;</code></pre>
+</div>
+</div>
+</div><p><strong>Локальные переменные, включая параметры конструктора, можно считать приватными свойствами.</strong></p>
+<p>В примере выше это <code>power</code> – мощность кофеварки, которая указывается при создании и далее будет использована для расчёта времени кипячения.</p>
+<p>К локальным переменным конструктора нельзя обратиться снаружи, но они доступны внутри самого конструктора.</p>
+<p><strong>Свойства, записанные в <code>this</code>, можно считать публичными.</strong></p>
+<p>Здесь свойство <code>waterAmount</code> записано в объект, а значит – доступно для модификации снаружи. Можно доливать и выливать воду в любом количестве.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Вопрос терминологии</span></div>
+<div class="important__content"><p>Далее мы будем называть <code>power</code> как «локальной переменной», так и «приватным свойством» объекта.</p>
+<p>Это, смотря, с какой стороны посмотреть.</p>
+<p>Термины «приватное свойство/метод», «публичное свойство/метод» относятся к общей теории ООП. А их конкретная реализация в языке программирования может быть различной.</p>
+<p>Здесь ООП-принцип «приватного свойства» реализован через локальные переменные, поэтому и «локальная переменная» и «приватное свойство» – правильные термины, в зависимости от того, с какой точки зрения взглянуть – кода или архитектуры ООП.</p>
+</div></div>
+<h2><a class="main__anchor" href="#шаг-2-публичный-и-приватный-методы" name="шаг-2-публичный-и-приватный-методы">Шаг 2: публичный и приватный методы</a></h2><p>Добавим публичный метод <code>run</code>, запускающий кофеварку, а также вспомогательные внутренние методы <code>getBoilTime</code> и <code>onReady</code>:</p>
+<div class="code-example" data-highlight-block="4-18" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function CoffeeMachine(power) {
+
+  this.waterAmount = 0;
+
+  // расчёт времени для кипячения
+  function getBoilTime() {
+    return 1000; // точная формула расчета будет позже
+  }
+
+  // что делать по окончании процесса
+  function onReady() {
+    alert( 'Кофе готово!' );
+  }
+
+  this.run = function() {
+    // setTimeout - встроенная функция,
+    // она запустит onReady через getBoilTime() миллисекунд
+    setTimeout(onReady, getBoilTime());
+  };
+}
+
+var coffeeMachine = new CoffeeMachine(100);
+coffeeMachine.waterAmount = 200;
+
+coffeeMachine.run();</code></pre>
+</div>
+</div>
+</div><p>Приватные методы, такие как <code>onReady</code>, <code>getBoilTime</code> могут быть объявлены как вложенные функции.</p>
+<p>В результате естественным образом получается, что доступ к ним (через замыкание) имеют только другие функции, объявленные в том же конструкторе.</p>
+<h2><a class="main__anchor" href="#шаг-3-константа" name="шаг-3-константа">Шаг 3: константа</a></h2><p>Для расчёта времени на кипячение воды используется формула <code>c*m*ΔT / power</code>, где:</p>
+<ul>
+<li><code>c</code> – коэффициент теплоёмкости воды, физическая константа равная <code>4200</code>.</li>
+<li><code>m</code> – масса воды, которую нужно нагреть.</li>
+<li><code>ΔT</code> – температура, на которую нужно подогреть, будем считать, что изначально вода – комнатной температуры 20°С, то есть до 100° нужно греть на <code>ΔT=80</code>.</li>
+<li><code>power</code> – мощность.</li>
+</ul>
+<p>Используем её в более реалистичном варианте <code>getBoilTime()</code>, включающем использование приватных свойств и константу:</p>
+<div class="code-example" data-highlight-block="6-12" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">"use strict"
+
+function CoffeeMachine(power) {
+
+  this.waterAmount = 0;
+
+  // физическая константа - удельная теплоёмкость воды для getBoilTime
+  var WATER_HEAT_CAPACITY = 4200;
+
+  // расчёт времени для кипячения
+  function getBoilTime() {
+      return this.waterAmount * WATER_HEAT_CAPACITY * 80 / power; // ошибка!
+    }
+
+  // что делать по окончании процесса
+  function onReady() {
+    alert( 'Кофе готово!' );
+  }
+
+  this.run = function() {
+    setTimeout(onReady, getBoilTime());
+  };
+
+}
+
+var coffeeMachine = new CoffeeMachine(1000);
+coffeeMachine.waterAmount = 200;
+
+coffeeMachine.run();</code></pre>
+</div>
+</div>
+</div><p>Удельная теплоёмкость <code>WATER_HEAT_CAPACITY</code> выделена большими буквами, так как это константа.</p>
+<p>Внимание, при запуске кода выше в методе <code>getBoilTime</code> будет ошибка. Как вы думаете, почему?</p>
+<h2><a class="main__anchor" href="#шаг-4-доступ-к-объекту-из-внутреннего-метода" name="шаг-4-доступ-к-объекту-из-внутреннего-метода">Шаг 4: доступ к объекту из внутреннего метода</a></h2><p>Внутренний метод вызывается так: <code>getBoilTime()</code>. А чему при этом равен <code>this</code>?… Как вы наверняка помните, в современном стандарте он будет <code>undefined</code> (в старом – <code>window</code>), из-за этого при чтении <code>this.waterAmount</code> возникнет ошибка!</p>
+<p>Её можно решить, если вызвать <code>getBoilTime</code> с явным указанием контекста: <code>getBoilTime.call(this)</code>:</p>
+<div class="code-example" data-highlight-block="13-13" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function CoffeeMachine(power) {
+  this.waterAmount = 0;
+  var WATER_HEAT_CAPACITY = 4200;
+
+  function getBoilTime() {
+    return this.waterAmount * WATER_HEAT_CAPACITY * 80 / power;
+  }
+
+  function onReady() {
+    alert( 'Кофе готово!' );
+  }
+
+  this.run = function() {
+    setTimeout(onReady, getBoilTime.call(this));
+  };
+
+}
+
+// создаю кофеварку, мощностью 100000W чтобы кипятила быстро
+var coffeeMachine = new CoffeeMachine(100000);
+coffeeMachine.waterAmount = 200;
+
+coffeeMachine.run();</code></pre>
+</div>
+</div>
+</div><p>Такой подход будет работать, но он не очень-то удобен. Ведь получается, что теперь везде, где мы хотим вызвать <code>getBoilTime</code>, нужно явно указывать контекст, т.е. писать <code>getBoilTime.call(this)</code>.</p>
+<p>К счастью существуют более элегантные решения.</p>
+<h3><a class="main__anchor" href="#привязка-через-bind" name="привязка-через-bind">Привязка через bind</a></h3><p>Можно при объявлении привязать <code>getBoilTime</code> к объекту через <code>bind</code>, тогда вопрос контекста отпадёт сам собой:</p>
+<div class="code-example" data-highlight-block="5-7,14-14" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function CoffeeMachine(power) {
+  this.waterAmount = 0;
+
+  var WATER_HEAT_CAPACITY = 4200;
+
+  var getBoilTime = function() {
+    return this.waterAmount * WATER_HEAT_CAPACITY * 80 / power;
+  }.bind(this);
+
+  function onReady() {
+    alert( 'Кофе готово!' );
+  }
+
+  this.run = function() {
+    setTimeout(onReady, getBoilTime());
+  };
+
+}
+
+var coffeeMachine = new CoffeeMachine(100000);
+coffeeMachine.waterAmount = 200;
+
+coffeeMachine.run();</code></pre>
+</div>
+</div>
+</div><p>Это решение будет работать, теперь функцию можно просто вызывать без <code>call</code>. Но объявление функции стало менее красивым.</p>
+<h3><a class="main__anchor" href="#сохранение-this-в-замыкании" name="сохранение-this-в-замыкании">Сохранение this в замыкании</a></h3><p>Пожалуй, самый удобный и часто применяемый путь решения состоит в том, чтобы предварительно скопировать <code>this</code> во вспомогательную переменную и обращаться из внутренних функций уже к ней.</p>
+<p>Вот так:</p>
+<div class="code-example" data-highlight-block="5-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function CoffeeMachine(power) {
+  this.waterAmount = 0;
+
+  var WATER_HEAT_CAPACITY = 4200;
+
+  var self = this;
+
+  function getBoilTime() {
+      return self.waterAmount * WATER_HEAT_CAPACITY * 80 / power;
+    }
+
+  function onReady() {
+    alert( 'Кофе готово!' );
+  }
+
+  this.run = function() {
+    setTimeout(onReady, getBoilTime());
+  };
+
+}
+
+var coffeeMachine = new CoffeeMachine(100000);
+coffeeMachine.waterAmount = 200;
+
+coffeeMachine.run();</code></pre>
+</div>
+</div>
+</div><p>Теперь <code>getBoilTime</code> получает <code>self</code> из замыкания.</p>
+<p><strong>Конечно, чтобы это работало, мы не должны изменять <code>self</code>, а все приватные методы, которые хотят иметь доступ к текущему объекту, должны использовать внутри себя <code>self</code> вместо <code>this</code>.</strong></p>
+<p>Вместо <code>self</code> можно использовать любое другое имя переменной, например <code>var me = this</code>.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Итак, мы сделали кофеварку с публичными и приватными методами и заставили их корректно работать.</p>
+<p>В терминологии ООП отделение и защита внутреннего интерфейса называется <a href="http://ru.wikipedia.org/wiki/%D0%98%D0%BD%D0%BA%D0%B0%D0%BF%D1%81%D1%83%D0%BB%D1%8F%D1%86%D0%B8%D1%8F_%28%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5%29">инкапсуляция</a>.</p>
+<p>Кратко перечислим бонусы, которые она даёт:</p>
+<dl>
+<dt>Защита пользователей от выстрела себе в ногу</dt>
+<dd>
+<p>Представьте, команда разработчиков пользуется кофеваркой. Кофеварка создана фирмой «Лучшие Кофеварки» и, в общем, работает хорошо, но с неё сняли защитный кожух и, таким образом, внутренний интерфейс стал доступен.</p>
+<p>Все разработчики цивилизованны – и пользуются кофеваркой как обычно. Но хитрый Вася решил, что он самый умный, и подкрутил кое-что внутри кофеварки, чтобы кофе заваривался покрепче. Вася не знал, что те изменения, которые он произвёл, приведут к тому, что кофеварка испортится через два дня.</p>
+<p>Виноват, разумеется, не только Вася, но и тот, кто снял защитный кожух с кофеварки, и тем самым позволил Васе проводить манипуляции.</p>
+<p>В программировании – то же самое. Если пользователь объекта будет менять то, что не рассчитано на изменение снаружи – последствия могут быть непредсказуемыми.</p>
+</dd>
+<dt>Удобство в поддержке</dt>
+<dd>
+<p>Ситуация в программировании сложнее, чем с кофеваркой, т.к. кофеварку один раз купили и всё, а программа может улучшаться и дорабатываться.</p>
+<p><strong>При наличии чётко выделенного внешнего интерфейса, разработчик может свободно менять внутренние свойства и методы, без оглядки на коллег.</strong></p>
+<p>Гораздо легче разрабатывать, если знаешь, что ряд методов (все внутренние) можно переименовывать, менять их параметры, и вообще, переписать как угодно, так как внешний код к ним абсолютно точно не обращается.</p>
+<p>Ближайшая аналогия в реальной жизни – это когда выходит «новая версия» кофеварки, которая работает гораздо лучше. Разработчик мог переделать всё внутри, но пользоваться ей по-прежнему просто, так как внешний интерфейс сохранён.</p>
+</dd>
+<dt>Управление сложностью</dt>
+<dd>
+<p>Люди обожают пользоваться вещами, которые просты с виду. А что внутри – дело десятое.</p>
+<p>Программисты здесь не исключение.</p>
+<p><strong>Всегда удобно, когда детали реализации скрыты, и доступен простой, понятно документированный внешний интерфейс.</strong></p>
+</dd>
+</dl>
+</cut></div></meta></article></main></div></body></html>

@@ -1,0 +1,138 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Координаты в окне" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Для того, чтобы поместить один элемент рядом с другим на странице, а также двигать его произвольным образом, к примеру, рядом с указателем мыши – используются координаты.</p>
+<p><em>Координатная система относительно окна браузера</em> начинается в левом-верхнем углу текущей видимой области окна.</p>
+<p>Мы будем называть координаты в ней <code>clientX/clientY</code>.</p>
+<h2><a class="main__anchor" href="#getboundingclientrect" name="getboundingclientrect">getBoundingClientRect()</a></h2><p>Метод <code>elem.getBoundingClientRect()</code> возвращает координаты элемента, под которыми понимаются размеры «воображаемого прямоугольника», который охватывает весь элемент.</p>
+<p>Координаты возвращаются в виде объекта со свойствами:</p>
+<ul>
+<li><code>top</code> – Y-координата верхней границы элемента,</li>
+<li><code>left</code> – X-координата левой границы,</li>
+<li><code>right</code> – X-координата правой границы,</li>
+<li><code>bottom</code> – Y-координата нижней границы.</li>
+</ul>
+<p>Например:</p>
+<figure><div class="image" style="width:370px">
+<div class="image__ratio" style="padding-top:75.67567567567568%"></div>
+<img alt="" class="image__image" height="280" src="article/coordinates/coords.png" width="370">
+</img></div></figure><p><strong>Координаты относительно окна не учитывают прокрутку, они высчитываются от границ текущей видимой области.</strong></p>
+<p>Иначе говоря, если страницу прокрутить, то элемент поднимется выше или опустится ниже – его координаты относительно окна изменятся.</p>
+<p>Например, кликните на кнопку, чтобы увидеть её координаты:</p>
+<input id="brTest" onclick="showRect(this)" type="button" value="Показать button.getBoundingClientRect() для этой кнопки"/>
+<script>
+function showRect(elem) {
+  var r = elem.getBoundingClientRect()
+  alert("{top:"+r.top+", left:"+r.left+", right:"+r.right+", bottom:"+ r.bottom + "}");
+}
+</script>
+<p>Если вы прокрутите эту страницу, то положение кнопки в окне изменится, и её координаты, соответственно, тоже.</p>
+<ul>
+<li>Координаты могут быть дробными – это нормально, так как они возвращаются из внутренних структур браузера.</li>
+<li>Координаты могут быть и отрицательными, например если прокрутить страницу так, что верх элемента будет выходить за верхнуюю границу окна, то его <code>top</code>-координата будет меньше нуля.</li>
+<li>Некоторые современные браузеры также добавляют к результату <code>getBoundingClientRect</code> свойства для ширины и высоты: <code>width/height</code>, но их можно получить и простым вычитанием: <code>height = bottom - top</code>, <code>width = right - left</code>.</li>
+</ul>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Координаты right/bottom отличаются от CSS-свойств</span></div>
+<div class="important__content"><p>Если рассмотреть позиционирование элементов при помощи CSS-свойства <code>position</code>, то там тоже указываются <code>left</code>, <code>right</code>, <code>top</code>, <code>bottom</code>.</p>
+<p>Однако, по CSS свойство <code>right</code> задаёт расстояние от правой границы, а <code>bottom</code> – от нижней.</p>
+<p>Если вы взглянете на иллюстрацию выше, то увидите, что в JavaScript это не так. Все координаты отсчитываются слева/сверху, в том числе и эти.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Метод <code>elem.getBoundingClientRect()</code> изнутри</span></div>
+<div class="important__content"><p>Браузер отображает любое содержимое, используя прямоугольники.</p>
+<p>В случае с блочным элементом, таким как <code>DIV</code>, элемент сам по себе образует прямоугольник. Но если элемент строчный и содержит в себе длинный текст, то каждая строка будет отдельным прямоугольником, с одинаковой высотой но разной длиной (у каждой строки – своя длина).</p>
+<p>Более подробно это описано в: <a href="http://www.w3.org/TR/CSS21/visuren.html#anonymous-block-level">спецификации</a>.</p>
+<p>Если обобщить, содержимое элемента может отображаться в одном прямоугольнике или в нескольких.</p>
+<p>Все эти прямоугольники можно получить с помощью <a href="https://developer.mozilla.org/en/DOM/element.getClientRects">elem.getClientRects()</a>. А метод <a href="https://developer.mozilla.org/en/DOM/element.getBoundingClientRect">elem.getBoundingClientRect()</a> возвращает один охватывающий прямоугольник для всех <code>getClientRects()</code>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#elementFromPoint" name="elementFromPoint">elementFromPoint(x, y)</a></h2><p>Возвращает элемент, который находится на координатах <code>(x, y)</code> относительно окна.</p>
+<p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var elem = document.elementFromPoint(x, y);</code></pre>
+</div>
+</div>
+</div><p>Например, код ниже выделяет и выводит тег у элемента, который сейчас в середине окна:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var centerX = document.documentElement.clientWidth / 2;
+var centerY = document.documentElement.clientHeight / 2;
+
+var elem = document.elementFromPoint(centerX, centerY);
+
+elem.style.background = "red";
+alert( elem.tagName );
+elem.style.background = "";</code></pre>
+</div>
+</div>
+</div><p>Аналогично предыдущему методу, используются координаты относительно окна, так что, в зависимости от прокрутки страницы, в центре может быть разный элемент.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Для координат вне окна <code>elementFromPoint</code> возвращает <code>null</code></span></div>
+<div class="important__content"><p>Метод <code>document.elementFromPoint(x,y)</code> работает только если координаты <code>(x,y)</code> находятся в пределах окна.</p>
+<p>Если одна из них отрицательна или больше чем ширина/высота окна – он возвращает <code>null</code>.</p>
+<p>В большинстве случаев использования это не является проблемой, но нужно обязательно иметь такую возможность в виду.</p>
+<p>Типичная ошибка, которая может возникнуть, если не проверять наличие <code>elem</code>:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var elem = document.elementFromPoint(centerX, centerY);
+// если координаты вне окна, то elem = null
+elem.style.background = ''; // ошибка!</code></pre>
+</div>
+</div>
+</div></div></div>
+<h2><a class="main__anchor" href="#координаты-для-position-fixed" name="координаты-для-position-fixed">Координаты для position:fixed</a></h2><p>Координаты обычно требуются не просто так, а, например, чтобы переместить элемент на них.</p>
+<p>В CSS для позиционирования элемента относительно окна используется свойство <code>position:fixed</code>. Как правило, вместе с ним идут и координаты, например <code>left/top</code>.</p>
+<p>Например, функция <code>createMessageUnder</code> из кода ниже покажет сообщение под элементом <code>elem</code>:</p>
+<div class="code-example" data-highlight-block="11-13" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var elem = document.getElementById("coords-show-mark");
+
+function createMessageUnder(elem, text) {
+  // получить координаты
+  var coords = elem.getBoundingClientRect();
+
+  // создать элемент для сообщения
+  var message = document.createElement('div');
+  // стиль лучше задавать классом
+  message.style.cssText = "position:fixed; color: red";
+
+  // к координатам обязательно добавляем "px"!
+  message.style.left = coords.left + "px";
+  message.style.top = coords.bottom + "px";
+
+  message.innerHTML = text;
+
+  return message;
+}
+
+// Использование
+// добавить на 5 сек в документ
+var message = createMessageUnder(elem, 'Привет, мир!');
+document.body.appendChild(message);
+setTimeout(function() {
+  document.body.removeChild(message);
+}, 5000);</code></pre>
+</div>
+</div>
+</div><p>Нажмите на кнопку, чтобы запустить его:</p>
+<p><button id="coords-show-mark">кнопка с id=«coords-show-mark»</button></p>
+<p>Этот код можно модифицировать, чтобы показывать сообщение слева, справа, сверху, делать это вместе с CSS-анимацией и так далее. Для этого нужно всего лишь понимать, как получить координаты.</p>
+<p><strong>Заметим, однако, важную деталь: при прокрутке страницы сообщение будет визуально отдаляться от кнопки.</strong></p>
+<p>Причина очевидна, ведь оно использует <code>position: fixed</code>, так что при прокрутке остаётся на месте, а страница скроллируется.</p>
+<p>Как сделать, чтобы сообщение было именно на конкретном месте документа, а не окна, мы рассмотрим в следующей главе.</p>
+</div></meta></article></main></div></body></html>

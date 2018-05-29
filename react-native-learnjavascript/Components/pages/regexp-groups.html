@@ -1,0 +1,178 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Скобочные группы" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Часть шаблона может быть заключена в скобки <code class="pattern">(...)</code>. Такие выделенные части шаблона называют «скобочными выражениями» или «скобочными группами».</p>
+<p>У такого выделения есть два эффекта:</p>
+<ol>
+<li>Он позволяет выделить часть совпадения в отдельный элемент массива при поиске через <a href="https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/String/match">String#match</a> или <a href="https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec">RegExp#exec</a>.</li>
+<li>Если поставить квантификатор после скобки, то он применится <em>ко всей скобке</em>, а не всего лишь к одному символу.</li>
+</ol>
+<cut>
+<h2><a class="main__anchor" href="#пример" name="пример">Пример</a></h2><p>В примере ниже, шаблон <code class="pattern">(go)+</code> находит один или более повторяющихся <code class="pattern">'go'</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 'Gogogo now!'.match(/(go)+/i) ); // "Gogogo"</code></pre>
+</div>
+</div>
+</div><p>Без скобок, шаблон <code class="pattern">/go+/</code> означал бы <code class="subject">g</code>, после которого идёт одна или более <code class="subject">o</code>, например: <code class="match">goooo</code>. А скобки «группируют» <code class="pattern">(go)</code> вместе.</p>
+<h2><a class="main__anchor" href="#содержимое-группы" name="содержимое-группы">Содержимое группы</a></h2><p>Скобки нумеруются слева направо. Поисковой движок запоминает содержимое каждой скобки и позволяет обращаться к нему – в шаблоне и строке замены и, конечно же, в результатах.</p>
+<p>Например, найти HTML-тег можно шаблоном <code class="pattern">&lt;.*?&gt;</code>.</p>
+<p>После поиска мы захотим что-то сделать с результатом. Для удобства заключим содержимое <code>&lt;...&gt;</code> в скобки: <code class="pattern">&lt;(.*?)&gt;</code>. Тогда оно будет доступно отдельно.</p>
+<p>При поиске методом <a href="https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/String/match">String#match</a> в результирующем массиве будет сначала всё совпадение, а далее – скобочные группы. В шаблоне <code class="pattern">&lt;(.*?)&gt;</code> скобочная группа только одна:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = '&lt;h1&gt;Привет, мир!&lt;/h1&gt;';
+var reg = /&lt;(.*?)&gt;/;
+
+alert( str.match(reg) ); // массив: &lt;h1&gt;, h1</code></pre>
+</div>
+</div>
+</div><p>Заметим, что метод <a href="https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/String/match">String#match</a> выдаёт скобочные группы только при поиске без флага <code>/.../g</code>. В примере выше он нашёл только первое совпадение <code class="match">&lt;h1&gt;</code>, а закрывающий <code class="match">&lt;/h1&gt;</code> не нашёл, поскольку без флага <code>/.../g</code> ищется только первое совпадение.</p>
+<p>Для того, чтобы искать и с флагом <code>/.../g</code> и со скобочными группами, используется метод <a href="https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec">RegExp#exec</a>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = '&lt;h1&gt;Привет, мир!&lt;/h1&gt;';
+var reg = /&lt;(.*?)&gt;/g;
+
+var match;
+
+while ((match = reg.exec(str)) !== null) {
+  // сначала выведет первое совпадение: &lt;h1&gt;,h1
+  // затем выведет второе совпадение: &lt;/h1&gt;,/h1
+  alert(match);
+}</code></pre>
+</div>
+</div>
+</div><p>Теперь найдено оба совпадения <code class="pattern">&lt;(.*?)&gt;</code>, каждое – массив из полного совпадения и скобочных групп (одна в данном случае).</p>
+<h2><a class="main__anchor" href="#вложенные-группы" name="вложенные-группы">Вложенные группы</a></h2><p>Скобки могут быть и вложенными. В этом случае нумерация также идёт слева направо.</p>
+<p>Например, при поиске тега в <code class="subject">&lt;span class="my"&gt;</code> нас может интересовать:</p>
+<ol>
+<li>Содержимое тега целиком: <code>span class="my"</code>.</li>
+<li>В отдельную переменную для удобства хотелось бы поместить тег: <code>span</code>.</li>
+<li>Также может быть удобно отдельно выделить атрибуты <code>class="my"</code>.</li>
+</ol>
+<p>Добавим скобки в регулярное выражение:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = '&lt;span class="my"&gt;';
+
+var reg = /&lt;(([a-z]+)\s*([^&gt;]*))&gt;/;
+
+alert( str.match(reg) ); // &lt;span class="my"&gt;, span class="my", span, class="my"</code></pre>
+</div>
+</div>
+</div><p>Вот так выглядят скобочные группы:</p>
+<figure><div class="image" style="width:320px">
+<div class="image__ratio" style="padding-top:40.625%"></div>
+<img alt="" class="image__image" height="130" src="article/regexp-groups/regexp-nested-groups.png" width="320">
+</img></div></figure><p>На нулевом месте – всегда совпадение полностью, далее – группы. Нумерация всегда идёт слева направо, по открывающей скобке.</p>
+<p>В данном случае получилось, что группа 1 включает в себя содержимое групп 2 и 3. Это совершенно нормальная ситуация, которая возникает, когда нужно выделить что-то отдельное внутри большей группы.</p>
+<p><strong>Даже если скобочная группа необязательна и не входит в совпадение, соответствующий элемент массива существует (и равен <code>undefined</code>).</strong></p>
+<p>Например, рассмотрим регэксп <code class="pattern">a(z)?(c)?</code>. Он ищет <code>"a"</code>, за которой не обязательно идёт буква <code>"z"</code>, за которой необязательно идёт буква <code>"c"</code>.</p>
+<p>Если напустить его на строку из одной буквы <code>"a"</code>, то результат будет таков:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var match = 'a'.match(/a(z)?(c)?/)
+
+alert( match.length ); // 3
+alert( match[0] ); // a
+alert( match[1] ); // undefined
+alert( match[2] ); // undefined</code></pre>
+</div>
+</div>
+</div><p>Массив получился длины <code>3</code>, но все скобочные группы – <code>undefined</code>.</p>
+<p>А теперь более сложная ситуация, строка <code class="subject">ack</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var match = 'ack'.match(/a(z)?(c)?/)
+
+alert( match.length ); // 3
+alert( match[0] ); // ac, всё совпадение
+alert( match[1] ); // undefined, для (z)? ничего нет
+alert( match[2] ); // c</code></pre>
+</div>
+</div>
+</div><p>Длина массива результатов по-прежнему <code>3</code>. Она постоянна. А вот для скобочной группы <code class="pattern">(z)?</code> в ней ничего нет, поэтому результат: <code>["ac", undefined, "c"]</code>.</p>
+<h2><a class="main__anchor" href="#исключение-из-запоминания-через" name="исключение-из-запоминания-через">Исключение из запоминания через ?:</a></h2><p>Бывает так, что скобки нужны, чтобы квантификатор правильно применился, а вот запоминать их содержимое в массиве не нужно.</p>
+<p>Скобочную группу можно исключить из запоминаемых и нумеруемых, добавив в её начало <code class="pattern">?:</code>.</p>
+<p>Например, мы хотим найти <code class="pattern">(go)+</code>, но содержимое скобок (<code>go</code>) в отдельный элемент массива выделять не хотим.</p>
+<p>Для этого нужно сразу после открывающей скобки поставить <code>?:</code>, то есть: <code class="pattern">(?:go)+</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="1-1" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "Gogo John!";
+var reg = /(?:go)+ (\w+)/i;
+
+var result = str.match(reg);
+
+alert( result.length ); // 2
+alert( result[1] ); // John</code></pre>
+</div>
+</div>
+</div><p>В примере выше массив результатов имеет длину <code>2</code> и содержит только полное совпадение и результат <code class="pattern">(\w+)</code>. Это удобно в тех случаях, когда содержимое скобок нас не интересует.</p>
+</cut></div></meta></article></main></div></body></html>

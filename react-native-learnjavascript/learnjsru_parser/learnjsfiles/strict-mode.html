@@ -1,0 +1,56 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Современный стандарт, "use strict"' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Очень долго язык JavaScript развивался без потери совместимости. Новые возможности добавлялись в язык, но старые – никогда не менялись, чтобы не «сломать» уже существующие HTML/JS-страницы с их использованием.</p>
+<p>Однако, это привело к тому, что любая ошибка в дизайне языка становилась «вмороженной» в него навсегда.</p>
+<p>Так было до появления стандарта ECMAScript 5 (ES5), который одновременно добавил новые возможности и внёс в язык ряд исправлений, которые могут привести к тому, что старый код, который был написан до его появления, перестанет работать.</p>
+<p>Чтобы этого не случилось, решили, что по умолчанию эти опасные изменения будут выключены, и код будет работать по-старому. А для того, чтобы перевести код в режим полного соответствия современному стандарту, нужно указать специальную директиву <code>use strict</code>.</p>
+<p>Эта директива не поддерживается IE9-.</p>
+<cut>
+<h2><a class="main__anchor" href="#директива-use-strict" name="директива-use-strict">Директива use strict</a></h2><p>Директива выглядит как строка <code>"use strict";</code> или <code>'use strict';</code> и ставится в начале скрипта.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">"use strict";
+
+// этот код будет работать по современному стандарту ES5
+...</code></pre>
+</div>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Отменить действие <code>use strict</code> никак нельзя</span></div>
+<div class="important__content"><p>Не существует директивы <code>no use strict</code> или подобной, которая возвращает в старый режим.</p>
+<p>Если уж вошли в современный режим, то это дорога в один конец.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type"><code>use strict</code> для функций</span></div>
+<div class="important__content"><p>Через некоторое время мы будем проходить <a href="/function-basics">функции</a>. На будущее заметим, что <code>use strict</code> также можно указывать в начале функций, тогда строгий режим будет действовать только внутри функции.</p>
+</div></div>
+<p>В следующих главах мы будем подробно останавливаться на отличиях в работе языка при <code>use strict</code> и без него.</p>
+<h2><a class="main__anchor" href="#нужен-ли-мне-use-strict" name="нужен-ли-мне-use-strict">Нужен ли мне «use strict»?</a></h2><p>Если говорить абстрактно, то – да, нужен. В строгом режиме исправлены некоторые ошибки в дизайне языка, и вообще, современный стандарт – это хорошо.</p>
+<p>Однако, есть и две проблемы.</p>
+<dl>
+<dt>Поддержка браузеров IE9-, которые игнорируют <code>"use strict"</code>.</dt>
+<dd>
+<p>Предположим, что мы, используя <code>"use strict"</code>, разработали код и протестировали его в браузере Chrome. Всё работает… Однако, вероятность ошибок при этом в IE9- выросла! Он-то всегда работает по старому стандарту, а значит, иногда по-другому. Возникающие ошибки придётся отлаживать уже в IE9-, и это намного менее приятно, нежели в Chrome.</p>
+<p>Впрочем, проблема не так страшна. Несовместимостей мало. И если их знать (а в учебнике мы будем останавливаться на них) и писать правильный код, то всё будет в порядке и <code>"use strict"</code> станет нашим верным помощником.</p>
+</dd>
+<dt>Библиотеки, написанные без учёта <code>"use strict"</code>.</dt>
+<dd>
+<p>Некоторые библиотеки, которые написаны без <code>"use strict"</code>, не всегда корректно работают, если вызывающий код содержит <code>"use strict"</code>.</p>
+<p>В первую очередь имеются в виду сторонние библиотеки, которые писали не мы, и которые не хотелось бы переписывать или править.</p>
+<p>Таких библиотек мало, но при переводе давно существующих проектов на <code>"use strict"</code> эта проблема возникает с завидной регулярностью.</p>
+</dd>
+</dl>
+<p>Вывод?</p>
+<p><strong>Писать код с <code>use strict</code> следует лишь в том случае, если вы уверены, что описанных выше проблем не будет.</strong></p>
+<p>Конечно же, весь код, который находится в этом учебнике, корректно работает в режиме <code>"use strict"</code>.</p>
+<h2><a class="main__anchor" href="#es5-shim" name="es5-shim">ES5-shim</a></h2><p>Браузер IE8 поддерживает только совсем старую версию стандарта JavaScript, а именно ES3.</p>
+<p>К счастью, многие возможности современного стандарта можно добавить в этот браузер, подключив библиотеку <a href="https://github.com/es-shims/es5-shim">ES5 shim</a>, а именно – скрипты <code>es5-shim.js</code> и <code>es5-sham.js</code> из неё.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>В этой главе мы познакомились с понятием «строгий режим».</p>
+<p>Далее мы будем предполагать, что разработка ведётся либо в современном браузере, либо в IE8- с подключённым <a href="https://github.com/es-shims/es5-shim">ES5 shim</a>. Это позволит нам использовать большинство возможностей современного JavaScript во всех браузерах.</p>
+<p>Очень скоро, буквально в следующей главе, мы увидим особенности строгого режима на конкретных примерах.</p>
+</cut></div></meta></article></main></div></body></html>

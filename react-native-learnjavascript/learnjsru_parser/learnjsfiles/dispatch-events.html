@@ -1,0 +1,447 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Генерация событий на элементах" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Можно не только назначать обработчики на события, но и генерировать их самому.</p>
+<p>Мы будем использовать это позже для реализации компонентной архитектуры, при которой элемент, представляющий собой, к примеру, меню, генерирует события, к этому меню относящиеся – <code>select</code> (выбран пункт меню) или <code>open</code> (меню раскрыто), и другие.</p>
+<p>Кроме того, события можно генерировать для целей автоматического тестирования.</p>
+<cut>
+<h2><a class="main__anchor" href="#конструктор-event" name="конструктор-event">Конструктор Event</a></h2><p>Вначале рассмотрим современный способ генерации событий, по стандарту <a href="http://www.w3.org/TR/dom/#introduction-to-dom-events">DOM 4</a>. Он поддерживается всеми браузерами, кроме IE11-. А далее рассмотрим устаревшие варианты, поддерживаемые IE.</p>
+<p>Объект события в нём создаётся при помощи встроенного конструктора <a href="http://www.w3.org/TR/dom/#event">Event</a>.</p>
+<p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var event = new Event(тип события[, флаги]);</code></pre>
+</div>
+</div>
+</div><p>Где:</p>
+<ul>
+<li>
+<p><em>Тип события</em> – может быть как своим, так и встроенным, к примеру <code>"click"</code>.</p>
+</li>
+<li>
+<p><em>Флаги</em> – объект вида <code>{ bubbles: true/false, cancelable: true/false }</code>, где свойство <code>bubbles</code> указывает, всплывает ли событие, а <code>cancelable</code> – можно ли отменить действие по умолчанию.</p>
+<p>Флаги по умолчанию: <code>{bubbles: false, cancelable: false}</code>.</p>
+</li>
+</ul>
+<h2><a class="main__anchor" href="#метод-dispatchevent" name="метод-dispatchevent">Метод dispatchEvent</a></h2><p>Затем, чтобы инициировать событие, запускается <code>elem.dispatchEvent(event)</code>.</p>
+<p>При этом событие срабатывает наравне с браузерными, то есть обычные браузерные обработчики на него отреагируют. Если при создании указан флаг <code>bubbles</code>, то оно будет всплывать.</p>
+<p>При просмотре примера ниже кнопка обработчик <code>onclick</code> на кнопке сработает сам по себе, событие генерируется скриптом:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;button id="elem" onclick="alert('Клик');"&gt;Автоклик&lt;/button&gt;
+
+&lt;script&gt;
+  var event = new Event("click");
+  elem.dispatchEvent(event);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#отмена-действия-по-умолчанию" name="отмена-действия-по-умолчанию">Отмена действия по умолчанию</a></h2><p>На сгенерированном событии, как и на встроенном браузерном, обработчик может вызвать метод <code>event.preventDefault()</code>. Тогда <code>dispatchEvent</code> возвратит <code>false</code>.</p>
+<p>Остановимся здесь подробнее. Обычно <code>preventDefault()</code> вызов предотвращает действие браузера. В случае, если событие придумано нами, имеет нестандартное имя – никакого действия браузера, конечно, нет.</p>
+<p>Но код, который генерирует событие, может предусматривать какие-то ещё действия после <code>dispatchEvent</code>.</p>
+<p>Вызов <code>event.preventDefault()</code> является возможностью для обработчика события сообщить в сгенерировавший событие код, что эти действия продолжать не надо.</p>
+<p>В примере ниже есть функция <code>hide()</code>, которая при вызове генерирует событие <code>hide</code> на элементе <code>#rabbit</code>, уведомляя всех интересующихся, что кролик собирается спрятаться.</p>
+<p>Любой обработчик может узнать об этом, подписавшись на событие через <code>rabbit.addEventListener('hide',...)</code> и, при желании, отменить действие по умолчанию через <code>event.preventDefault()</code>. Тогда кролик не исчезнет:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;pre id="rabbit"&gt;
+  |\   /|
+   \|_|/
+   /. .\
+  =\_Y_/=
+   {&gt;o&lt;}
+&lt;/pre&gt;
+
+&lt;script&gt;
+
+  function hide() {
+    var event = new Event("hide", {
+      cancelable: true
+    });
+    if (!rabbit.dispatchEvent(event)) {
+      alert( 'действие отменено обработчиком' );
+    } else {
+      rabbit.hidden = true;
+    }
+  }
+
+  rabbit.addEventListener('hide', function(event) {
+    if (confirm("Вызвать preventDefault?")) {
+      event.preventDefault();
+    }
+  });
+
+  // прячемся через 2 секунды
+  setTimeout(hide, 2000);
+
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">Как отличить реальное нажатие от скриптового?</span></div>
+<div class="important__content"><p>В целях безопасности иногда хорошо бы знать – инициировано ли действие посетителем или это кликнул скрипт.</p>
+<p>Единственный способ, которым код может отличить реальное нажатие от программного, является проверка свойства <code>event.isTrusted</code>.</p>
+<p>Оно на момент написания статьи поддерживается IE и Firefox и равно <code>true</code>, если посетитель кликнул сам, и всегда <code>false</code> – если событие инициировал скрипт.</p>
+</div></div>
+<h2><a class="main__anchor" href="#другие-свойства-событий" name="другие-свойства-событий">Другие свойства событий</a></h2><p>При создании события браузер автоматически ставит следующие свойства:</p>
+<ul>
+<li><code>isTrusted: false</code> – означает, что событие сгенерировано скриптом,  это свойство изменить невозможно.</li>
+<li><code>target: null</code> –  это свойство ставится автоматически позже при <code>dispatchEvent</code>.</li>
+<li><code>type: тип события</code> – первый аргумент <code>new Event</code>.</li>
+<li><code>bubbles</code>, <code>cancelable</code> – по второму аргументу <code>new Event</code>.</li>
+</ul>
+<p>Другие свойства события, если они нужны, например координаты для события мыши – можно присвоить в объект события позже, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var event = new Event("click", {bubbles: true, cancelable: false});
+event.clientX = 100;
+event.clientY = 100;</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#пример-со-всплытием" name="пример-со-всплытием">Пример со всплытием</a></h2><p>Сгенерируем совершенно новое событие <code>"hello"</code> и поймаем его на <code>document</code>.</p>
+<p>Всё, что для этого нужно – это флаг <code>bubbles</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;h1 id="elem"&gt;Привет от скрипта!&lt;/h1&gt;
+
+&lt;script&gt;
+  document.addEventListener("hello", function(event) { // (1)
+    alert("Привет");
+    event.preventDefault();  // (2)
+  }, false);
+
+  var event = new Event("hello", {bubbles: true, cancelable: true}); // (3)
+  if (elem.dispatchEvent(event) === false) {
+    alert('Событие было отменено preventDefault');
+  }
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Обратите внимание:</p>
+<ol>
+<li>Обработчик события <code>hello</code> стоит на <code>document</code>. Мы его поймаем на всплытии.</li>
+<li>Вызов <code>event.preventDefault()</code> приведёт к тому, что <code>dispatchEvent</code> вернёт <code>false</code>.</li>
+<li>Чтобы событие всплывало и его можно было отменить, указан второй аргумент <code>new Event</code>.</li>
+</ol>
+<p>Никакой разницы между встроенными событиями (<code>click</code>) и своими (<code>hello</code>) здесь нет, их можно сгенерировать и запустить совершенно одинаково.</p>
+<h2><a class="main__anchor" href="#конструкторы-mouseevent-keyboardevent-и-другие" name="конструкторы-mouseevent-keyboardevent-и-другие">Конструкторы MouseEvent, KeyboardEvent и другие</a></h2><p>Для некоторых конкретных типов событий есть свои, специфические, конструкторы.</p>
+<p>Вот список конструкторов для различных событий интерфейса которые можно найти в спецификации <a href="http://www.w3.org/TR/uievents/">UI Event</a>:</p>
+<ul>
+<li><code>UIEvent</code></li>
+<li><code>FocusEvent</code></li>
+<li><code>MouseEvent</code></li>
+<li><code>WheelEvent</code></li>
+<li><code>KeyboardEvent</code></li>
+<li><code>CompositionEvent</code></li>
+</ul>
+<p>Вместо <code>new Event("click")</code> можно вызвать <code>new MouseEvent("click")</code>.</p>
+<p><strong>Специфический конструктор позволяет указать стандартные свойства для данного типа события.</strong></p>
+<p>Например, <code>clientX/clientY</code> для события мыши:</p>
+<div class="code-example" data-highlight-block="7-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var e = new MouseEvent("click", {
+  bubbles: true,
+  cancelable: true,
+  clientX: 100,
+  clientY: 100
+});
+
+alert( e.clientX ); // 100</code></pre>
+</div>
+</div>
+</div><p>Это нельзя было бы сделать с обычным конструктором <code>Event</code>:</p>
+<div class="code-example" data-highlight-block="7-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var e = new Event("click", {
+  bubbles: true,
+  cancelable: true,
+  clientX: 100,
+  clientY: 100
+});
+
+alert( e.clientX ); // undefined, свойство не присвоено!</code></pre>
+</div>
+</div>
+</div><p>Обычный конструктор <code>Event</code> не знает про «мышиные» свойства, поэтому их игнорирует.</p>
+<p>Впрочем, использование конкретного конструктора не является обязательным, можно обойтись <code>Event</code>, а свойства записать в объект отдельно, после конструктора. Здесь это скорее вопрос удобства и желания следовать правилам. События, которые генерирует браузер, всегда имеют правильный тип.</p>
+<p>Полный список свойств по типам событий вы найдёте в спецификации, например для <code>MouseEvent</code>: <a href="http://www.w3.org/TR/uievents/#constructor-mouseevent">MouseEvent Constructor</a>.</p>
+<h2><a class="main__anchor" href="#свои-события" name="свои-события">Свои события</a></h2><p>Для генерации своих, нестандартных, событий, хоть и можно использовать конструктор <code>Event</code>, но существует и специфический конструктор <a href="http://www.w3.org/TR/dom/#customevent">CustomEvent</a>.</p>
+<p>Технически, он абсолютно идентичен <code>Event</code>, кроме небольшой детали: у второго аргумента-объекта есть дополнительное свойство <code>detail</code>, в котором можно указывать информацию для передачи в событие.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="8-8" data-highlight-inline="4:11-28" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;h1 id="elem"&gt;Привет для Васи!&lt;/h1&gt;
+
+&lt;script&gt;
+  elem.addEventListener("hello", function(event) {
+    alert( event.detail.name );
+  }, false);
+
+  var event = new CustomEvent("hello", {
+    detail: { name: "Вася" }
+  });
+
+  elem.dispatchEvent(event);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Надо сказать, что никто не мешает и в обычное <code>Event</code> записать любые свойства. Но <code>CustomEvent</code> более явно говорит, что событие не встроенное, а своё, и выделяет отдельно «информационное» поле <code>detail</code>, в которое можно записать что угодно без конфликта со стандартными свойствами объекта.</p>
+<h2><a class="main__anchor" href="#старое-api-для-ie9" name="старое-api-для-ie9">Старое API для IE9+</a></h2><p>Способ генерации событий, описанный выше, не поддерживается в IE11-, там нужен другой, более старый способ, описанный в стандарте <a href="http://www.w3.org/TR/DOM-Level-3-Events">DOM 3 Events</a>.</p>
+<p>В нём была предусмотрена <a href="http://www.w3.org/TR/DOM-Level-3-Events/#event-interfaces">иерархия событий</a>, с различными методами инициализации.</p>
+<p>Она поддерживается как современными браузерами, так и IE9+. Там используется немного другой синтаксис, но по возможностям – всё то же самое, что и в современном стандарте.</p>
+<p>Можно использовать этот немного устаревший способ, если нужно поддерживать IE9+. Далее мы на его основе создадим полифилл.</p>
+<p>Объект события создаётся вызовом <code>document.createEvent</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var event = document.createEvent(eventInterface);</code></pre>
+</div>
+</div>
+</div><p>Аргументы:</p>
+<ul>
+<li><code>eventInterface</code> – это тип события, например <code>MouseEvent</code>, <code>FocusEvent</code>, <code>KeyboardEvent</code>. В <a href="http://www.w3.org/TR/DOM-Level-3-Events/#events-module">секции 5 DOM 3 Events</a> есть подробный список, какое событие к какому интерфейсу относится.</li>
+</ul>
+<p>На практике можно всегда использовать самый общий интерфейс: <code>document.createEvent("Event")</code>.</p>
+<p>Далее событие нужно инициализировать:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">event.initEvent(type, boolean bubbles, boolean cancelable);</code></pre>
+</div>
+</div>
+</div><p>Аргументы:</p>
+<ul>
+<li><code>type</code> – тип события, например <code>"click"</code>.</li>
+<li><code>bubbles</code> – всплывает ли событие.</li>
+<li><code>cancelable</code> – можно ли отменить событие.</li>
+</ul>
+<p>Эти два кода аналогичны:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// современный стандарт
+var event = new Event("click", {
+  bubbles: true,
+  cancelable: true
+});
+
+// старый стандарт
+var event = document.createEvent("Event");
+event.initEvent("click", true, true);</code></pre>
+</div>
+</div>
+</div><p>Единственная разница – старый стандарт поддерживается IE9+.</p>
+<p>Этот пример с событием <code>hello</code> будет работать во всех браузерах, кроме IE8-:</p>
+<div class="code-example" data-highlight-block="8-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;h1 id="elem"&gt;Привет от скрипта!&lt;/h1&gt;
+
+&lt;script&gt;
+  document.addEventListener("hello", function(event) {
+    alert( "Привет" );
+    event.preventDefault();
+  }, false);
+
+  var event = document.createEvent("Event");
+  event.initEvent("hello", true, true);
+
+  if (elem.dispatchEvent(event) === false) {
+    alert( 'Событие было отменено preventDefault' );
+  }
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type"><code>initMouseEvent</code>, <code>initKeyboardEvent</code> и другие…</span></div>
+<div class="important__content"><p>У конкретных типов событий, например <code>MouseEvent</code>, <code>KeyboardEvent</code>, есть методы, которые позволяют указать стандартные свойства.</p>
+<p>Они называются по аналогии: <code>initMouseEvent</code>, <code>initKeyboardEvent</code>.</p>
+<p>Их можно использовать вместо базового <code>initEvent</code>, если хочется, чтобы свойства событий соответствовали встроенным браузерным.</p>
+<p>Выглядят они немного страшновато, например (взято из <a href="http://www.w3.org/TR/DOM-Level-3-Events/#idl-interface-MouseEvent-initializers">спецификации</a>):</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">void initMouseEvent(
+  DOMString typeArg, // тип
+  boolean bubblesArg, // всплывает?
+  boolean cancelableArg, // можно отменить?
+  AbstractView ? viewArg, // объект window, null означает текущее окно
+  long detailArg, // свойство detail и другие...
+  long screenXArg,
+  long screenYArg,
+  long clientXArg,
+  long clientYArg,
+  boolean ctrlKeyArg,
+  boolean altKeyArg,
+  boolean shiftKeyArg,
+  boolean metaKeyArg,
+  unsigned short buttonArg,
+  EventTarget ? relatedTargetArg);
+};</code></pre>
+</div>
+</div>
+</div><p>Для инициализации мышиного события нужно обязательно указать <em>все</em> аргументы, например:</p>
+<div class="code-example" data-highlight-block="8-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;button id="elem"&gt;Автоклик&lt;/button&gt;
+
+&lt;script&gt;
+  elem.onclick = function(e) {
+    alert( 'Клик на координатах ' + e.clientX + ':' + e.clientY );
+  };
+
+  var event = document.createEvent("MouseEvent");
+  event.initMouseEvent("click", true, true, null, 0, 0, 0, 100, 100, true, true, true, null, 1, null);
+  elem.dispatchEvent(event);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Браузер, по стандарту, может сгенерировать отсутствующие свойства самостоятельно, например <code>pageX</code>, но это нужно проверять в конкретных случаях, иногда это не работает или работает некорректно, так что лучше указать все.</p>
+</div></div>
+<h2><a class="main__anchor" href="#полифилл-customevent" name="полифилл-customevent">Полифилл CustomEvent</a></h2><p>Для поддержки <code>CustomEvent</code> в IE9+ можно сделать небольшой полифилл:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">try {
+  new CustomEvent("IE has CustomEvent, but doesn't support constructor");
+} catch (e) {
+
+  window.CustomEvent = function(event, params) {
+    var evt;
+    params = params || {
+      bubbles: false,
+      cancelable: false,
+      detail: undefined
+    };
+    evt = document.createEvent("CustomEvent");
+    evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+    return evt;
+  };
+
+  CustomEvent.prototype = Object.create(window.Event.prototype);
+}</code></pre>
+</div>
+</div>
+</div><p>Здесь мы сначала проверяем – в IE9-11 есть <code>CustomEvent</code>, но его нельзя создать через <code>new</code>, будет ошибка. В этом случае заменяем браузерную реализацию на свою, совместимую.</p>
+<h2><a class="main__anchor" href="#антистандарт-ie8" name="антистандарт-ie8">Антистандарт: IE8-</a></h2><p>В совсем старом IE были «свои» методы <code>document.createEventObject()</code> и <code>elem.fireEvent()</code>.</p>
+<p>Пример с ними для IE8:</p>
+<div class="code-example" data-highlight-block="8-11" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;button id="elem"&gt;Автоклик&lt;/button&gt;
+
+&lt;script&gt;
+  document.body.onclick = function() {
+    alert( "Клик, event.type=" + event.type );
+    return false;
+  };
+
+  var event = document.createEventObject();
+  if (!elem.fireEvent("onclick", event)) {
+    alert( 'Событие было отменено' );
+  }
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p><strong>При помощи <code>fireEvent</code> можно сгенерировать только встроенные события.</strong></p>
+<p>Если указать <code>"hello"</code> вместо <code>"onclick"</code> в примере выше – будет ошибка.</p>
+<p>Параметры <code>bubbles</code> и <code>cancelable</code> настраивать нельзя, браузер использует стандартные для данного типа событий.</p>
+<p>Существуют полифиллы для генерации произвольных событий и для IE8-, но они, по сути, полностью подменяют встроенную систему обработки событий браузером. И кода это требует тоже достаточно много.</p>
+<p>Альтернатива – фреймворк, например jQuery, который также реализует свою мощную систему работы с событиями, доступную через методы jQuery.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Все браузеры, кроме IE9-11, позволяют генерировать любые события, следуя стандарту DOM4.</li>
+<li>В IE9+ поддерживается более старый стандарт, можно легко сделать полифилл, например для <code>CustomEvent</code> он рассмотрен в этой главе.</li>
+<li>IE8- может генерировать только встроенные события.</li>
+</ul>
+<p>Несмотря на техническую возможность генерировать встроенные браузерные события типа <code>click</code> или <code>keydown</code> – пользоваться ей стоит с большой осторожностью.</p>
+<p>В 98% случаев, когда разработчик начинающего или среднего уровня хочет сгенерировать <em>встроенное</em> событие – это вызвано «кривой» архитектурой кода, и взаимодействие нужно на уровне выше.</p>
+<p>Как правило события имеет смысл генерировать:</p>
+<ul>
+<li>Либо как явный и грубый хак, чтобы заставить работать сторонние библиотеки, в которых не предусмотрены другие средства взаимодействия.</li>
+<li>Либо для автоматического тестирования, чтобы скриптом «нажать на кнопку» и посмотреть, произошло ли нужное действие.</li>
+<li>Либо при создании своих «элементов интерфейса». Например, никто не мешает при помощи JavaScript создать из <code>&lt;div class="calendar"&gt;</code> красивый календарь и генерировать на нём событие <code>change</code> при выборе даты. Эту тему мы разовьём позже.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

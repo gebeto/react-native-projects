@@ -1,0 +1,264 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Переменные: let и const" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В ES-2015 предусмотрены новые способы объявления переменных: через <code>let</code> и <code>const</code> вместо <code>var</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">let a = 5;</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#let" name="let">let</a></h2><p>У объявлений переменной через <code>let</code> есть три основных отличия от <code>var</code>:</p>
+<ol>
+<li>
+<p><strong>Область видимости переменной <code>let</code> – блок <code>{...}</code>.</strong></p>
+<p>Как мы помним, переменная, объявленная через <code>var</code>, видна везде в функции.</p>
+<p>Переменная, объявленная через <code>let</code>, видна только в рамках блока <code>{...}</code>, в котором объявлена.</p>
+<p>Это, в частности, влияет на объявления внутри <code>if</code>, <code>while</code> или <code>for</code>.</p>
+<p>Например, переменная через <code>var</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var apples = 5;
+
+if (true) {
+  var apples = 10;
+
+  alert(apples); // 10 (внутри блока)
+}
+
+alert(apples); // 10 (снаружи блока то же самое)</code></pre>
+</div>
+</div>
+</div><p>В примере выше <code>apples</code> – одна переменная на весь код, которая модифицируется в <code>if</code>.</p>
+<p>То же самое с <code>let</code> будет работать по-другому:</p>
+<div class="code-example" data-highlight-block="8-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">let apples = 5; // (*)
+
+if (true) {
+  let apples = 10;
+
+  alert(apples); // 10 (внутри блока)
+}
+
+alert(apples); // 5 (снаружи блока значение не изменилось)</code></pre>
+</div>
+</div>
+</div><p>Здесь, фактически, две независимые переменные <code>apples</code>, одна – глобальная, вторая – в блоке <code>if</code>.</p>
+<p>Заметим, что если объявление <code>let apples</code> в первой строке <code>(*)</code> удалить, то в последнем <code>alert</code> будет ошибка: переменная неопределена:</p>
+<div class="code-example" data-highlight-block="6-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">if (true) {
+  let apples = 10;
+
+  alert(apples); // 10 (внутри блока)
+}
+
+alert(apples); // ошибка!</code></pre>
+</div>
+</div>
+</div><p>Это потому что переменная <code>let</code> всегда видна именно в том блоке, где объявлена, и не более.</p>
+</li>
+<li>
+<p><strong>Переменная <code>let</code> видна только после объявления.</strong></p>
+<p>Как мы помним, переменные <code>var</code> существуют и до объявления. Они равны <code>undefined</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert(a); // undefined
+
+var a = 5;</code></pre>
+</div>
+</div>
+</div><p>С переменными <code>let</code> всё проще. До объявления их вообще нет.</p>
+<p>Такой доступ приведёт к ошибке:</p>
+<div class="code-example" data-highlight-block="0-0" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert(a); // ошибка, нет такой переменной
+
+let a = 5;</code></pre>
+</div>
+</div>
+</div><p>Заметим также, что переменные <code>let</code> нельзя повторно объявлять. То есть, такой код выведет ошибку:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">let x;
+let x; // ошибка: переменная x уже объявлена</code></pre>
+</div>
+</div>
+</div><p>Это – хоть и выглядит ограничением по сравнению с <code>var</code>, но на самом деле проблем не создаёт. Например, два таких цикла совсем не конфликтуют:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// каждый цикл имеет свою переменную i
+for(let i = 0; i&lt;10; i++) { /* … */ }
+for(let i = 0; i&lt;10; i++) { /* … */ }
+
+alert( i ); // ошибка: глобальной i нет</code></pre>
+</div>
+</div>
+</div><p>При объявлении внутри цикла переменная <code>i</code> будет видна только в блоке цикла. Она не видна снаружи, поэтому будет ошибка в последнем <code>alert</code>.</p>
+</li>
+<li>
+<p><strong>При использовании в цикле, для каждой итерации создаётся своя переменная.</strong></p>
+<p>Переменная <code>var</code> – одна на все итерации цикла и видна даже после цикла:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">for(var i=0; i&lt;10; i++) { /* … */ }
+
+alert(i); // 10</code></pre>
+</div>
+</div>
+</div><p>С переменной <code>let</code> – всё по-другому.</p>
+<p>Каждому повторению цикла соответствует своя независимая переменная <code>let</code>. Если внутри цикла есть вложенные объявления функций, то в замыкании каждой будет та переменная, которая была при соответствующей итерации.</p>
+<p>Это позволяет легко решить классическую проблему с замыканиями, описанную в задаче <a href="/task/make-army">Армия функций</a>.</p>
+<div class="code-example" data-highlight-inline="4:7-10" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function makeArmy() {
+
+  let shooters = [];
+
+  for (let i = 0; i &lt; 10; i++) {
+    shooters.push(function() {
+      alert( i ); // выводит свой номер
+    });
+  }
+
+  return shooters;
+}
+
+var army = makeArmy();
+
+army[0](); // 0
+army[5](); // 5</code></pre>
+</div>
+</div>
+</div><p>Если бы объявление было <code>var i</code>, то была бы одна переменная <code>i</code> на всю функцию, и вызовы в последних строках выводили бы <code>10</code> (подробнее – см. задачу <a href="/task/make-army">Армия функций</a>).</p>
+<p>А выше объявление <code>let i</code> создаёт для каждого повторения блока в цикле свою переменную, которую функция и получает из замыкания в последних строках.</p>
+</li>
+</ol>
+<h2><a class="main__anchor" href="#const" name="const">const</a></h2><p>Объявление <code>const</code> задаёт константу, то есть переменную, которую нельзя менять:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">const apple = 5;
+apple = 10; // ошибка</code></pre>
+</div>
+</div>
+</div><p>В остальном объявление <code>const</code> полностью аналогично <code>let</code>.</p>
+<p>Заметим, что если в константу присвоен объект, то от изменения защищена сама константа, но не свойства внутри неё:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">const user = {
+  name: "Вася"
+};
+
+user.name = "Петя"; // допустимо
+user = 5; // нельзя, будет ошибка</code></pre>
+</div>
+</div>
+</div><p>То же самое верно, если константе присвоен массив или другое объектное значение.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">константы и КОНСТАНТЫ</span></div>
+<div class="important__content"><p>Константы, которые жёстко заданы всегда, во время всей программы, обычно пишутся в верхнем регистре. Например: <code>const ORANGE = "#ffa500"</code>.</p>
+<p>Большинство переменных – константы в другом смысле: они не меняются после присвоения. Но при разных запусках функции это значение может быть разным. Для таких переменных можно использовать <code>const</code> и обычные строчные буквы в имени.</p>
+</div></div>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Переменные <code>let</code>:</p>
+<ul>
+<li>Видны только после объявления и только в текущем блоке.</li>
+<li>Нельзя переобъявлять (в том же блоке).</li>
+<li>При объявлении переменной в цикле <code>for(let …)</code> – она видна только в этом цикле. Причём каждой итерации соответствует своя переменная <code>let</code>.</li>
+</ul>
+<p>Переменная <code>const</code> – это константа, в остальном – как <code>let</code>.</p>
+</div></meta></article></main></div></body></html>

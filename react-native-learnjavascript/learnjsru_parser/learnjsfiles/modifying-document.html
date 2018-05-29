@@ -1,0 +1,420 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Добавление и удаление узлов" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Изменение DOM – ключ к созданию «живых» страниц.</p>
+<p>В этой главе мы рассмотрим, как создавать новые элементы «на лету» и заполнять их данными.</p>
+<cut>
+<h2><a class="main__anchor" href="#пример-показ-сообщения" name="пример-показ-сообщения">Пример: показ сообщения</a></h2><p>В качестве примера рассмотрим добавление сообщения на страницу, чтобы оно было оформленно красивее чем обычный <code>alert</code>.</p>
+<p>HTML-код для сообщения:</p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-highlight-block="10-12" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+.alert {
+  padding: 15px;
+  border: 1px solid #d6e9c6;
+  border-radius: 4px;
+  color: #3c763d;
+  background-color: #dff0d8;
+}
+&lt;/style&gt;
+
+&lt;div class="alert"&gt;
+  &lt;strong&gt;Ура!&lt;/strong&gt; Вы прочитали это важное сообщение.
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-auwrb" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><h2><a class="main__anchor" href="#создание-элемента" name="создание-элемента">Создание элемента</a></h2><p>Для создания элементов используются следующие методы:</p>
+<dl>
+<dt><code>document.createElement(tag)</code></dt>
+<dd>
+<p>Создает новый элемент с указанным тегом:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var div = document.createElement('div');</code></pre>
+</div>
+</div>
+</div></dd>
+</dl>
+<p><code>document.createTextNode(text)</code></p>
+<dd>Создает новый *текстовый* узел с данным текстом:
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var textElem = document.createTextNode('Тут был я');</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#создание-сообщения" name="создание-сообщения">Создание сообщения</a></h3><p>В нашем случае мы хотим сделать DOM-элемент <code>div</code>, дать ему классы и заполнить текстом:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var div = document.createElement('div');
+div.className = "alert alert-success";
+div.innerHTML = "&lt;strong&gt;Ура!&lt;/strong&gt; Вы прочитали это важное сообщение.";</code></pre>
+</div>
+</div>
+</div><p>После этого кода у нас есть готовый DOM-элемент. Пока что он присвоен в переменную <code>div</code>, но не виден, так как никак не связан со страницей.</p>
+<h2><a class="main__anchor" href="#добавление-элемента-appendchild-insertbefore" name="добавление-элемента-appendchild-insertbefore">Добавление элемента: appendChild, insertBefore</a></h2><p>Чтобы DOM-узел был показан на странице, его необходимо вставить в <code>document</code>.</p>
+<p>Для этого первым делом нужно решить, куда мы будем его вставлять. Предположим, что мы решили, что вставлять будем в некий элемент <code>parentElem</code>, например <code>var parentElem = document.body</code>.</p>
+<p>Для вставки внутрь <code>parentElem</code> есть следующие методы:</p>
+<dl>
+<dt><code>parentElem.appendChild(elem)</code></dt>
+<dd>
+<p>Добавляет <code>elem</code> в конец дочерних элементов <code>parentElem</code>.</p>
+<p>Следующий пример добавляет новый элемент в конец <code>&lt;ol&gt;</code>:</p>
+<div class="code-example" data-demo-height="100" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;ol id="list"&gt;
+  &lt;li&gt;0&lt;/li&gt;
+  &lt;li&gt;1&lt;/li&gt;
+  &lt;li&gt;2&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;script&gt;
+  var newLi = document.createElement('li');
+  newLi.innerHTML = 'Привет, мир!';
+
+  list.appendChild(newLi);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div></dd>
+<dt><code>parentElem.insertBefore(elem, nextSibling)</code></dt>
+<dd>
+<p>Вставляет <code>elem</code> в коллекцию детей <code>parentElem</code>, перед элементом <code>nextSibling</code>.</p>
+<p>Следующий код вставляет новый элемент перед вторым <code>&lt;li&gt;</code>:</p>
+<div class="code-example" data-demo-height="100" data-highlight-block="9-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;ol id="list"&gt;
+  &lt;li&gt;0&lt;/li&gt;
+  &lt;li&gt;1&lt;/li&gt;
+  &lt;li&gt;2&lt;/li&gt;
+&lt;/ol&gt;
+&lt;script&gt;
+  var newLi = document.createElement('li');
+  newLi.innerHTML = 'Привет, мир!';
+
+  list.insertBefore(newLi, list.children[1]);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Для вставки элемента в начало достаточно указать, что вставлять будем перед первым потомком:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">list.insertBefore(newLi, list.firstChild);</code></pre>
+</div>
+</div>
+</div><p>У читателя, который посмотрит на этот код внимательно, наверняка возникнет вопрос: «А что, если <code>list</code> вообще пустой, в этом случае ведь <code>list.firstChild = null</code>, произойдёт ли вставка?»</p>
+<p>Ответ – да, произойдёт.</p>
+<p><strong>Дело в том, что если вторым аргументом указать <code>null</code>, то <code>insertBefore</code> сработает как <code>appendChild</code>:</strong></p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">parentElem.insertBefore(elem, null);
+// то же, что и:
+parentElem.appendChild(elem)</code></pre>
+</div>
+</div>
+</div><p>Так что <code>insertBefore</code> универсален.</p>
+</dd>
+</dl>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">На заметку:</span></div>
+<div class="important__content"><p>Все методы вставки возвращают вставленный узел.</p>
+<p>Например, <code>parentElem.appendChild(elem)</code> возвращает <code>elem</code>.</p>
+</div></div>
+<h3><a class="main__anchor" href="#пример-использования" name="пример-использования">Пример использования</a></h3><p>Добавим сообщение в конец <code>&lt;body&gt;</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="150" data-highlight-block="19-19" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+.alert {
+  padding: 15px;
+  border: 1px solid #d6e9c6;
+  border-radius: 4px;
+  color: #3c763d;
+  background-color: #dff0d8;
+}
+&lt;/style&gt;
+
+&lt;body&gt;
+  &lt;h3&gt;Моя страница&lt;/h3&gt;
+&lt;/body&gt;
+
+&lt;script&gt;
+  var div = document.createElement('div');
+  div.className = "alert alert-success";
+  div.innerHTML = "&lt;strong&gt;Ура!&lt;/strong&gt; Вы прочитали это важное сообщение.";
+
+  document.body.appendChild(div);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-feanz0" src="about:blank" style="height:150px"></iframe>
+</div>
+</div><p>…А теперь – в начало <code>&lt;body&gt;</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="150" data-highlight-block="19-19" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+.alert {
+  padding: 15px;
+  border: 1px solid #d6e9c6;
+  border-radius: 4px;
+  color: #3c763d;
+  background-color: #dff0d8;
+}
+&lt;/style&gt;
+
+&lt;body&gt;
+  &lt;h3&gt;Моя страница&lt;/h3&gt;
+&lt;/body&gt;
+
+&lt;script&gt;
+  var div = document.createElement('div');
+  div.className = "alert alert-success";
+  div.innerHTML = "&lt;strong&gt;Ура!&lt;/strong&gt; Вы прочитали это важное сообщение.";
+
+  document.body.insertBefore(div, document.body.firstChild);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-e6ogtz" src="about:blank" style="height:150px"></iframe>
+</div>
+</div><h2><a class="main__anchor" href="#клонирование-узлов-clonenode" name="клонирование-узлов-clonenode">Клонирование узлов: cloneNode</a></h2><p>А как бы вставить второе похожее сообщение?</p>
+<p>Конечно, можно сделать функцию для генерации сообщений и поместить туда этот код, но в ряде случаев гораздо эффективнее – <em>клонировать</em> существующий <code>div</code>, а потом изменить текст внутри. В частности, если элемент большой, то клонировать его будет гораздо быстрее, чем пересоздавать.</p>
+<p>Вызов <code>elem.cloneNode(true)</code> создаст «глубокую» копию элемента – вместе с атрибутами, включая подэлементы. Если же вызвать с аргументом <code>false</code>, то копия будет сделана без дочерних элементов. Это нужно гораздо реже.</p>
+<p>Пример со вставкой копии сообщения:</p>
+<div class="code-example" data-autorun="true" data-demo-height="200" data-highlight-block="21-26" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+.alert {
+  padding: 15px;
+  border: 1px solid #d6e9c6;
+  border-radius: 4px;
+  color: #3c763d;
+  background-color: #dff0d8;
+}
+&lt;/style&gt;
+
+&lt;body&gt;
+  &lt;h3&gt;Моя страница&lt;/h3&gt;
+&lt;/body&gt;
+
+&lt;script&gt;
+  var div = document.createElement('div');
+  div.className = "alert alert-success";
+  div.innerHTML = "&lt;strong&gt;Ура!&lt;/strong&gt; Вы прочитали это важное сообщение.";
+
+  document.body.insertBefore(div, document.body.firstChild);
+
+  // создать копию узла
+  var div2 = div.cloneNode(true);
+  // копию можно подправить
+  div2.querySelector('strong').innerHTML = 'Супер!';
+  // вставим её после текущего сообщения
+  div.parentNode.insertBefore(div2, div.nextSibling);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-1mv4vc" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><p>Обратите внимание на последнюю строку, которая вставляет <code>div2</code> после <code>div</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">div.parentNode.insertBefore(div2, div.nextSibling);</code></pre>
+</div>
+</div>
+</div><ol>
+<li>Для вставки нам нужен будущий родитель. Мы, возможно, не знаем, где точно находится <code>div</code> (или не хотим зависеть от того, где он), но если нужно вставить рядом с <code>div</code>, то родителем определённо будет <code>div.parentNode</code>.</li>
+<li>Мы хотели бы вставить <em>после</em> <code>div</code>, но метода <code>insertAfter</code> нет, есть только <code>insertBefore</code>, поэтому вставляем <em>перед</em> его правым соседом <code>div.nextSibling</code>.</li>
+</ol>
+<h2><a class="main__anchor" href="#удаление-узлов-removechild" name="удаление-узлов-removechild">Удаление узлов: removeChild</a></h2><p>Для удаления узла есть два метода:</p>
+<dl>
+<dt><code>parentElem.removeChild(elem)</code></dt>
+<dd>Удаляет <code>elem</code> из списка детей <code>parentElem</code>.</dd>
+<dt><code>parentElem.replaceChild(newElem, elem)</code></dt>
+<dd>Среди детей <code>parentElem</code> удаляет <code>elem</code> и вставляет на его место <code>newElem</code>.</dd>
+</dl>
+<p>Оба этих метода возвращают удаленный узел, то есть <code>elem</code>. Если нужно, его можно вставить в другое место DOM тут же или в будущем.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">На заметку:</span></div>
+<div class="important__content"><p>Если вы хотите <em>переместить</em> элемент на новое место – не нужно его удалять со старого.</p>
+<p><strong>Все методы вставки автоматически удаляют вставляемый элемент со старого места.</strong></p>
+<p>Конечно же, это очень удобно.</p>
+<p>Например, поменяем элементы местами:</p>
+<div class="code-example" data-demo-height="150" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div&gt;Первый&lt;/div&gt;
+&lt;div&gt;Второй&lt;/div&gt;
+&lt;script&gt;
+  var first = document.body.children[0];
+  var last = document.body.children[1];
+
+  // нет необходимости в предварительном removeChild(last)
+  document.body.insertBefore(last, first); // поменять местами
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div></div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Метод <code>remove</code></span></div>
+<div class="important__content"><p>В современном стандарте есть также метод <a href="https://dom.spec.whatwg.org/#dom-childnode-remove">elem.remove()</a>, который удаляет элемент напрямую, не требуя ссылки на родителя. Это зачастую удобнее, чем <code>removeChild</code>.</p>
+<p>Он поддерживается во всех современных браузерах, кроме IE11-. Впрочем, легко подключить или даже сделать полифилл.</p>
+</div></div>
+<h3><a class="main__anchor" href="#удаление-сообщения" name="удаление-сообщения">Удаление сообщения</a></h3><p>Сделаем так, что через секунду сообщение пропадёт:</p>
+<div class="code-example" data-highlight-block="21-23" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+.alert {
+  padding: 15px;
+  border: 1px solid #d6e9c6;
+  border-radius: 4px;
+  color: #3c763d;
+  background-color: #dff0d8;
+}
+&lt;/style&gt;
+
+&lt;body&gt;
+  &lt;h3&gt;Сообщение пропадёт через секунду&lt;/h3&gt;
+&lt;/body&gt;
+
+&lt;script&gt;
+  var div = document.createElement('div');
+  div.className = "alert alert-success";
+  div.innerHTML = "&lt;strong&gt;Ура!&lt;/strong&gt; Вы прочитали это важное сообщение.";
+
+  document.body.appendChild(div);
+
+  setTimeout(function() {
+    div.parentNode.removeChild(div);
+  }, 1000);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#текстовые-узлы-для-вставки-текста" name="текстовые-узлы-для-вставки-текста">Текстовые узлы для вставки текста</a></h2><p>При работе с сообщением мы использовали только узлы-элементы и <code>innerHTML</code>.</p>
+<p>Но и текстовые узлы тоже имеют интересную область применения!</p>
+<p>Если текст для сообщения нужно показать именно как текст, а не как HTML, то можно обернуть его в текстовый узел.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="15-18" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+.alert {
+  padding: 15px;
+  border: 1px solid #d6e9c6;
+  border-radius: 4px;
+  color: #3c763d;
+  background-color: #dff0d8;
+}
+&lt;/style&gt;
+
+&lt;script&gt;
+  var div = document.createElement('div');
+  div.className = "alert alert-success";
+  document.body.appendChild(div);
+
+  var text = prompt("Введите текст для сообщения", "Жили были &lt;a&gt; и &lt;b&gt;!");
+
+  // вставится именно как текст, без HTML-обработки
+  div.appendChild(document.createTextNode(text));
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>В современных браузерах (кроме IE8-) в качестве альтернативы можно использовать присвоение <code>textContent</code>.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Методы для создания узлов:</p>
+<ul>
+<li><code>document.createElement(tag)</code> – создает элемент</li>
+<li><code>document.createTextNode(value)</code> – создает текстовый узел</li>
+<li><code>elem.cloneNode(deep)</code> – клонирует элемент, если <code>deep == true</code>, то со всеми потомками, если <code>false</code> – без потомков.</li>
+</ul>
+<p>Вставка и удаление узлов:</p>
+<ul>
+<li><code>parent.appendChild(elem)</code></li>
+<li><code>parent.insertBefore(elem, nextSibling)</code></li>
+<li><code>parent.removeChild(elem)</code></li>
+<li><code>parent.replaceChild(newElem, elem)</code></li>
+</ul>
+<p>Все эти методы возвращают <code>elem</code>.</p>
+<p>Методы для изменения DOM также описаны в спецификации <a href="http://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html">DOM Level 1</a>.</p>
+</dd></cut></div></meta></article></main></div></body></html>

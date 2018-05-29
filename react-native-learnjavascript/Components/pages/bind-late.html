@@ -1,0 +1,148 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Позднее связывание "bindLate"' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Обычный метод <code>bind</code> называется «ранним связыванием», поскольку фиксирует привязку сразу же.</p>
+<p>Как только значения привязаны – они уже не могут быть изменены. В том числе, если метод объекта, который привязали, кто-то переопределит – «привязанная» функция этого не заметит.</p>
+<p>Позднее связывание – более гибкое, оно позволяет переопределить привязанный метод когда угодно.</p>
+<cut>
+<h2><a class="main__anchor" href="#раннее-связывание" name="раннее-связывание">Раннее связывание</a></h2><p>Например, попытаемся переопределить метод при раннем связывании:</p>
+<div class="code-example" data-highlight-block="11-11" data-highlight-inline="17:16-33" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function bind(func, context) {
+  return function() {
+    return func.apply(context, arguments);
+  };
+}
+
+var user = {
+  sayHi: function() { alert('Привет!'); }
+}
+
+// привязали метод к объекту
+var userSayHi = bind(user.sayHi, user);
+
+// понадобилось переопределить метод
+user.sayHi = function() { alert('Новый метод!'); }
+
+// будет вызван старый метод, а хотелось бы - новый!
+userSayHi(); // выведет "Привет!"</code></pre>
+</div>
+</div>
+</div><p>…Привязка всё ещё работает со старым методом, несмотря на то что он был переопределён.</p>
+<h2><a class="main__anchor" href="#позднее-связывание" name="позднее-связывание">Позднее связывание</a></h2><p>При позднем связывании <code>bind</code> вызовет не ту функцию, которая была в <code>sayHi</code> на момент привязки, а ту, которая есть на момент вызова.**</p>
+<p>Встроенного метода для этого нет, поэтому нужно реализовать.</p>
+<p>Синтаксис будет таков:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var func = bindLate(obj, "method");</code></pre>
+</div>
+</div>
+</div><dl>
+<dt><code>obj</code></dt>
+<dd>Объект</dd>
+<dt><code>method</code></dt>
+<dd>Название метода (строка)</dd>
+</dl>
+<p>Код:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function bindLate(context, funcName) {
+  return function() {
+    return context[funcName].apply(context, arguments);
+  };
+}</code></pre>
+</div>
+</div>
+</div><p>Этот вызов похож на обычный <code>bind</code>, один из вариантов которого как раз и выглядит как <code>bind(obj, "method")</code>, но работает по-другому.</p>
+<p><strong>Поиск метода в объекте: <code>context[funcName]</code>, осуществляется при вызове, самой обёрткой</strong>.</p>
+<p><strong>Поэтому, если метод переопределили – будет использован всегда последний вариант.</strong></p>
+<p>В частности, пример, рассмотренный выше, станет работать правильно:</p>
+<div class="code-example" data-highlight-block="10-10" data-highlight-inline="14:16-29" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function bindLate(context, funcName) {
+  return function() {
+    return context[funcName].apply(context, arguments);
+  };
+}
+
+var user = {
+  sayHi: function() { alert('Привет!'); }
+}
+
+var userSayHi = bindLate(user, 'sayHi');
+
+user.sayHi = function() { alert('Здравствуйте!'); }
+
+userSayHi(); // Здравствуйте!</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#привязка-метода-которого-нет" name="привязка-метода-которого-нет">Привязка метода, которого нет</a></h2><p>Позднее связывание позволяет привязать к объекту даже метод, которого ещё нет!</p>
+<p>Конечно, предполагается, что к моменту вызова он уже будет определён ;).</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="10-10" data-highlight-inline="6:3-13,9:3-25,15:32-39" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function bindLate(context, funcName) {
+  return function() {
+    return context[funcName].apply(context, arguments);
+  };
+}
+
+// метода нет
+var user = {  };
+
+// ..а привязка возможна!
+var userSayHi = bindLate(user, 'sayHi');
+
+// по ходу выполнения добавили метод..
+user.sayHi = function() { alert('Привет!'); }
+
+userSayHi(); // Метод работает: Привет!</code></pre>
+</div>
+</div>
+</div><p>В некотором смысле, позднее связывание всегда лучше, чем раннее. Оно удобнее и надежнее, так как всегда вызывает нужный метод, который в объекте сейчас.</p>
+<p>Но оно влечет и небольшие накладные расходы – поиск метода при каждом вызове.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p><em>Позднее связывание</em> ищет функцию в объекте в момент вызова.</p>
+<p>Оно используется для привязки в тех случаях, когда метод <em>может быть переопределён</em> после привязки или <em>на момент привязки не существует</em>.</p>
+<p>Обёртка для позднего связывания (без карринга):</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function bindLate(context, funcName) {
+  return function() {
+    return context[funcName].apply(context, arguments);
+  };
+}</code></pre>
+</div>
+</div>
+</div></cut></div></meta></article></main></div></body></html>

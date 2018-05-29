@@ -1,0 +1,119 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Свойство white-space" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Свойство <code>white-space</code> позволяет сохранять пробелы и переносы строк.</p>
+<p>У него есть два известных значения:</p>
+<ul>
+<li><code>white-space: normal</code> – обычное поведение</li>
+<li><code>white-space: pre</code> – текст ведёт себя, как будто оформлен в тег <code>pre</code>.</li>
+</ul>
+<p>Но браузеры поддерживают и другие, которые также бывают очень полезны.</p>
+<cut>
+<h2><a class="main__anchor" href="#pre-nowrap" name="pre-nowrap">pre / nowrap</a></h2><p>Встречаем первую «сладкую парочку» – <code>pre</code> и <code>nowrap</code>.</p>
+<p>Оба этих значения меняют стандартное поведение HTML при работе с текстом:</p>
+<p><strong><code>pre</code></strong>:</p>
+<ul>
+<li>Сохраняет пробелы.</li>
+<li>Переносит текст при явном разрыве строки.</li>
+</ul>
+<p><strong><code>nowrap</code></strong></p>
+<ul>
+<li>Не сохраняет пробелы.</li>
+<li>Игнорирует явные разрывы строки (не переносит текст).</li>
+</ul>
+<p>Оба этих значения поддерживаются кросс-браузерно.</p>
+<p><strong>Их основной недостаток – текст может вылезти из контейнера.</strong></p>
+<p>Для примера, рассмотрим следующий фрагмент кода:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">if (hours &gt; 18) {
+      // Пойти поиграть в теннис
+}</code></pre>
+</div>
+</div>
+</div><p><strong><code>white-space: pre</code>:</strong></p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  div { font-family: monospace; width: 200px; border: 1px solid black; }
+&lt;/style&gt;
+
+&lt;div style="white-space:pre"&gt;if (hours &gt; 18) {
+      // Пойти поиграть в теннис
+}
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-dcr9sm" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><p>Здесь пробелы и переводы строк сохранены. В HTML этому значению <code>white-space</code> соответствует тег <code>PRE</code>.</p>
+<p><strong><code>white-space: nowrap</code>:</strong></p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  div { font-family: monospace; width: 200px; border: 1px solid black; }
+&lt;/style&gt;
+
+&lt;div style="white-space:nowrap"&gt;if (hours &gt; 18) {
+      // Пойти поиграть в теннис
+}
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-a3vchl" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><p>Здесь переводы строки проигнорированы, а подряд идущие пробелы, если присмотреться – сжаты в один (например, перед комментарием <code>//</code>).</p>
+<p>Допустим, мы хотим разрешить посетителям публиковать код на сайте, с сохранением разметки. Но тег <code>PRE</code> и описанные выше значения <code>white-space</code> для этого не подойдут!</p>
+<p>Злой посетитель Василий Пупкин может написать такой текст, который вылезет из контейнера и поломает вёрстку страницы.</p>
+<p>Можно скрыть вылезшее значение при помощи <code>overflow-x: hidden</code> или сделать так, чтобы была горизонтальная прокрутка, но, к счастью, есть другие значения <code>white-space</code>, специально для таких случаев.</p>
+<h2><a class="main__anchor" href="#pre-wrap-pre-line" name="pre-wrap-pre-line">pre-wrap/pre-line</a></h2><dl>
+<dt><code>pre-wrap</code></dt>
+<dd>То же самое, что <code>pre</code>, но переводит строку, если текст вылезает из контейнера.</dd>
+<dt><code>pre-line</code></dt>
+<dd>То же самое, что <code>pre</code>, но переводит строку, если текст вылезает из контейнера и не сохраняет пробелы.</dd>
+</dl>
+<p>Оба поведения отлично прослеживаются на примерах:</p>
+<p><strong><code>white-space: pre-wrap</code>:</strong></p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  div { font-family: monospace; width: 200px; border: 1px solid black; }
+&lt;/style&gt;
+
+&lt;div style="white-space:pre-wrap"&gt;if (hours &gt; 18) {
+      // Пойти поиграть в теннис
+}
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-djukxt" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><p>Отличный выбор для безопасной вставки кода посетителями.</p>
+<p><strong><code>white-space: pre-line</code>:</strong></p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  div { font-family: monospace; width: 200px; border: 1px solid black; }
+&lt;/style&gt;
+
+&lt;div style="white-space:pre-line"&gt;if (hours &gt; 18) {
+      // Пойти поиграть в теннис
+}
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-2wx2k7" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><p>Сохранены переводы строк, ничего не вылезает, но пробелы интерпретированы в режиме обычного HTML.</p>
+</cut></div></meta></article></main></div></body></html>

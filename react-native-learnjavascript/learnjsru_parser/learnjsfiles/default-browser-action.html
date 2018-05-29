@@ -1,0 +1,147 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Действия браузера по умолчанию" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Многие события автоматически влекут за собой действие браузера.</p>
+<p>Например:</p>
+<ul>
+<li>Клик по ссылке инициирует переход на новый URL.</li>
+<li>Нажатие на кнопку «отправить» в форме – отсылку ее на сервер.</li>
+<li>Двойной клик на тексте – инициирует его выделение.</li>
+</ul>
+<p>Если мы обрабатываем событие в JavaScript, то зачастую такое действие браузера нам не нужно. К счастью, его можно отменить.</p>
+<cut>
+<h2><a class="main__anchor" href="#отмена-действия-браузера" name="отмена-действия-браузера">Отмена действия браузера</a></h2><p>Есть два способа отменить действие браузера:</p>
+<ul>
+<li><strong>Основной способ – это воспользоваться объектом события. Для отмены действия браузера существует стандартный метод <code>event.preventDefault()</code>.</strong></li>
+<li>Если же обработчик назначен через <code>onсобытие</code> (не через <code>addEventListener</code>), то можно просто вернуть <code>false</code> из обработчика.</li>
+</ul>
+<p>В следующем примере при клике по ссылке переход не произойдет:</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;a href="/" onclick="return false"&gt;Нажми здесь&lt;/a&gt;
+или
+&lt;a href="/" onclick="event.preventDefault()"&gt;здесь&lt;/a&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-1zw531" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Возвращать <code>true</code> не нужно</span></div>
+<div class="important__content"><p>Обычно значение, которое возвращает обработчик события, игнорируется.</p>
+<p>Единственное исключение – это <code>return false</code> из обработчика, назначенного через <code>onсобытие</code>.</p>
+<p>Иногда в коде начинающих разработчиков можно увидеть <code>return</code> других значений. Но они не нужны и никак не обрабатываются.</p>
+</div></div>
+<h3><a class="main__anchor" href="#пример-меню" name="пример-меню">Пример: меню</a></h3><p>Рассмотрим задачу, когда нужно создать меню для сайта, например такое:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;ul id="menu" class="menu"&gt;
+  &lt;li&gt;&lt;a href="/php"&gt;PHP&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href="/html"&gt;HTML&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href="/javascript"&gt;JavaScript&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href="/flash"&gt;Flash&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+</div>
+</div>
+</div><p>Данный пример при помощи CSS может выводиться так:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/default-browser-action/menu/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="JcPnEGfaRdtzqaPlTL27" href="http://plnkr.co/edit/JcPnEGfaRdtzqaPlTL27?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/default-browser-action/menu/" style="height:70px"></iframe>
+</div><p>HTML-разметка сделана так, что все элементы меню являются не кнопками, а ссылками, то есть тегами <code>&lt;a&gt;</code>.</p>
+<p>Это потому, что некоторые посетители очень любят сочетание «правый клик – открыть в новом окне».  Да, мы можем использовать и <code>&lt;button&gt;</code> и <code>&lt;span&gt;</code>, но если правый клик не работает – это их огорчает. Кроме того, если на сайт зайдёт поисковик, то по ссылке из <code>&lt;a href="..."&gt;</code> он перейдёт, а выполнить сложный JavaScript и получить результат – вряд ли захочет.</p>
+<p>Поэтому в разметке мы используем именно <code>&lt;a&gt;</code>, но обычно клик будет обрабатываться полностью в JavaScript, а стандартное действие браузера (переход по ссылке) – отменяться.</p>
+<p>Например, вот так:</p>
+<div class="code-example" data-highlight-block="6-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">menu.onclick = function(event) {
+  if (event.target.nodeName != 'A') return;
+
+  var href = event.target.getAttribute('href');
+  alert( href ); // может быть подгрузка с сервера, генерация интерфейса и т.п.
+
+  return false; // отменить переход по url
+};</code></pre>
+</div>
+</div>
+</div><p>В конце <code>return false</code>, иначе браузер перейдёт по адресу из <code>href</code>.</p>
+<p>Так как мы применили делегирование, то меню может увеличиваться, можно добавить вложенные списки <code>ul/li</code>, стилизовать их при помощи CSS – обработчик не потребует изменений.</p>
+<h2><a class="main__anchor" href="#другие-действия-браузера" name="другие-действия-браузера">Другие действия браузера</a></h2><p>Действий браузера по умолчанию достаточно много.</p>
+<p>Вот некоторые примеры событий, которые вызывают действие браузера:</p>
+<ul>
+<li><code>mousedown</code> – нажатие кнопкой мыши в то время как курсор находится на тексте начинает его выделение.</li>
+<li><code>click</code> на <code>&lt;input type="checkbox"&gt;</code> – ставит или убирает галочку.</li>
+<li><code>submit</code> – при нажатии на <code>&lt;input type="submit"&gt;</code>  в форме данные отправляются на сервер.</li>
+<li><code>wheel</code> – движение колёсика мыши инициирует прокрутку.</li>
+<li><code>keydown</code> – при нажатии клавиши в поле ввода появляется символ.</li>
+<li><code>contextmenu</code> – при правом клике показывается контекстное меню браузера.</li>
+<li>…</li>
+</ul>
+<p>Все эти действия можно отменить, если мы хотим обработать событие исключительно при помощи JavaScript.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">События могут быть связаны между собой</span></div>
+<div class="important__content"><p>Некоторые события естественным образом вытекают друг из друга.</p>
+<p>Например, нажатие мышкой <code>mousedown</code> на поле ввода <code>&lt;input&gt;</code> приводит к фокусировке внутрь него. Если отменить действие <code>mousedown</code>, то и фокуса не будет.</p>
+<p>Попробуйте нажать мышкой на первый <code>&lt;input&gt;</code> – произойдёт событие <code>onfocus</code>. Это обычная ситуация.</p>
+<p>Но если нажать на второй, то фокусировки не произойдёт.</p>
+<div class="code-example" data-autorun="true" data-highlight-inline="1:7-33" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input value="Фокус работает" onfocus="this.value=''"&gt;
+&lt;input onmousedown="return false" onfocus="this.value=''" value="Кликни меня"&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-fg9aj0" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><p>Это потому, что отменено стандартное действие при <code>onmousedown</code>.</p>
+<p>…С другой стороны, во второй <code>&lt;input&gt;</code> можно перейти с первого нажатием клавиши <kbd class="shortcut">Tab</kbd>, и тогда фокусировка сработает. То есть, дело здесь именно в <code>onmousedown="return false"</code>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#особенности-ie8" name="особенности-ie8">Особенности IE8-</a></h2><p>В IE8- для отмены действия по умолчанию нужно назначить свойство <code>event.returnValue = false</code>.</p>
+<p>Кроссбраузерный код для отмены действия по умолчанию:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">element.onclick = function(event) {
+  event = event || window.event;
+
+  if (event.preventDefault) { // если метод существует
+    event.preventDefault(); // то вызвать его
+  } else { // иначе вариант IE8-:
+    event.returnValue = false;
+  }
+}</code></pre>
+</div>
+</div>
+</div><p>Можно записать в одну строку:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">...
+event.preventDefault ? event.preventDefault() : (event.returnValue=false);
+...</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Браузер имеет встроенные действия при ряде событий – переход по ссылке, отправка формы и т.п. Как правило, их можно отменить.</li>
+<li>Есть два способа отменить действие по умолчанию: первый – использовать <code>event.preventDefault()</code> (IE8-: <code>event.returnValue=false</code>), второй – <code>return false</code> из обработчика. Второй способ работает только если обработчик назначен через <code>onсобытие</code>.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

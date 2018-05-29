@@ -1,0 +1,252 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Загрузка скриптов, картинок, фреймов: onload и onerror" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Браузер позволяет отслеживать загрузку внешних ресурсов – скриптов, ифреймов, картинок и других.</p>
+<p>Для этого есть два события:</p>
+<ul>
+<li><code>onload</code> – если загрузка успешна.</li>
+<li><code>onerror</code> – если при загрузке произошла ошибка.</li>
+</ul>
+<h2><a class="main__anchor" href="#загрузка-script" name="загрузка-script">Загрузка SCRIPT</a></h2><p>Рассмотрим следующую задачу.</p>
+<p>В браузере работает сложный интерфейс и, чтобы создать очередной компонент, нужно загрузить скрипт с сервера.</p>
+<p>Подгрузить внешний скрипт – достаточно просто:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var script = document.createElement('script');
+script.src = "my.js";
+
+document.body.appendChild(script);</code></pre>
+</div>
+</div>
+</div><p>…Но как после подгрузки выполнить функцию, которая объявлена в этом скрипте? Для этого нужно отловить момент окончания загрузки и выполнения тега <code>&lt;script&gt;</code>.</p>
+<h3><a class="main__anchor" href="#script-onload" name="script-onload">script.onload</a></h3><p>Главным помощником станет событие <code>onload</code>. Оно сработает, когда скрипт загрузился и выполнился.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="4-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var script = document.createElement('script');
+script.src = "https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.3.0/lodash.js"
+document.body.appendChild(script);
+
+script.onload = function() {
+    // после выполнения скрипта становится доступна функция _
+    alert( _ ); // её код
+  }</code></pre>
+</div>
+</div>
+</div><p>Это даёт возможность, как в примере выше, получить переменные из скрипта и выполнять объявленные в нём функции.</p>
+<p>…А что, если загрузка скрипта не удалась? Например, такого скрипта на сервере нет (ошибка 404) или сервер «упал» (ошибка 500).</p>
+<p>Такую ситуацию тоже нужно как-то обрабатывать, хотя бы сообщить посетителю о возникшей проблеме.</p>
+<h3><a class="main__anchor" href="#script-onerror" name="script-onerror">script.onerror</a></h3><p>Любые ошибки загрузки (но не выполнения) скрипта отслеживаются обработчиком <code>onerror</code>.</p>
+<p>Например, сделаем запрос заведомо отсутствующего скрипта:</p>
+<div class="code-example" data-highlight-block="4-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var script = document.createElement('script');
+script.src = "https://example.com/404.js"
+document.body.appendChild(script);
+
+script.onerror = function() {
+  alert( "Ошибка: " + this.src );
+};</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#onreadystatechange" name="onreadystatechange">IE8-: script.onreadystatechange</a></h3><p>Примеры выше работают во всех браузерах, кроме IE8-.</p>
+<p>В IE для отслеживания загрузки есть другое событие: <code>onreadystatechange</code>. Оно срабатывает многократно, при каждом обновлении состояния загрузки.</p>
+<p>Текущая стадия процесса находится в <code>script.readyState</code>:</p>
+<dl>
+<dt><code>loading</code></dt>
+<dd>В процессе загрузки.</dd>
+<dt><code>loaded</code></dt>
+<dd>Получен ответ с сервера – скрипт или ошибка. Скрипт на фазе <code>loaded</code> может быть ещё не выполнен.</dd>
+<dt><code>complete</code></dt>
+<dd>Скрипт выполнен.</dd>
+</dl>
+<p>Например, рабочий скрипт:</p>
+<div class="code-example" data-highlight-block="4-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var script = document.createElement('script');
+script.src = "https://code.jquery.com/jquery.js";
+document.documentElement.appendChild(script);
+
+script.onreadystatechange = function() {
+  alert(this.readyState); // loading -&gt; loaded -&gt; complete
+}</code></pre>
+</div>
+</div>
+</div><p>Скрипт с ошибкой:</p>
+<div class="code-example" data-highlight-block="4-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var script = document.createElement('script');
+script.src = "http://ajax.googleapis.com/404.js";
+document.documentElement.appendChild(script);
+
+script.onreadystatechange = function() {
+  alert(this.readyState);  // loading -&gt; loaded
+}</code></pre>
+</div>
+</div>
+</div><p>Обратим внимание на две особенности:</p>
+<ul>
+<li>
+<p><strong>Стадии могут пропускаться.</strong></p>
+<p>Если скрипт в кэше браузера – он сразу даст <code>complete</code>. Вы можете увидеть это, если несколько раз запустите первый пример.</p>
+</li>
+<li>
+<p><strong>Нет особой стадии для ошибки.</strong></p>
+<p>В примере выше это видно, обработка останавливается на <code>loaded</code>.</p>
+</li>
+</ul>
+<p>Итак, самое надёжное средство для IE8- поймать загрузку (или ошибку загрузки) – это повесить обработчик на событие <code>onreadystatechange</code>, который будет срабатывать и на стадии <code>complete</code> и на стадии <code>loaded</code>. Так как скрипт может быть ещё не выполнен к этому моменту, то вызов функции лучше сделать через <code>setTimeout(.., 0)</code>.</p>
+<p>Пример ниже вызывает <code>afterLoad</code> после загрузки скрипта и работает только в IE:</p>
+<div class="code-example" data-highlight-block="8-19" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var script = document.createElement('script');
+script.src = "https://code.jquery.com/jquery.js";
+document.documentElement.appendChild(script);
+
+function afterLoad() {
+  alert("Загрузка завершена: " + typeof(jQuery));
+}
+
+script.onreadystatechange = function() {
+  if (this.readyState == "complete") { // на случай пропуска loaded
+    afterLoad(); // (2)
+  }
+
+  if (this.readyState == "loaded") {
+    setTimeout(afterLoad, 0);  // (1)
+
+    // убираем обработчик, чтобы не сработал на complete
+    this.onreadystatechange = null;
+  }
+}</code></pre>
+</div>
+</div>
+</div><p>Вызов <code>(1)</code> выполнится при первой загрузке скрипта, а <code>(2)</code> – при второй, когда он уже будет в кеше, и стадия станет сразу <code>complete</code>.</p>
+<p>Функция <code>afterLoad</code> может и не обнаружить <code>jQuery</code>, если при загрузке была ошибка, причём не важно какая – файл не найден или синтаксис скрипта ошибочен.</p>
+<h3><a class="main__anchor" href="#кросс-браузерное-решение" name="кросс-браузерное-решение">Кросс-браузерное решение</a></h3><p>Для кросс-браузерной обработки загрузки скрипта или её ошибки поставим обработчик на все три события: <code>onload</code>, <code>onerror</code>, <code>onreadystatechange</code>.</p>
+<p>Пример ниже выполняет функцию <code>afterLoad</code> после загрузки скрипта <em>или</em> при ошибке.</p>
+<p>Работает во всех браузерах:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var script = document.createElement('script');
+script.src = "https://code.jquery.com/jquery.js";
+document.documentElement.appendChild(script);
+
+function afterLoad() {
+  alert( "Загрузка завершена: " + typeof(jQuery) );
+}
+
+script.onload = script.onerror = function() {
+  if (!this.executed) { // выполнится только один раз
+    this.executed = true;
+    afterLoad();
+  }
+};
+
+script.onreadystatechange = function() {
+  var self = this;
+  if (this.readyState == "complete" || this.readyState == "loaded") {
+    setTimeout(function() {
+      self.onload()
+    }, 0); // сохранить "this" для onload
+  }
+};</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#загрузка-других-ресурсов" name="загрузка-других-ресурсов">Загрузка других ресурсов</a></h2><p>Поддержка этих событий для других типов ресурсов различна:</p>
+<dl>
+<dt><code>&lt;img&gt;</code>, <code>&lt;link&gt;</code> (стили)</dt>
+<dd>
+<p>Поддерживает <code>onload/onerror</code> во всех браузерах.</p>
+</dd>
+<dt><code>&lt;iframe&gt;</code></dt>
+<dd>
+<p>Поддерживает <code>onload</code> во всех браузерах. Это событие срабатывает как при успешной загрузке, так и при ошибке.</p>
+<p>Обратим внимание, что если <code>&lt;iframe&gt;</code> загружается с того же домена, то можно, используя <code>iframe.contentWindow.document</code> получить ссылку на документ и поставить обработчик <code>DOMContentLoaded</code>. А вот если <code>&lt;iframe&gt;</code> – с другого домена, то так не получится, однако сработает <code>onload</code>.</p>
+</dd>
+</dl>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>В этой статье мы рассмотрели события <code>onload/onerror</code> для ресурсов.</p>
+<p>Их можно обобщить, разделив на рецепты:</p>
+<dl>
+<dt>Отловить загрузку скрипта (включая ошибку)</dt>
+<dd>
+<p>Ставим обработчики на <code>onload</code> + <code>onerror</code> + (для IE8-) <code>onreadystatechange</code>, как указано в рецепте выше</p>
+</dd>
+<dt>Отловить загрузку картинки <code>&lt;img&gt;</code> или стиля <code>&lt;link&gt;</code></dt>
+<dd>
+<p>Ставим обработчики на <code>onload</code> + <code>onerror</code></p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var img = document.createElement('img');
+img.onload = function() { alert("Успех "+this.src };
+img.onerror = function() { alert("Ошибка "+this.src };
+img.src = ...</code></pre>
+</div>
+</div>
+</div><p>Изображения начинают загружаться сразу при создании, не нужно их для этого вставлять в HTML.</p>
+<p><strong>Чтобы работало в IE8-, <code>src</code> нужно ставить <em>после</em> <code>onload/onerror</code>.</strong></p>
+</dd>
+<dt>Отловить загрузку <code>&lt;iframe&gt;</code></dt>
+<dd>
+<p>Поддерживается только обработчик <code>onload</code>. Он сработает, когда <code>IFRAME</code> загрузится, со всеми подресурсами, а также в случае ошибки.</p>
+</dd>
+</dl>
+</div></meta></article></main></div></body></html>

@@ -1,0 +1,856 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Основы XMLHttpRequest" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Объект <code>XMLHttpRequest</code> (или, как его кратко называют, «XHR») дает возможность из JavaScript делать HTTP-запросы к серверу без перезагрузки страницы.</p>
+<p>Несмотря на слово «XML» в названии, <code>XMLHttpRequest</code> может работать с любыми данными, а не только с XML.</p>
+<p>Использовать его очень просто.</p>
+<cut>
+<h2><a class="main__anchor" href="#пример-использования" name="пример-использования">Пример использования</a></h2><p>Как правило, <code>XMLHttpRequest</code> используют для загрузки данных.</p>
+<p>Для начала посмотрим на пример использования, который загружает файл <code>phones.json</code> из текущей директории и выдаёт его содержимое:</p>
+<div class="code-example" data-highlight-block="0-0,3-4,6-6,9-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// 1. Создаём новый объект XMLHttpRequest
+var xhr = new XMLHttpRequest();
+
+// 2. Конфигурируем его: GET-запрос на URL 'phones.json'
+xhr.open('GET', 'phones.json', false);
+
+// 3. Отсылаем запрос
+xhr.send();
+
+// 4. Если код ответа сервера не 200, то это ошибка
+if (xhr.status != 200) {
+  // обработать ошибку
+  alert( xhr.status + ': ' + xhr.statusText ); // пример вывода: 404: Not Found
+} else {
+  // вывести результат
+  alert( xhr.responseText ); // responseText -- текст ответа.
+}</code></pre>
+</div>
+</div>
+</div><p>В действии:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">phones.json</div><div class="code-tabs__switch">server.js</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/ajax-xmlhttprequest/phones/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_download" href="/tutorial/zipview/phones.zip?plunkId=icIyT3XRchZNzDGZU2pX" target="_blank"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/ajax-xmlhttprequest/phones/"></iframe></div><div class="code-tabs__section"><pre class="language-none line-numbers"><code>[
+    {
+        "age": 0,
+        "id": "motorola-xoom-with-wi-fi",
+        "imageUrl": "img/phones/motorola-xoom-with-wi-fi.0.jpg",
+        "name": "Motorola XOOM\u2122 with Wi-Fi",
+        "snippet": "The Next, Next Generation\r\n\r\nExperience the future with Motorola XOOM with Wi-Fi, the world's first tablet powered by Android 3.0 (Honeycomb)."
+    },
+    {
+        "age": 1,
+        "id": "motorola-xoom",
+        "imageUrl": "img/phones/motorola-xoom.0.jpg",
+        "name": "MOTOROLA XOOM\u2122",
+        "snippet": "The Next, Next Generation\n\nExperience the future with MOTOROLA XOOM, the world's first tablet powered by Android 3.0 (Honeycomb)."
+    },
+    {
+        "age": 2,
+        "carrier": "AT&amp;amp;T",
+        "id": "motorola-atrix-4g",
+        "imageUrl": "img/phones/motorola-atrix-4g.0.jpg",
+        "name": "MOTOROLA ATRIX\u2122 4G",
+        "snippet": "MOTOROLA ATRIX 4G the world's most powerful smartphone."
+    },
+    {
+        "age": 3,
+        "id": "dell-streak-7",
+        "imageUrl": "img/phones/dell-streak-7.0.jpg",
+        "name": "Dell Streak 7",
+        "snippet": "Introducing Dell\u2122 Streak 7. Share photos, videos and movies together. It\u2019s small enough to carry around, big enough to gather around."
+    },
+    {
+        "age": 4,
+        "carrier": "Cellular South",
+        "id": "samsung-gem",
+        "imageUrl": "img/phones/samsung-gem.0.jpg",
+        "name": "Samsung Gem\u2122",
+        "snippet": "The Samsung Gem\u2122 brings you everything that you would expect and more from a touch display smart phone \u2013 more apps, more features and a more affordable price."
+    },
+    {
+        "age": 5,
+        "carrier": "Dell",
+        "id": "dell-venue",
+        "imageUrl": "img/phones/dell-venue.0.jpg",
+        "name": "Dell Venue",
+        "snippet": "The Dell Venue; Your Personal Express Lane to Everything"
+    },
+    {
+        "age": 6,
+        "carrier": "Best Buy",
+        "id": "nexus-s",
+        "imageUrl": "img/phones/nexus-s.0.jpg",
+        "name": "Nexus S",
+        "snippet": "Fast just got faster with Nexus S. A pure Google experience, Nexus S is the first phone to run Gingerbread (Android 2.3), the fastest version of Android yet."
+    },
+    {
+        "age": 7,
+        "carrier": "Cellular South",
+        "id": "lg-axis",
+        "imageUrl": "img/phones/lg-axis.0.jpg",
+        "name": "LG Axis",
+        "snippet": "Android Powered, Google Maps Navigation, 5 Customizable Home Screens"
+    },
+    {
+        "age": 8,
+        "id": "samsung-galaxy-tab",
+        "imageUrl": "img/phones/samsung-galaxy-tab.0.jpg",
+        "name": "Samsung Galaxy Tab\u2122",
+        "snippet": "Feel Free to Tab\u2122. The Samsung Galaxy Tab\u2122 brings you an ultra-mobile entertainment experience through its 7\u201d display, high-power processor and Adobe\u00ae Flash\u00ae Player compatibility."
+    },
+    {
+        "age": 9,
+        "carrier": "Cellular South",
+        "id": "samsung-showcase-a-galaxy-s-phone",
+        "imageUrl": "img/phones/samsung-showcase-a-galaxy-s-phone.0.jpg",
+        "name": "Samsung Showcase\u2122 a Galaxy S\u2122 phone",
+        "snippet": "The Samsung Showcase\u2122 delivers a cinema quality experience like you\u2019ve never seen before. Its innovative 4\u201d touch display technology provides rich picture brilliance, even outdoors"
+    },
+    {
+        "age": 10,
+        "carrier": "Verizon",
+        "id": "droid-2-global-by-motorola",
+        "imageUrl": "img/phones/droid-2-global-by-motorola.0.jpg",
+        "name": "DROID\u2122 2 Global by Motorola",
+        "snippet": "The first smartphone with a 1.2 GHz processor and global capabilities."
+    },
+    {
+        "age": 11,
+        "carrier": "Verizon",
+        "id": "droid-pro-by-motorola",
+        "imageUrl": "img/phones/droid-pro-by-motorola.0.jpg",
+        "name": "DROID\u2122 Pro by Motorola",
+        "snippet": "The next generation of DOES."
+    },
+    {
+        "age": 12,
+        "carrier": "AT&amp;amp;T",
+        "id": "motorola-bravo-with-motoblur",
+        "imageUrl": "img/phones/motorola-bravo-with-motoblur.0.jpg",
+        "name": "MOTOROLA BRAVO\u2122 with MOTOBLUR\u2122",
+        "snippet": "An experience to cheer about."
+    },
+    {
+        "age": 13,
+        "carrier": "T-Mobile",
+        "id": "motorola-defy-with-motoblur",
+        "imageUrl": "img/phones/motorola-defy-with-motoblur.0.jpg",
+        "name": "Motorola DEFY\u2122 with MOTOBLUR\u2122",
+        "snippet": "Are you ready for everything life throws your way?"
+    },
+    {
+        "age": 14,
+        "carrier": "T-Mobile",
+        "id": "t-mobile-mytouch-4g",
+        "imageUrl": "img/phones/t-mobile-mytouch-4g.0.jpg",
+        "name": "T-Mobile myTouch 4G",
+        "snippet": "The T-Mobile myTouch 4G is a premium smartphone designed to deliver blazing fast 4G speeds so that you can video chat from practically anywhere, with or without Wi-Fi."
+    },
+    {
+        "age": 15,
+        "carrier": "US Cellular",
+        "id": "samsung-mesmerize-a-galaxy-s-phone",
+        "imageUrl": "img/phones/samsung-mesmerize-a-galaxy-s-phone.0.jpg",
+        "name": "Samsung Mesmerize\u2122 a Galaxy S\u2122 phone",
+        "snippet": "The Samsung Mesmerize\u2122 delivers a cinema quality experience like you\u2019ve never seen before. Its innovative 4\u201d touch display technology provides rich picture brilliance,even outdoors"
+    },
+    {
+        "age": 16,
+        "carrier": "Sprint",
+        "id": "sanyo-zio",
+        "imageUrl": "img/phones/sanyo-zio.0.jpg",
+        "name": "SANYO ZIO",
+        "snippet": "The Sanyo Zio by Kyocera is an Android smartphone with a combination of ultra-sleek styling, strong performance and unprecedented value."
+    },
+    {
+        "age": 17,
+        "id": "samsung-transform",
+        "imageUrl": "img/phones/samsung-transform.0.jpg",
+        "name": "Samsung Transform\u2122",
+        "snippet": "The Samsung Transform\u2122 brings you a fun way to customize your Android powered touch screen phone to just the way you like it through your favorite themed \u201cSprint ID Service Pack\u201d."
+    },
+    {
+        "age": 18,
+        "id": "t-mobile-g2",
+        "imageUrl": "img/phones/t-mobile-g2.0.jpg",
+        "name": "T-Mobile G2",
+        "snippet": "The T-Mobile G2 with Google is the first smartphone built for 4G speeds on T-Mobile's new network. Get the information you need, faster than you ever thought possible."
+    },
+    {
+        "age": 19,
+        "id": "motorola-charm-with-motoblur",
+        "imageUrl": "img/phones/motorola-charm-with-motoblur.0.jpg",
+        "name": "Motorola CHARM\u2122 with MOTOBLUR\u2122",
+        "snippet": "Motorola CHARM fits easily in your pocket or palm.  Includes MOTOBLUR service."
+    }
+]</code></pre></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>var http = require('http');
+var url = require('url');
+var querystring = require('querystring');
+var static = require('node-static');
+var file = new static.Server('.', {
+  cache: 0
+});
+
+
+function accept(req, res) {
+
+  if (req.url == '/phones.json') {
+    // искусственная задержка для наглядности
+    setTimeout(function() {
+      file.serve(req, res);
+    }, 2000);
+  } else {
+    file.serve(req, res);
+  }
+
+}
+
+
+// ------ запустить сервер -------
+
+if (!module.parent) {
+  http.createServer(accept).listen(8080);
+} else {
+  exports.accept = accept;
+}</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;button onclick="loadPhones()"&gt;Загрузить phones.json!&lt;/button&gt;
+
+  &lt;script&gt;
+    function loadPhones() {
+      var xhr = new XMLHttpRequest();
+
+      xhr.open('GET', 'phones.json', false);
+      xhr.send();
+
+      if (xhr.status != 200) {
+        // обработать ошибку
+        alert('Ошибка ' + xhr.status + ': ' + xhr.statusText);
+      } else {
+        // вывести результат
+        alert(xhr.responseText);
+      }
+    }
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>Далее мы более подробно разберём основные методы и свойства объекта <code>XMLHttpRequest</code>, в том числе те, которые были использованы в этом коде.</p>
+<h2><a class="main__anchor" href="#настроить-open" name="настроить-open">Настроить: open</a></h2><p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">xhr.open(method, URL, async, user, password)</code></pre>
+</div>
+</div>
+</div><p>Этот метод – как правило, вызывается первым после создания объекта <code>XMLHttpRequest</code>.</p>
+<p>Задаёт основные параметры запроса:</p>
+<ul>
+<li>
+<p><code>method</code> – HTTP-метод. Как правило, используется GET либо POST, хотя доступны и более экзотические, вроде TRACE/DELETE/PUT и т.п.</p>
+</li>
+<li>
+<p><code>URL</code> – адрес запроса. Можно использовать не только http/https, но и другие протоколы, например <code>ftp://</code> и <code>file://</code>.</p>
+<p>При этом есть ограничения безопасности, называемые «Same Origin Policy»: запрос со страницы можно отправлять только на тот же <code>протокол://домен:порт</code>, с которого она пришла. В следующих главах мы рассмотрим, как их можно обойти.</p>
+</li>
+<li>
+<p><code>async</code> – если установлено в <code>false</code>, то запрос производится синхронно, если <code>true</code> – асинхронно.</p>
+</li>
+</ul>
+<p>«Синхронный запрос» означает, что после вызова <code>xhr.send()</code> и до ответа сервера главный поток будет «заморожен»: посетитель не сможет взаимодействовать со страницей – прокручивать, нажимать на кнопки и т.п. После получения ответа выполнение продолжится со следующей строки.</p>
+<p>«Асинхронный запрос» означает, что браузер отправит запрос, а далее результат нужно будет получить через обработчики событий, которые мы рассмотрим далее.</p>
+<ul>
+<li><code>user</code>, <code>password</code> – логин и пароль для HTTP-авторизации, если нужны.</li>
+</ul>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Вызов <code>open</code> не открывает соединение</span></div>
+<div class="important__content"><p>Заметим, что вызов <code>open</code>, в противоположность своему названию (<code>open</code> – англ. «открыть») не открывает соединение. Он лишь настраивает запрос, а коммуникация инициируется методом <code>send</code>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#отослать-данные-send" name="отослать-данные-send">Отослать данные: send</a></h2><p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">xhr.send([body])</code></pre>
+</div>
+</div>
+</div><p>Именно этод метод открывает соединение и отправляет запрос на сервер.</p>
+<p>В <code>body</code> находится <em>тело</em> запроса. Не у всякого запроса есть тело, например у GET-запросов тела нет, а у POST – основные данные как раз передаются через <code>body</code>.</p>
+<h2><a class="main__anchor" href="#отмена-abort" name="отмена-abort">Отмена: abort</a></h2><p>Вызов <code>xhr.abort()</code> прерывает выполнение запроса.</p>
+<h2><a class="main__anchor" href="#ответ-status-statustext-responsetext" name="ответ-status-statustext-responsetext">Ответ: status, statusText, responseText</a></h2><p>Основные свойства, содержащие ответ сервера:</p>
+<dl>
+<dt><code>status</code></dt>
+<dd>HTTP-код ответа: <code>200</code>, <code>404</code>, <code>403</code> и так далее. Может быть также равен <code>0</code>, если сервер не ответил или при запросе на другой домен.</dd>
+<dt><code>statusText</code></dt>
+<dd>Текстовое описание статуса от сервера: <code>OK</code>, <code>Not Found</code>, <code>Forbidden</code> и так далее.</dd>
+<dt><code>responseText</code></dt>
+<dd>Текст ответа сервера.</dd>
+</dl>
+<p>Есть и ещё одно свойство, которое используется гораздо реже:</p>
+<dl>
+<dt><code>responseXML</code></dt>
+<dd>
+<p>Если сервер вернул XML, снабдив его правильным заголовком <code>Content-type: text/xml</code>, то браузер создаст из него XML-документ. По нему можно будет делать запросы <code>xhr.responseXml.querySelector("...")</code> и другие.</p>
+<p>Оно используется редко, так как обычно используют не XML, а JSON. То есть, сервер возвращает JSON в виде текста, который браузер превращает в объект вызовом <code>JSON.parse(xhr.responseText)</code>.</p>
+</dd>
+</dl>
+<h2><a class="main__anchor" href="#синхронные-и-асинхронные-запросы" name="синхронные-и-асинхронные-запросы">Синхронные и асинхронные запросы</a></h2><p>Если в методе <code>open</code> установить параметр <code>async</code> равным <code>false</code>, то запрос будет синхронным.</p>
+<p>Синхронные вызовы используются чрезвычайно редко, так как блокируют взаимодействие со страницей до окончания загрузки. Посетитель не может даже прокручивать её. Никакой JavaScript не может быть выполнен, пока синхронный вызов не завершён – в общем, в точности те же ограничения как <code>alert</code>.</p>
+<div class="code-example" data-highlight-block="5-5" data-highlight-inline="1:31-36" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// Синхронный запрос
+xhr.open('GET', 'phones.json', false);
+
+// Отсылаем его
+xhr.send();
+// ...весь JavaScript "подвиснет", пока запрос не завершится</code></pre>
+</div>
+</div>
+</div><p>Если синхронный вызов занял слишком много времени, то браузер предложит закрыть «зависшую» страницу.</p>
+<p>Из-за такой блокировки получается, что нельзя отослать два запроса одновременно. Кроме того, забегая вперёд, заметим, что ряд продвинутых возможностей, таких как возможность делать запросы на другой домен и указывать таймаут, в синхронном режиме не работают.</p>
+<p>Из всего вышесказанного уже должно быть понятно, что синхронные запросы используются чрезвычайно редко, а асинхронные – почти всегда.</p>
+<p>Для того, чтобы запрос стал асинхронным, укажем параметр <code>async</code> равным <code>true</code>.</p>
+<p>Изменённый JS-код:</p>
+<div class="code-example" data-highlight-block="6-7" data-highlight-inline="2:31-35" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var xhr = new XMLHttpRequest();
+
+xhr.open('GET', 'phones.json', true);
+
+xhr.send(); // (1)
+
+xhr.onreadystatechange = function() { // (3)
+  if (xhr.readyState != 4) return;
+
+  button.innerHTML = 'Готово!';
+
+  if (xhr.status != 200) {
+    alert(xhr.status + ': ' + xhr.statusText);
+  } else {
+    alert(xhr.responseText);
+  }
+
+}
+
+button.innerHTML = 'Загружаю...'; // (2)
+button.disabled = true;</code></pre>
+</div>
+</div>
+</div><p>Если в <code>open</code> указан третий аргумент <code>true</code> (или если третьего аргумента нет), то запрос выполняется асинхронно. Это означает, что после вызова <code>xhr.send()</code> в строке <code>(1)</code> код не «зависает», а преспокойно продолжает выполняться, выполняется строка <code>(2)</code>, а результат приходит через событие <code>(3)</code>, мы изучим его чуть позже.</p>
+<p>Полный пример в действии:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">phones.json</div><div class="code-tabs__switch">server.js</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/ajax-xmlhttprequest/phones-async/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_download" href="/tutorial/zipview/phones-async.zip?plunkId=22ztE4DMqoTj8vgG0xmM" target="_blank"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/ajax-xmlhttprequest/phones-async/"></iframe></div><div class="code-tabs__section"><pre class="language-none line-numbers"><code>[
+    {
+        "age": 0,
+        "id": "motorola-xoom-with-wi-fi",
+        "imageUrl": "img/phones/motorola-xoom-with-wi-fi.0.jpg",
+        "name": "Motorola XOOM\u2122 with Wi-Fi",
+        "snippet": "The Next, Next Generation\r\n\r\nExperience the future with Motorola XOOM with Wi-Fi, the world's first tablet powered by Android 3.0 (Honeycomb)."
+    },
+    {
+        "age": 1,
+        "id": "motorola-xoom",
+        "imageUrl": "img/phones/motorola-xoom.0.jpg",
+        "name": "MOTOROLA XOOM\u2122",
+        "snippet": "The Next, Next Generation\n\nExperience the future with MOTOROLA XOOM, the world's first tablet powered by Android 3.0 (Honeycomb)."
+    },
+    {
+        "age": 2,
+        "carrier": "AT&amp;amp;T",
+        "id": "motorola-atrix-4g",
+        "imageUrl": "img/phones/motorola-atrix-4g.0.jpg",
+        "name": "MOTOROLA ATRIX\u2122 4G",
+        "snippet": "MOTOROLA ATRIX 4G the world's most powerful smartphone."
+    },
+    {
+        "age": 3,
+        "id": "dell-streak-7",
+        "imageUrl": "img/phones/dell-streak-7.0.jpg",
+        "name": "Dell Streak 7",
+        "snippet": "Introducing Dell\u2122 Streak 7. Share photos, videos and movies together. It\u2019s small enough to carry around, big enough to gather around."
+    },
+    {
+        "age": 4,
+        "carrier": "Cellular South",
+        "id": "samsung-gem",
+        "imageUrl": "img/phones/samsung-gem.0.jpg",
+        "name": "Samsung Gem\u2122",
+        "snippet": "The Samsung Gem\u2122 brings you everything that you would expect and more from a touch display smart phone \u2013 more apps, more features and a more affordable price."
+    },
+    {
+        "age": 5,
+        "carrier": "Dell",
+        "id": "dell-venue",
+        "imageUrl": "img/phones/dell-venue.0.jpg",
+        "name": "Dell Venue",
+        "snippet": "The Dell Venue; Your Personal Express Lane to Everything"
+    },
+    {
+        "age": 6,
+        "carrier": "Best Buy",
+        "id": "nexus-s",
+        "imageUrl": "img/phones/nexus-s.0.jpg",
+        "name": "Nexus S",
+        "snippet": "Fast just got faster with Nexus S. A pure Google experience, Nexus S is the first phone to run Gingerbread (Android 2.3), the fastest version of Android yet."
+    },
+    {
+        "age": 7,
+        "carrier": "Cellular South",
+        "id": "lg-axis",
+        "imageUrl": "img/phones/lg-axis.0.jpg",
+        "name": "LG Axis",
+        "snippet": "Android Powered, Google Maps Navigation, 5 Customizable Home Screens"
+    },
+    {
+        "age": 8,
+        "id": "samsung-galaxy-tab",
+        "imageUrl": "img/phones/samsung-galaxy-tab.0.jpg",
+        "name": "Samsung Galaxy Tab\u2122",
+        "snippet": "Feel Free to Tab\u2122. The Samsung Galaxy Tab\u2122 brings you an ultra-mobile entertainment experience through its 7\u201d display, high-power processor and Adobe\u00ae Flash\u00ae Player compatibility."
+    },
+    {
+        "age": 9,
+        "carrier": "Cellular South",
+        "id": "samsung-showcase-a-galaxy-s-phone",
+        "imageUrl": "img/phones/samsung-showcase-a-galaxy-s-phone.0.jpg",
+        "name": "Samsung Showcase\u2122 a Galaxy S\u2122 phone",
+        "snippet": "The Samsung Showcase\u2122 delivers a cinema quality experience like you\u2019ve never seen before. Its innovative 4\u201d touch display technology provides rich picture brilliance, even outdoors"
+    },
+    {
+        "age": 10,
+        "carrier": "Verizon",
+        "id": "droid-2-global-by-motorola",
+        "imageUrl": "img/phones/droid-2-global-by-motorola.0.jpg",
+        "name": "DROID\u2122 2 Global by Motorola",
+        "snippet": "The first smartphone with a 1.2 GHz processor and global capabilities."
+    },
+    {
+        "age": 11,
+        "carrier": "Verizon",
+        "id": "droid-pro-by-motorola",
+        "imageUrl": "img/phones/droid-pro-by-motorola.0.jpg",
+        "name": "DROID\u2122 Pro by Motorola",
+        "snippet": "The next generation of DOES."
+    },
+    {
+        "age": 12,
+        "carrier": "AT&amp;amp;T",
+        "id": "motorola-bravo-with-motoblur",
+        "imageUrl": "img/phones/motorola-bravo-with-motoblur.0.jpg",
+        "name": "MOTOROLA BRAVO\u2122 with MOTOBLUR\u2122",
+        "snippet": "An experience to cheer about."
+    },
+    {
+        "age": 13,
+        "carrier": "T-Mobile",
+        "id": "motorola-defy-with-motoblur",
+        "imageUrl": "img/phones/motorola-defy-with-motoblur.0.jpg",
+        "name": "Motorola DEFY\u2122 with MOTOBLUR\u2122",
+        "snippet": "Are you ready for everything life throws your way?"
+    },
+    {
+        "age": 14,
+        "carrier": "T-Mobile",
+        "id": "t-mobile-mytouch-4g",
+        "imageUrl": "img/phones/t-mobile-mytouch-4g.0.jpg",
+        "name": "T-Mobile myTouch 4G",
+        "snippet": "The T-Mobile myTouch 4G is a premium smartphone designed to deliver blazing fast 4G speeds so that you can video chat from practically anywhere, with or without Wi-Fi."
+    },
+    {
+        "age": 15,
+        "carrier": "US Cellular",
+        "id": "samsung-mesmerize-a-galaxy-s-phone",
+        "imageUrl": "img/phones/samsung-mesmerize-a-galaxy-s-phone.0.jpg",
+        "name": "Samsung Mesmerize\u2122 a Galaxy S\u2122 phone",
+        "snippet": "The Samsung Mesmerize\u2122 delivers a cinema quality experience like you\u2019ve never seen before. Its innovative 4\u201d touch display technology provides rich picture brilliance,even outdoors"
+    },
+    {
+        "age": 16,
+        "carrier": "Sprint",
+        "id": "sanyo-zio",
+        "imageUrl": "img/phones/sanyo-zio.0.jpg",
+        "name": "SANYO ZIO",
+        "snippet": "The Sanyo Zio by Kyocera is an Android smartphone with a combination of ultra-sleek styling, strong performance and unprecedented value."
+    },
+    {
+        "age": 17,
+        "id": "samsung-transform",
+        "imageUrl": "img/phones/samsung-transform.0.jpg",
+        "name": "Samsung Transform\u2122",
+        "snippet": "The Samsung Transform\u2122 brings you a fun way to customize your Android powered touch screen phone to just the way you like it through your favorite themed \u201cSprint ID Service Pack\u201d."
+    },
+    {
+        "age": 18,
+        "id": "t-mobile-g2",
+        "imageUrl": "img/phones/t-mobile-g2.0.jpg",
+        "name": "T-Mobile G2",
+        "snippet": "The T-Mobile G2 with Google is the first smartphone built for 4G speeds on T-Mobile's new network. Get the information you need, faster than you ever thought possible."
+    },
+    {
+        "age": 19,
+        "id": "motorola-charm-with-motoblur",
+        "imageUrl": "img/phones/motorola-charm-with-motoblur.0.jpg",
+        "name": "Motorola CHARM\u2122 with MOTOBLUR\u2122",
+        "snippet": "Motorola CHARM fits easily in your pocket or palm.  Includes MOTOBLUR service."
+    }
+]</code></pre></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>var http = require('http');
+var url = require('url');
+var querystring = require('querystring');
+var static = require('node-static');
+var file = new static.Server('.', {
+  cache: 0
+});
+
+
+function accept(req, res) {
+
+  if (req.url == '/phones.json') {
+    // искусственная задержка для наглядности
+    setTimeout(function() {
+      file.serve(req, res);
+    }, 2000);
+  } else {
+    file.serve(req, res);
+  }
+
+}
+
+
+// ------ запустить сервер -------
+
+if (!module.parent) {
+  http.createServer(accept).listen(8080);
+} else {
+  exports.accept = accept;
+}</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;button onclick="loadPhones()" id="button"&gt;Загрузить phones.json!&lt;/button&gt;
+
+  &lt;script&gt;
+    function loadPhones() {
+
+      var xhr = new XMLHttpRequest();
+
+      xhr.open('GET', 'phones.json', true);
+
+
+      xhr.send();
+
+
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState != 4) return;
+
+        button.innerHTML = 'Готово!';
+
+        if (xhr.status != 200) {
+          // обработать ошибку
+          alert(xhr.status + ': ' + xhr.statusText);
+        } else {
+          // вывести результат
+          alert(xhr.responseText);
+        }
+
+      }
+
+      button.innerHTML = 'Загружаю...';
+      button.disabled = true;
+    }
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><h1><a class="main__anchor" href="#событие-readystatechange" name="событие-readystatechange">Событие readystatechange</a></h1><p>Событие <code>readystatechange</code> происходит несколько раз в процессе отсылки и получения ответа. При этом можно посмотреть «текущее состояние запроса» в свойстве <code>xhr.readyState</code>.</p>
+<p>В примере выше мы использовали только состояние <code>4</code> (запрос завершён), но есть и другие.</p>
+<p>Все состояния, по <a href="http://www.w3.org/TR/XMLHttpRequest/#states">спецификации</a>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">const unsigned short UNSENT = 0; // начальное состояние
+const unsigned short OPENED = 1; // вызван open
+const unsigned short HEADERS_RECEIVED = 2; // получены заголовки
+const unsigned short LOADING = 3; // загружается тело (получен очередной пакет данных)
+const unsigned short DONE = 4; // запрос завершён</code></pre>
+</div>
+</div>
+</div><p>Запрос проходит их в порядке <code>0</code> → <code>1</code> → <code>2</code> → <code>3</code> → … → <code>3</code> → <code>4</code>, состояние <code>3</code> повторяется при каждом получении очередного пакета данных по сети.</p>
+<p>Пример ниже демонстрирует переключение между состояниями. В нём сервер отвечает на запрос <code>digits</code>, пересылая по строке из 1000 цифр раз в секунду.</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">server.js</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/ajax-xmlhttprequest/readystate/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_download" href="/tutorial/zipview/readystate.zip?plunkId=BomLM7ZfQJug4YqYq80c" target="_blank"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/ajax-xmlhttprequest/readystate/"></iframe></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>var http = require('http');
+var url = require('url');
+var querystring = require('querystring');
+var static = require('node-static');
+var file = new static.Server('.');
+
+function accept(req, res) {
+
+  if (req.url == '/digits') {
+
+    res.writeHead(200, {
+      'Content-Type': 'text/plain',
+      'Cache-Control': 'no-cache'
+    });
+
+    var i = 0;
+
+    var timer = setInterval(write, 1000);
+    write();
+
+    function write() {
+      res.write(new Array(1000).join(++i + '') + ' ');
+      if (i == 9) {
+        clearInterval(timer);
+        res.end();
+      }
+
+    }
+  } else {
+    file.serve(req, res);
+  }
+}
+
+
+
+// ----- запуск accept как сервера из консоли или как модуля ------
+
+if (!module.parent) {
+  http.createServer(accept).listen(8080);
+} else {
+  exports.accept = accept;
+}</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;button onclick="run()"&gt;Загрузить digits&lt;/button&gt;
+
+  &lt;ul id="log"&gt;&lt;/ul&gt;
+
+  &lt;script&gt;
+    function run() {
+
+      var xhr = new XMLHttpRequest();
+      write(xhr.readyState);
+
+      xhr.open('GET', 'digits', true);
+      write(xhr.readyState);
+
+      xhr.onreadystatechange = function() {
+        write(xhr.readyState + " получено символов:" + xhr.responseText.length);
+      };
+
+      xhr.send();
+    }
+
+    function write(text) {
+      var li = log.appendChild(document.createElement('li'));
+      li.innerHTML = text;
+    }
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Точка разрыва пакетов не гарантирована</span></div>
+<div class="important__content"><p>При состоянии <code>readyState=3</code> (получен очередной пакет) мы можем посмотреть текущие данные в <code>responseText</code> и, казалось бы, могли бы работать с этими данными как с «ответом на текущий момент».</p>
+<p>Однако, технически мы не управляем разрывами между сетевыми пакетами. Если протестировать пример выше в локальной сети, то в большинстве браузеров разрывы будут каждые 1000 символов, но в реальности пакет может прерваться на любом байте.</p>
+<p>Чем это опасно? Хотя бы тем, что символы русского языка в кодировке UTF-8 кодируются двумя байтами каждый – и разрыв может возникнуть <em>между ними</em>.</p>
+<p>Получится, что при очередном <code>readyState</code> в конце <code>responseText</code> будет байт-полсимвола, то есть он не будет корректной строкой – частью ответа! Если в скрипте как-то по-особому это не обработать, то неизбежны проблемы.</p>
+</div></div>
+<h2><a class="main__anchor" href="#http-заголовки" name="http-заголовки">HTTP-заголовки</a></h2><p><code>XMLHttpRequest</code> умеет как указывать свои заголовки в запросе, так и читать присланные в ответ.</p>
+<p>Для работы с HTTP-заголовками есть 3 метода:</p>
+<dl>
+<dt><code>setRequestHeader(name, value)</code></dt>
+<dd>
+<p>Устанавливает заголовок <code>name</code> запроса со значением <code>value</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">xhr.setRequestHeader('Content-Type', 'application/json');</code></pre>
+</div>
+</div>
+</div></dd>
+</dl>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Ограничения на заголовки</span></div>
+<div class="important__content"><p>Нельзя установить заголовки, которые контролирует браузер, например <code>Referer</code> или <code>Host</code> и ряд других (полный список <a href="http://www.w3.org/TR/XMLHttpRequest/#the-setrequestheader-method">тут</a>).</p>
+<p>Это ограничение существует в целях безопасности и для контроля корректности запроса.</p>
+</div></div>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Поставленный заголовок нельзя снять</span></div>
+<div class="important__content"><p>Особенностью <code>XMLHttpRequest</code> является то, что отменить <code>setRequestHeader</code> невозможно.</p>
+<p>Повторные вызовы лишь добавляют информацию к заголовку, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">xhr.setRequestHeader('X-Auth', '123');
+xhr.setRequestHeader('X-Auth', '456');
+
+// в результате будет заголовок:
+// X-Auth: 123, 456</code></pre>
+</div>
+</div>
+</div></div></div>
+<dl>
+<dt><code>getResponseHeader(name)</code></dt>
+<dd>
+<p>Возвращает значение заголовка ответа <code>name</code>, кроме <code>Set-Cookie</code> и <code>Set-Cookie2</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">xhr.getResponseHeader('Content-Type')</code></pre>
+</div>
+</div>
+</div></dd>
+<dt><code>getAllResponseHeaders()</code></dt>
+<dd>
+<p>Возвращает все заголовки ответа, кроме <code>Set-Cookie</code> и <code>Set-Cookie2</code>.</p>
+<p>Заголовки возвращаются в виде единой строки, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">Cache-Control: max-age=31536000
+Content-Length: 4260
+Content-Type: image/png
+Date: Sat, 08 Sep 2012 16:53:16 GMT</code></pre>
+</div>
+</div>
+</div><p>Между заголовками стоит перевод строки в два символа <code>"\r\n"</code> (не зависит от ОС), значение заголовка отделено двоеточием с пробелом <code>": "</code>. Этот формат задан стандартом.</p>
+<p>Таким образом, если хочется получить объект с парами заголовок-значение, то эту строку необходимо разбить и обработать.</p>
+</dd>
+</dl>
+<h2><a class="main__anchor" href="#таймаут" name="таймаут">Таймаут</a></h2><p>Максимальную продолжительность асинхронного запроса можно задать свойством <code>timeout</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">xhr.timeout = 30000; // 30 секунд (в миллисекундах)</code></pre>
+</div>
+</div>
+</div><p>При превышении этого времени запрос будет оборван и сгенерировано событие <code>ontimeout</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">xhr.ontimeout = function() {
+  alert( 'Извините, запрос превысил максимальное время' );
+}</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#полный-список-событий" name="полный-список-событий">Полный список событий</a></h2><p>Современная <a href="http://www.w3.org/TR/XMLHttpRequest/#events">спецификация</a> предусматривает следующие события по ходу обработки запроса:</p>
+<ul>
+<li><code>loadstart</code> – запрос начат.</li>
+<li><code>progress</code> – браузер получил очередной пакет данных, можно прочитать текущие полученные данные в <code>responseText</code>.</li>
+<li><code>abort</code> – запрос был отменён вызовом <code>xhr.abort()</code>.</li>
+<li><code>error</code> – произошла ошибка.</li>
+<li><code>load</code> – запрос был успешно (без ошибок) завершён.</li>
+<li><code>timeout</code> – запрос был прекращён по таймауту.</li>
+<li><code>loadend</code> – запрос был завершён (успешно или неуспешно)</li>
+</ul>
+<p>Используя эти события можно более удобно отслеживать загрузку (<code>onload</code>) и ошибку (<code>onerror</code>), а также количество загруженных данных (<code>onprogress</code>).</p>
+<p>Ранее мы видели ещё одно событие – <code>readystatechange</code>. Оно появилось гораздо раньше, ещё до появления текущего стандарта.</p>
+<p>В современных браузерах от него можно отказаться в пользу других, необходимо лишь, как мы увидим далее,  учесть особенности IE8-9.</p>
+<h2><a class="main__anchor" href="#ie8-9-xdomainrequest" name="ie8-9-xdomainrequest">IE8,9: XDomainRequest</a></h2><p>В IE8 и IE9 поддержка <code>XMLHttpRequest</code> ограничена:</p>
+<ul>
+<li>Не поддерживаются события, кроме <code>onreadystatechange</code>.</li>
+<li>Некорректно поддерживается состояние <code>readyState = 3</code>: браузер может сгенерировать его только один раз во время запроса, а не при каждом пакете данных. Кроме того, он не даёт доступ к ответу <code>responseText</code> до того, как он будет до конца получен.</li>
+</ul>
+<p>Дело в том, что, когда создавались эти браузеры, спецификации были не до конца проработаны. Поэтому разработчики браузера решили добавить свой объект <code>XDomainRequest</code>, который реализовывал часть возможностей современного стандарта.</p>
+<p>А обычный <code>XMLHttpRequest</code> решили не трогать, чтобы ненароком не сломать существующий код.</p>
+<p>Мы подробнее поговорим про <code>XDomainRequest</code> в главе <a href="/xhr-crossdomain">XMLHttpRequest: кросс-доменные запросы</a>. Пока лишь заметим, что для того, чтобы получить некоторые из современных возможностей в IE8,9 – вместо <code>new XMLHttpRequest()</code> нужно использовать <code>new XDomainRequest</code>.</p>
+<p>Кросс-браузерно:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var XHR = ("onload" in new XMLHttpRequest()) ? XMLHttpRequest : XDomainRequest;
+var xhr = new XHR();</code></pre>
+</div>
+</div>
+</div><p>Теперь в IE8,9 поддерживаются события <code>onload</code>, <code>onerror</code> и <code>onprogress</code>. Это именно для IE8,9. Для IE10 обычный <code>XMLHttpRequest</code> уже является полноценным.</p>
+<h3><a class="main__anchor" href="#ie9-и-кеширование" name="ie9-и-кеширование">IE9- и кеширование</a></h3><p>Обычно ответы на запросы <code>XMLHttpRequest</code> кешируются, как и обычные страницы.</p>
+<p>Но IE9- по умолчанию кеширует все ответы, не снабжённые антикеш-заголовком. Другие браузеры этого не делают. Чтобы этого избежать, сервер должен добавить в ответ соответствующие антикеш-заголовки, например <code>Cache-Control: no-cache</code>.</p>
+<p>Впрочем, использовать заголовки типа <code>Expires</code>, <code>Last-Modified</code> и <code>Cache-Control</code> рекомендуется в любом случае, чтобы дать понять браузеру (не обязательно IE), что ему следует делать.</p>
+<p>Альтернативный вариант – добавить в URL запроса случайный параметр, предотвращающий кеширование.</p>
+<p>Например, вместо <code>xhr.open('GET', 'service', false)</code> написать:</p>
+<div class="code-example" data-highlight-inline="0:16-44" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">xhr.open('GET', 'service?r=' + Math.random(), false);</code></pre>
+</div>
+</div>
+</div><p>По историческим причинам такой способ предотвращения кеширования можно увидеть много где, так как старые браузеры плохо обрабатывали кеширующие заголовки. Сейчас серверные заголовки поддерживаются хорошо.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Типовой код для GET-запроса при помощи <code>XMLHttpRequest</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var xhr = new XMLHttpRequest();
+
+xhr.open('GET', '/my/url', true);
+
+xhr.send();
+
+xhr.onreadystatechange = function() {
+  if (this.readyState != 4) return;
+
+  // по окончании запроса доступны:
+  // status, statusText
+  // responseText, responseXML (при content-type: text/xml)
+
+  if (this.status != 200) {
+    // обработать ошибку
+    alert( 'ошибка: ' + (this.status ? this.statusText : 'запрос не удался') );
+    return;
+  }
+
+  // получить результат из this.responseText или this.responseXML
+}</code></pre>
+</div>
+</div>
+</div><p>Мы разобрали следующие методы <code>XMLHttpRequest</code>:</p>
+<ul>
+<li><code>open(method, url, async, user, password)</code></li>
+<li><code>send(body)</code></li>
+<li><code>abort()</code></li>
+<li><code>setRequestHeader(name, value)</code></li>
+<li><code>getResponseHeader(name)</code></li>
+<li><code>getAllResponseHeaders()</code></li>
+</ul>
+<p>Свойства <code>XMLHttpRequest</code>:</p>
+<ul>
+<li><code>timeout</code></li>
+<li><code>responseText</code></li>
+<li><code>responseXML</code></li>
+<li><code>status</code></li>
+<li><code>statusText</code></li>
+</ul>
+<p>События:</p>
+<ul>
+<li><code>onreadystatechange</code></li>
+<li><code>ontimeout</code></li>
+<li><code>onerror</code></li>
+<li><code>onload</code></li>
+<li><code>onprogress</code></li>
+<li><code>onabort</code></li>
+<li><code>onloadstart</code></li>
+<li><code>onloadend</code></li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

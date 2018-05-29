@@ -1,0 +1,151 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Примеси" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В JavaScript невозможно унаследовать от двух и более объектов. Ссылка <code>__proto__</code> – только одна.</p>
+<p>Но потребность такая существует – к примеру, мы написали код, релизующий методы работы с шаблонизатором или методы по обмену событиями, и хочется легко и непринуждённо добавлять эти возможности к любому классу.</p>
+<p>Обычно это делают через примеси.</p>
+<p>Примесь (англ. mixin) – класс или объект, реализующий какое-либо чётко выделенное поведение. Используется для уточнения поведения других классов, не предназначен для самостоятельного использования.</p>
+<!--break-->
+<h2><a class="main__anchor" href="#пример-примеси" name="пример-примеси">Пример примеси</a></h2><p>Самый простой вариант примеси – это объект с полезными методами, которые мы просто копируем в нужный прототип.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="0-0,10-10" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// примесь
+var sayHiMixin = {
+  sayHi: function() {
+    alert("Привет " + this.name);
+  },
+  sayBye: function() {
+    alert("Пока " + this.name);
+  }
+};
+
+// использование:
+function User(name) {
+  this.name = name;
+}
+
+// передать методы примеси
+for(var key in sayHiMixin) User.prototype[key] = sayHiMixin[key];
+
+// User "умеет" sayHi
+new User("Вася").sayHi(); // Привет Вася</code></pre>
+</div>
+</div>
+</div><p>Как видно из примера, методы примеси активно используют <code>this</code> и предназначены именно для запуска в контексте «объекта-носителя примеси».</p>
+<p>Если какие-то из методов примеси не нужны – их можно перезаписать своими после копирования.</p>
+<h2><a class="main__anchor" href="#примесь-для-событий" name="примесь-для-событий">Примесь для событий</a></h2><p>Теперь пример из реальной жизни.</p>
+<p>Важный аспект, который может понадобиться объектам – это умение работать с событиями.</p>
+<p>То есть, чтобы объект мог специальным вызовом генерировать «уведомление о событии», а на эти уведомления другие объекты могли «подписываться», чтобы их получать.</p>
+<p>Например, объект «Пользователь» при входе на сайт может генерировать событие <code>"login"</code>, а другие объекты, например «Календарь» может такие уведомления получать и подгружать информацию о пользователе.</p>
+<p>Или объект «Меню» может при выборе пункта меню генерировать событие <code>"select"</code> с информацией о выбранном пункте меню, а другие объекты – подписавшись на это событие, будут узнавать об этом.</p>
+<p>События – это средство «поделиться информацией» с неопределённым кругом заинтересованных лиц. А там уже кому надо – тот среагирует.</p>
+<p>Примесь <code>eventMixin</code>, реализующая события:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var eventMixin = {
+
+  /**
+   * Подписка на событие
+   * Использование:
+   *  menu.on('select', function(item) { ... }
+  */
+  on: function(eventName, handler) {
+    if (!this._eventHandlers) this._eventHandlers = {};
+    if (!this._eventHandlers[eventName]) {
+      this._eventHandlers[eventName] = [];
+    }
+    this._eventHandlers[eventName].push(handler);
+  },
+
+  /**
+   * Прекращение подписки
+   *  menu.off('select',  handler)
+   */
+  off: function(eventName, handler) {
+    var handlers = this._eventHandlers &amp;&amp; this._eventHandlers[eventName];
+    if (!handlers) return;
+    for(var i=0; i&lt;handlers.length; i++) {
+      if (handlers[i] == handler) {
+        handlers.splice(i--, 1);
+      }
+    }
+  },
+
+  /**
+   * Генерация события с передачей данных
+   *  this.trigger('select', item);
+   */
+  trigger: function(eventName /*, ... */) {
+
+    if (!this._eventHandlers || !this._eventHandlers[eventName]) {
+      return; // обработчиков для события нет
+    }
+
+    // вызвать обработчики
+    var handlers = this._eventHandlers[eventName];
+    for (var i = 0; i &lt; handlers.length; i++) {
+      handlers[i].apply(this, [].slice.call(arguments, 1));
+    }
+
+  }
+};</code></pre>
+</div>
+</div>
+</div><p>Здесь есть три метода:</p>
+<ol>
+<li><code>.on(имя события, функция)</code> – назначает функцию к выполнению при наступлении события с данным именем. Такие функции хранятся в защищённом свойстве объекта <code>_eventHandlers</code>.</li>
+<li><code>.off(имя события, функция)</code> – удаляет функцию из списка предназначенных к выполнению.</li>
+<li><code>.trigger(имя события, аргументы)</code> – генерирует событие, при этом вызываются все назначенные на него функции, и им передаются аргументы.</li>
+</ol>
+<p>Использование:</p>
+<div class="code-example" data-highlight-block="11-11,18-20" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// Класс Menu с примесью eventMixin
+function Menu() {
+  // ...
+}
+
+for(var key in eventMixin) {
+  Menu.prototype[key] = eventMixin[key];
+}
+
+// Генерирует событие select при выборе значения
+Menu.prototype.choose = function(value) {
+  this.trigger("select", value);
+}
+
+// Создадим меню
+var menu = new Menu();
+
+// При наступлении события select вызвать эту функцию
+menu.on("select", function(value) {
+  alert("Выбрано значение " + value);
+});
+
+// Запускаем выбор (событие select вызовет обработчики)
+menu.choose("123");</code></pre>
+</div>
+</div>
+</div><p>…То есть, смысл событий – обычно в том, что объект, в процессе своей деятельности, внутри себя (<code>this.trigger</code>) генерирует уведомления, на которые внешний код через <code>menu.on(...)</code> может быть подписан. И узнавать из них ценную информацию о происходящем, например – что выбран некий пункт меню.</p>
+<p>Один раз написав методы <code>on/off/trigger</code> в примеси, мы затем можем использовать их во множестве прототипов.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Примесь – объект, содержащий методы и свойства для реализации конкретного функционала.
+Возможны вариации этого приёма проектирования. Например, примесь может предусматривать конструктор, который должен запускаться в конструкторе объекта. Но как правило просто набора методов хватает.</li>
+<li>Для добавления примеси в класс – её просто «подмешивают» в прототип.</li>
+<li>«Подмешать» можно сколько угодно примесей, но если имена методов в разных примесях совпадают, то возможны конфликты. Их уже разрешать – разработчику. Например, можно заменить конфликтующий метод на свой, который будет решать несколько задач сразу. Конфликты при грамотно оформленных примесях возникают редко.</li>
+</ul>
+</div></meta></article></main></div></body></html>

@@ -1,0 +1,169 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Введение в методы и свойства" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Все значения в JavaScript, за исключением <code>null</code> и <code>undefined</code>, содержат набор вспомогательных функций и значений, доступных «через точку».</p>
+<p>Такие функции называют «методами», а значения – «свойствами». Здесь мы рассмотрим основы использования свойств и методов.</p>
+<cut>
+<h2><a class="main__anchor" href="#свойство-str-length" name="свойство-str-length">Свойство str.length</a></h2><p>У строки есть <em>свойство</em> <code>length</code>, содержащее длину:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "Привет, мир!".length ); // 12</code></pre>
+</div>
+</div>
+</div><p>Можно и записать строку в переменную, а потом запросить её свойство:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "Привет, мир!";
+alert( str.length ); // 12</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#метод-str-touppercase" name="метод-str-touppercase">Метод str.toUpperCase()</a></h2><p>Также у строк есть <em>метод</em> <code>toUpperCase()</code>, который возвращает строку в верхнем регистре:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var hello = "Привет, мир!";
+
+alert( hello.toUpperCase() ); // "ПРИВЕТ, МИР!"</code></pre>
+</div>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Вызов метода – через круглые скобки!</span></div>
+<div class="important__content"><p>Обратите внимание, для вызова метода обязательно нужны круглые скобки.</p>
+<p>Посмотрите, например, результат обращения к <code>toUpperCase</code> без скобок:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var hello = "Привет";
+
+alert( hello.toUpperCase ); // function...</code></pre>
+</div>
+</div>
+</div><p>Метод – это встроенная команда («функция», мы поговорим о них позже), которую нужно вызвать для получения значения. При обращении без скобок мы получим саму эту функцию. Как правило браузер выведет её как-то так: <code>"function toUpperCase() { ... }"</code>.</p>
+<p>А чтобы получить результат – нужно произвести её вызов, добавив скобки:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var hello = "Привет";
+
+alert( hello.toUpperCase() ); // ПРИВЕТ</code></pre>
+</div>
+</div>
+</div></div></div>
+<p>Более подробно с различными свойствами и методами строк мы познакомимся в главе <a href="/string">Строки</a>.</p>
+<h2><a class="main__anchor" href="#метод-num-tofixed-n" name="метод-num-tofixed-n">Метод num.toFixed(n)</a></h2><p>Есть методы и у чисел, например <code>num.toFixed(n)</code>. Он округляет число <code>num</code> до <code>n</code> знаков после запятой, при необходимости добивает нулями до данной длины и возвращает в виде строки (удобно для форматированного вывода):</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var n = 12.345;
+
+alert( n.toFixed(2) ); // "12.35"
+alert( n.toFixed(0) ); // "12"
+alert( n.toFixed(5) ); // "12.34500"</code></pre>
+</div>
+</div>
+</div><p>Детали работы <code>toFixed</code> разобраны в главе <a href="/number">Числа</a>.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Обращение к методам чисел</span></div>
+<div class="important__content"><p>К методу числа можно обратиться и напрямую:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 12.34.toFixed(1) ); // 12.3</code></pre>
+</div>
+</div>
+</div><p>…Но если число целое, то будет проблема:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert(12.toFixed(1)); // ошибка!</code></pre>
+</div>
+</div>
+</div><p>Ошибка произойдёт потому, что JavaScript ожидает десятичную дробь после точки.</p>
+<p>Это – особенность синтаксиса JavaScript. Вот так – будет работать:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 12..toFixed(1) ); // 12.0</code></pre>
+</div>
+</div>
+</div></div></div>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>В этой главе мы познакомились с методами и свойствами.</p>
+<p>Почти все значения в JavaScript, кроме разве что <code>null</code> и <code>undefined</code> имеют их и предоставляют через них разный функционал.</p>
+<p>Далее мы подробно разберём основные свойства и методы структур данных в JavaScript.</p>
+</cut></div></meta></article></main></div></body></html>

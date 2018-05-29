@@ -1,0 +1,469 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Графические компоненты" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Первый и главный шаг в наведении порядка – это оформить код в объекты, каждый из которых будет решать свою задачу.</p>
+<p>Здесь мы сосредоточимся на графических компонентах, которые также называют «виджетами».</p>
+<p>В браузерах есть встроенные виджеты, например <code>&lt;select&gt;</code>, <code>&lt;input&gt;</code> и другие элементы, о которых мы даже и не думаем, «как они работают». Они «просто работают»: показывают значение, вызывают события…</p>
+<p>Наша задача – сделать то же самое на уровне выше. Мы будем создавать объекты, которые генерируют меню, диалог или другие компоненты интерфейса, и дают возможность удобно работать с ними.</p>
+<h2><a class="main__anchor" href="#виджет-menu" name="виджет-menu">Виджет Menu</a></h2><p>Мы начнём работу с виджета, который предусматривает уже готовую разметку.</p>
+<p>То есть, в нужном месте HTML находится DOM-структура для меню – заголовок и список опций:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div class="menu" id="sweets-menu"&gt;
+  &lt;span class="title"&gt;Сладости&lt;/span&gt;
+  &lt;ul&gt;
+    &lt;li&gt;Торт&lt;/li&gt;
+    &lt;li&gt;Пончик&lt;/li&gt;
+    &lt;li&gt;...&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</div><p>Далее она может дополняться, изменяться, но в начале – она такая.</p>
+<p>Обратим внимание на важные соглашения виджета:</p>
+<dl>
+<dt>Вся разметка заключена в корневой элемент <code>&lt;div class="menu" id="sweets-menu"&gt;</code>.</dt>
+<dd>
+<p>Это очень удобно: вынул этот элемент из DOM – нет меню, вставил в другое место – переместил меню. Кроме того, можно удобно искать подэлементы.</p>
+</dd>
+<dt>Внутри корневого элемента – только классы, не <code>id</code>.</dt>
+<dd>
+<p>Документ вполне может содержать много различных меню. Они не должны конфликтовать между собой, поэтому для разметки везде используются классы.</p>
+<p>Исключение – корневой элемент. В данном случае мы предполагаем, что данное конкретное «меню сладостей» в документе только одно, поэтому даём ему <code>id</code>.</p>
+</dd>
+</dl>
+<h1><a class="main__anchor" href="#класс-виджета" name="класс-виджета">Класс виджета</a></h1><p>Для работы с разметкой будем создавать объект <code>new Menu</code> и передавать ему корневой элемент. В конструкторе он поставит необходимые обработчики:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Menu(options) {
+  var elem = options.elem;
+
+  elem.onmousedown = function() {
+    return false;
+  }
+
+  elem.onclick = function(event) {
+    if (event.target.closest('.title')) {
+      elem.classList.toggle('open');
+    }
+  };
+
+}
+
+// использование
+var menu = new Menu({
+  elem: document.getElementById('sweets-menu')
+});</code></pre>
+</div>
+</div>
+</div><p>Меню:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">menu.js</div><div class="code-tabs__switch">style.css</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/widgets-structure/menu/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/wcdXjYE7iO4plB4DJIxd?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/widgets-structure/menu/"></iframe></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>function Menu(options) {
+  var elem = options.elem;
+
+  elem.onmousedown = function() {
+    return false;
+  }
+
+  elem.onclick = function(event) {
+    if (event.target.closest('.title')) {
+      elem.classList.toggle('open');
+    }
+  };
+
+}</code></pre></div><div class="code-tabs__section"><pre class="language-css line-numbers"><code>.menu ul {
+  display: none;
+  margin: 0;
+}
+
+.menu .title {
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.menu .title:before {
+  content: '▶';
+  padding-right: 6px;
+  color: green;
+}
+
+.menu.open ul {
+  display: block;
+}
+
+.menu.open .title:before {
+  content: '▼';
+}</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;link rel="stylesheet" href="style.css"&gt;
+  &lt;script src="https://cdn.polyfill.io/v1/polyfill.js?features=Element.prototype.closest"&gt;&lt;/script&gt;
+  &lt;script src="menu.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;div id="sweets-menu" class="menu"&gt;
+    &lt;span class="title"&gt;Сладости&lt;/span&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Торт&lt;/li&gt;
+      &lt;li&gt;Пончик&lt;/li&gt;
+      &lt;li&gt;Пирожное&lt;/li&gt;
+      &lt;li&gt;Шоколадка&lt;/li&gt;
+      &lt;li&gt;Мороженое&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+
+  &lt;script&gt;
+    var menu = new Menu({
+      elem: document.getElementById('sweets-menu')
+    });
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>Это, конечно, только первый шаг, но уже здесь видны некоторые важные соглашения в коде.</p>
+<dl>
+<dt>У конструктора только один аргумент – объект <code>options</code>.</dt>
+<dd>
+<p>Это удобно, так как у графических компонентов обычно много настроек, большинство из которых имеют разумные значения «по умолчанию». Если передавать аргументы через запятую – их будет слишком много.</p>
+</dd>
+<dt>Обработчики назначаются через делегирование.</dt>
+<dd>
+<p>Вместо того, чтобы найти элемент и поставить обработчик на него:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var titleElem = elem.querySelector('.title');
+
+titleElem.onclick = function() {
+  elem.classList.toggle('open');
+}</code></pre>
+</div>
+</div>
+</div><p>…Мы ставим обработчик на корневой <code>elem</code> и используем делегирование:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">elem.onclick = function(event) {
+  if (event.target.closest('.title')) {
+    elem.classList.toggle('open');
+  }
+};</code></pre>
+</div>
+</div>
+</div><p>Это ускоряет инициализацию, так как не надо искать элементы, и даёт возможность в любой момент менять DOM внутри, в том числе через <code>innerHTML</code>, без необходимости переставлять обработчик.</p>
+</dd>
+</dl>
+<p>В этот код лучше добавить дополнительную проверку на то, что найденный <code>.title</code> находится внутри <code>elem</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">elem.onclick = function(event) {
+  var closestTitle = event.target.closest('.title');
+  if (closestTitle &amp;&amp; elem.contains(closestTitle)) {
+    elem.classList.toggle('open');
+  }
+};</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#публичные-методы" name="публичные-методы">Публичные методы</a></h2><p>Уважающий себя компонент обычно имеет публичные методы, которые позволяют управлять им снаружи.</p>
+<p>Рассмотрим повнимательнее этот фрагмент:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">if (event.target.closest('.title')) {
+  elem.classList.toggle('open');
+}</code></pre>
+</div>
+</div>
+</div><p>Здесь в обработчике события сразу код работы с элементом. Пока одна строка – всё понятно, но если их будет много, то при чтении понадобится долго и упорно вникать: «А что же, всё-таки, такое делается при клике?»</p>
+<p>Для улучшения читаемости выделим обработчик в отдельную функцию <code>toggle</code>, которая к тому же станет полезным публичным методом:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Menu(options) {
+  var elem = options.elem;
+
+  elem.onmousedown = function() {
+    return false;
+  }
+
+  elem.onclick = function(event) {
+    if (event.target.closest('.title')) {
+      toggle();
+    }
+  };
+
+  function toggle() {
+    elem.classList.toggle('open');
+  }
+
+  this.toggle = toggle;
+}</code></pre>
+</div>
+</div>
+</div><p>Теперь метод <code>toggle</code> можно использовать и снаружи:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var menu = new Menu(...);
+menu.toggle();</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#генерация-dom-элемента" name="генерация-dom-элемента">Генерация DOM-элемента</a></h2><p>До этого момента меню «оживляло» уже существующий HTML.</p>
+<p>Но далеко не всегда в HTML уже есть готовая разметка. В сложных интерфейсах намного чаще её нет, а есть данные, на основе которых компонент генерирует разметку.</p>
+<p>В случае меню, данные – это набор пунктов меню, которые передаются конструктору.</p>
+<p>Для генерации DOM добавим меню три метода:</p>
+<ul>
+<li><code>render()</code> – генерирует корневой DOM-элемент и заголовок меню.</li>
+<li><code>renderItems()</code> – генерирует DOM для списка опций <code>ul/li</code>.</li>
+<li><code>getElem()</code> – возвращает DOM-элемент меню, при необходимости запуская генерацию, публичный метод.</li>
+</ul>
+<p>Функция генерации корневого элемента с заголовком <code>render</code> отделена от генерации списка <code>renderItems</code>. Почему – будет видно чуть далее.</p>
+<p>Новый способ использования меню:</p>
+<div class="code-example" data-highlight-block="0-0,12-12,15-15" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// создать объект меню с данным заголовком и опциями
+var menu = new Menu({
+  title: "Сладости",
+  items: [
+    "Торт",
+    "Пончик",
+    "Пирожное",
+    "Шоколадка",
+    "Мороженое"
+  ]
+});
+
+// получить сгенерированный DOM-элемент меню
+var elem = menu.getElem();
+
+// вставить меню в нужное место страницы
+document.body.appendChild(elem);</code></pre>
+</div>
+</div>
+</div><p>Код <code>Menu</code> с новыми методами:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Menu(options) {
+  var elem;
+
+  function getElem() {
+    if (!elem) render();
+    return elem;
+  }
+
+  function render() {
+    elem = document.createElement('div');
+    elem.className = "menu";
+
+    var titleElem = document.createElement('span');
+    elem.appendChild(titleElem);
+    titleElem.className = "title";
+    titleElem.textContent = options.title;
+
+    elem.onmousedown = function() {
+      return false;
+    };
+
+    elem.onclick = function(event) {
+      if (event.target.closest('.title')) {
+        toggle();
+      }
+    }
+
+  }
+
+  function renderItems() {
+    var items = options.items || [];
+    var list = document.createElement('ul');
+    items.forEach(function(item) {
+      var li = document.createElement('li');
+      li.textContent = item;
+      list.appendChild(li);
+    });
+    elem.appendChild(list);
+  }
+
+  function open() {
+    if (!elem.querySelector('ul')) {
+      renderItems();
+    }
+    elem.classList.add('open');
+  };
+
+  function close() {
+    elem.classList.remove('open');
+  };
+
+  function toggle() {
+    if (elem.classList.contains('open')) close();
+    else open();
+  };
+
+  this.getElem = getElem;
+  this.toggle = toggle;
+  this.close = close;
+  this.open = open;
+}</code></pre>
+</div>
+</div>
+</div><p>Отметим некоторые особенности этого кода.</p>
+<dl>
+<dt>Обработчики отделяются от реальных действий.</dt>
+<dd>
+<p>В обработчике <code>onclick</code> мы «ловим» событие и выясняем, что именно произошло. Возможно, нужно проверить  <code>event.target</code>, координаты, клавиши-модификаторы, и т.п. Это всё можно делать здесь же.</p>
+<p>Выяснив, что нужно сделать, обработчик <code>onclick</code> не делает это сам, а вызывает для этого соответствующий метод. Этот метод уже не знает ничего о событии, он просто делает что-то с виджетом. Его можно вызвать и отдельно, не из обработчика.</p>
+<p>Здесь есть ряд важных плюсов:</p>
+</dd>
+</dl>
+<ul>
+<li>Обработчик <code>onclick</code> не «распухает» чрезмерно.</li>
+<li>Код гораздо лучше читается.</li>
+<li>Метод можно повторно использовать, в том числе и сделать публичным, как в коде выше.</li>
+</ul>
+<dl>
+<dt>Генерация DOM, по возможности, должна быть «ленивой».</dt>
+<dd>
+<p>Мы стараемся откладывать работу до момента, когда она реально нужна. Например, когда <code>new Menu</code> создаётся, то переменная <code>elem</code> лишь объявляется. DOM-дерево будет сгенерировано только при вызове <code>getElem()</code> функцией <code>render()</code>.</p>
+<p>Более того! Пока меню закрыто – достаточно заголовка. Кроме того, возможно, посетитель вообще никогда не раскроет это меню, так зачем генерировать список раньше времени? А при первом открытиии <code>open()</code> вызовет функцию <code>renderItems()</code>, которая специально для этого выделена отдельно от <code>render()</code>.</p>
+<p><strong>Фаза инициализации очень чувствительна к производительности, так как обычно в сложном интерфейсе создаётся много всего.</strong></p>
+<p>Если изначально подходить к оптимизации на этой фазе «спустя рукава», то потом поправить долгий старт может быть сложно. Тем более, что инициализация – это фундамент, начало работы виджета, её оптимизация в будущем может потребовать сильных изменений кода.</p>
+<p>Конечно, здесь, как и везде в оптимизации – без фанатизма. Бывают ситуации, когда гораздо удобнее что-то сделать сразу. Если это один элемент, то оптимизация здесь ни к чему. А если большой фрагмент DOM, который, как в случае с меню, прямо сейчас не нужен – то лучше отложить.</p>
+</dd>
+</dl>
+<p>В действии:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">menu.js</div><div class="code-tabs__switch">style.css</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/widgets-structure/menu-dom/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/9x4j3By1tOgZXIv5W1l8?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/widgets-structure/menu-dom/"></iframe></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>function Menu(options) {
+  var elem;
+
+  function getElem() {
+    if (!elem) render();
+    return elem;
+  }
+
+  function render() {
+    elem = document.createElement('div');
+    elem.className = "menu";
+
+    var titleElem = document.createElement('span');
+    elem.appendChild(titleElem);
+    titleElem.className = "title";
+    titleElem.textContent = options.title;
+
+    elem.onmousedown = function() {
+      return false;
+    };
+
+    elem.onclick = function(event) {
+      if (event.target.closest('.title')) {
+        toggle();
+      }
+    }
+
+  }
+
+  function renderItems() {
+    var items = options.items || [];
+    var list = document.createElement('ul');
+    items.forEach(function(item) {
+      var li = document.createElement('li');
+      li.textContent = item;
+      list.appendChild(li);
+    });
+    elem.appendChild(list);
+  }
+
+  function open() {
+    if (!elem.querySelector('ul')) {
+      renderItems();
+    }
+    elem.classList.add('open');
+  };
+
+  function close() {
+    elem.classList.remove('open');
+  };
+
+  function toggle() {
+    if (elem.classList.contains('open')) close();
+    else open();
+  };
+
+  this.getElem = getElem;
+  this.toggle = toggle;
+  this.close = close;
+  this.open = open;
+}</code></pre></div><div class="code-tabs__section"><pre class="language-css line-numbers"><code>.menu ul {
+  display: none;
+  margin: 0;
+}
+
+.menu .title {
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.menu .title:before {
+  content: '▶';
+  padding-right: 6px;
+  color: green;
+}
+
+.menu.open ul {
+  display: block;
+}
+
+.menu.open .title:before {
+  content: '▼';
+}</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;link rel="stylesheet" href="style.css"&gt;
+  &lt;script src="https://cdn.polyfill.io/v1/polyfill.js?features=Element.prototype.closest"&gt;&lt;/script&gt;
+  &lt;script src="menu.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;button onclick="menu.toggle()"&gt;menu.toggle()&lt;/button&gt;
+  &lt;button onclick="menu.open()"&gt;menu.open()&lt;/button&gt;
+  &lt;button onclick="menu.close()"&gt;menu.close()&lt;/button&gt;
+
+  &lt;script&gt;
+    var menu = new Menu({
+      title: "Сладости",
+      items: [
+        "Торт",
+        "Пончик",
+        "Пирожное",
+        "Шоколадка",
+        "Мороженое"
+      ]
+    });
+
+    document.body.appendChild(menu.getElem());
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Мы начали создавать компонент «с чистого листа», пока без дополнительных библиотек.</p>
+<p>Основные принципы:</p>
+<ul>
+<li>Виджет – это объект, который либо контролирует готовое дерево DOM, либо создаёт своё.</li>
+<li>В конструктор виджета передаётся объект аргументов <code>options</code>.</li>
+<li>Виджет при необходимости создаёт элемент или «оживляет» готовый. Внутри в разметке не используются <code>id</code>.</li>
+<li>Обработчики назначаются через делегирование – для производительности и упрощения виджета.</li>
+<li>Обработчики событий вызывают соответствующий метод, не пытаются делать всё сами.</li>
+<li>При инициализации, если существенный участок работы можно отложить до реального задействования виджета – откладываем его.</li>
+</ul>
+</div></meta></article></main></div></body></html>

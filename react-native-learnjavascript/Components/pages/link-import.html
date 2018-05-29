@@ -1,0 +1,219 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Импорты" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Новая спецификация <a href="http://w3c.github.io/webcomponents/spec/imports/index.html">«HTML Imports»</a> описывает, как вставить один документ в другой при помощи HTML-тега <code>&lt;link rel="import"&gt;</code>.</p>
+<cut>
+<h2><a class="main__anchor" href="#зачем" name="зачем">Зачем?</a></h2><p>Мы ведь и так можем вставлять документ в документ, при помощи <code>&lt;iframe&gt;</code>, зачем нужен ещё какой-то импорт? Что не так с <code>iframe</code>?</p>
+<p>…С <code>iframe</code> всё так. Однако, по своему смыслу <code>iframe</code> – это отдельный документ.</p>
+<ul>
+<li>Для <code>iframe</code> создаётся полностью своё окружение, у него свой объект <code>window</code> и свои переменные.</li>
+<li>Если <code>iframe</code> загружен с другого домена, то взаимодействие с ним возможно только через <code>postMessage</code>.</li>
+</ul>
+<p>Это хорошо, когда нужно действительно в одной странице отобразить содержимое другой.</p>
+<p>А что, если нужно встроить другой документ как естественную часть текущего? С единым скриптовым пространством, едиными стилями, но при этом – другой документ.</p>
+<p>Например, это нужно для подгрузки внешних частей документа (веб-компонент) снаружи. И желательно не иметь проблем с разными доменами: если уж мы действительно хотим подключить HTML с одного домена в  страницу на другом – мы должны иметь возможность это сделать без «плясок с бубном».</p>
+<p>Иначе говоря, <code>&lt;link rel="import"&gt;</code> – это аналог <code>&lt;script&gt;</code>, но для подключения полноценных документов, с шаблонами, библиотеками, веб-компонентами и т.п. Всё станет понятнее, когда мы посмотрим детали.</p>
+<h2><a class="main__anchor" href="#пример-вставки" name="пример-вставки">Пример вставки</a></h2><p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;link rel="import" href="http://site.com/document.html"&gt;</code></pre>
+</div>
+</div>
+</div><ul>
+<li>В отличие от <code>&lt;iframe&gt;</code> тег <code>&lt;link rel="import"&gt;</code> может быть в любом месте документа, даже в <code>&lt;head&gt;</code>.</li>
+<li>При вставке через <code>&lt;iframe&gt;</code> документ показывается внутри фрейма. В случае с <code>&lt;link rel="import"&gt;</code> это не так, по умолчанию документ вообще не показывается.</li>
+</ul>
+<p><strong>HTML, загруженный через <code>&lt;link rel="import"&gt;</code> имеет отдельный DOM документа, но скрипты в нём выполняются в общем контексте страницы.</strong></p>
+<p>Файл, загруженный через <code>&lt;link rel="import"&gt;</code>, обрабатывается, выполняются скрипты, строится DOM документа, но не показывается, а записывается в свойство <code>link.import</code>.</p>
+<p>Мы сами решаем, где и когда его вставить.</p>
+<p>В примере ниже <code>&lt;link rel="import" href="timer.html"&gt;</code> подключает документ <code>timer.html</code> и, после его загрузки, вызывает функцию <code>show</code>. Эта функция через <code>link.import.querySelector('time')</code> выбирает интересующую часть подгруженного документа и вставляет её в текущий:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;body&gt;
+
+  &lt;script&gt;
+    function show() {
+      var time = link.import.querySelector('time')
+      document.body.appendChild(time);
+    };
+  &lt;/script&gt;
+
+  &lt;link rel="import" id="link" onload="show()" href="timer.html"&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div><p>В файле <code>timer.html</code> находится элемент и скрипт, который его «оживляет»:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;body&gt;
+
+  &lt;time id="timer"&gt;0&lt;/time&gt;
+
+  &lt;script&gt;
+    var localDocument = document.currentScript.ownerDocument;
+    var timer = localDocument.getElementById('timer');
+
+    var timerId = setInterval(function() {
+      timer.innerHTML++;
+    }, 1000);
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div><div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">index.html</div><div class="code-tabs__switch">timer.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/link-import/import-show/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/NJaffd1rGtEcUOYquWkh?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:350px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/link-import/import-show/"></iframe></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;body&gt;
+
+  &lt;script&gt;
+    function show() {
+      var time = link.import.querySelector('time')
+      document.body.appendChild(time);
+    };
+  &lt;/script&gt;
+
+  &lt;link rel="import" id="link" onload="show()" href="timer.html"&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;body&gt;
+
+  &lt;time id="timer"&gt;0&lt;/time&gt;
+
+  &lt;script&gt;
+    var localDocument = document.currentScript.ownerDocument;
+    var timer = localDocument.getElementById('timer');
+
+    var timerId = setInterval(function() {
+      timer.innerHTML++;
+    }, 1000);
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>Важные детали:</p>
+<ul>
+<li>После загрузки все скрипты в подключённом <code>timer.html</code> выполняются в контексте основной страницы, так что <code>timer</code> и другие переменные станут глобальными переменными страницы.</li>
+<li>Переменная <code>document</code> – это документ основной страницы. Для доступа к импортированному, то есть текущему документу изнутри <code>timer.html</code> его можно получить как <code>document.currentScript.ownerDocument</code>.</li>
+<li>Таймер в загруженном документе начинает работать сразу, новый документ оживает сразу после загрузки, хотя до переноса узлов в основной документ этого может быть и не видно.</li>
+</ul>
+<p>В примере выше содержимым импорта управлял основной документ, но <code>timer.html</code> мог бы и показать сам себя вызовом <code>document.body.appendChild(timer)</code> или вызвать функцию с внешнего документа, так как у них единая область видимости. Тогда не понадобился бы никакой <code>onload</code>.</p>
+<p>Ещё пример вставки, на этот раз документ только подключает <code>&lt;link&gt;</code>, а таймер вставляет себя сам:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">index.html</div><div class="code-tabs__switch">timer.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/link-import/import-style/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/6hx36Q1rbVqpnkr8aTjq?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/link-import/import-style/"></iframe></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;link rel="import" id="link" href="timer.html"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;style&gt;
+    #timer {
+      color: red;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;p id="timer"&gt;0&lt;/p&gt;
+
+  &lt;script&gt;
+    var localDocument = document.currentScript.ownerDocument;
+    var timer = localDocument.getElementById('timer');
+
+    var timerId = setInterval(function() {
+      timer.innerHTML++;
+    }, 1000);
+
+    document.body.appendChild(timer);
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>Обратим внимание – стили импорта попадают в контекст страницы. В примере выше импорт добавил и стиль для <code>#timer</code> и сам элемент.</p>
+<h2><a class="main__anchor" href="#веб-компоненты" name="веб-компоненты">Веб-компоненты</a></h2><p>Импорт задуман как часть платформы Web Components.</p>
+<p>Предполагается, что главный документ может импортировать файлы-определения, в которых будут все необходимые HTML, JS и CSS для элементов, а затем использовать их.</p>
+<p>Пример:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;link rel="import" href="ui-tabs.html"&gt;
+&lt;link rel="import" href="ui-dialog.html"&gt;
+
+&lt;ui-tabs&gt;...&lt;/ui-tabs&gt;
+&lt;ui-dialog&gt;...&lt;/ui-dialog&gt;</code></pre>
+</div>
+</div>
+</div><p>В следующей главе мы разберём расширенный пример на эту тему.</p>
+<h2><a class="main__anchor" href="#повторное-использование" name="повторное-использование">Повторное использование</a></h2><p>Повторный импорт с тем же URL использует уже существующий документ.</p>
+<p>Если файл <code>libs.html</code> импортирован два раза, то CSS и скрипты из него подключатся и выполнятся ровно один раз.</p>
+<p>Это можно использовать, чтобы не подгружать одинаковые зависимости много раз. И сама страница и её импорты, и их подимпорты, и так далее, могут подключать <code>libs.html</code> без опасения лишний раз перезагрузить и выполнить скрипты.</p>
+<p>Например:</p>
+<ul>
+<li>
+<p>Главный файл <code>index.html</code> подключает документы:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;link rel="import" href="ui-tabs.html"&gt;
+&lt;link rel="import" href="ui-dialog.html"&gt;
+...</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p><code>ui-tabs.html</code> подключает <code>libs.html</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;link rel="import" href="libs.html"&gt;
+...template и код для табов...</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p><code>ui-dialog.html</code> также использует <code>libs.html</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;link rel="import" href="libs.html"&gt;
+...template и код для диалогов...</code></pre>
+</div>
+</div>
+</div></li>
+</ul>
+<p>Файл <code>libs.html</code> при этом будет подключен только один раз. Это позволяет не бояться лишнего дублирования библиотек, используемых при описании множества компонент.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Тег <code>&lt;link rel="import"&gt;</code> позволяет подключить любой документ к странице, причём:</p>
+<ul>
+<li>Скриптовое пространство и стили со страницей будут общие.</li>
+<li>Документ DOM – отдельный, он доступен как <code>link.import</code> снаружи, а из внутреннего скрипта – через <code>document.currentScript.ownerDocument</code>. Можно без проблем переносить элементы из главного документа в импорт и наоборот.</li>
+<li>Импорты могут содержать другие импорты.</li>
+<li>Если какой-то URL импортируется повторно – подключается уже готовый документ, без повторного выполнения скриптов в нём. Это позволяет избежать дублирования при использовании одной библиотеки во множестве мест.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

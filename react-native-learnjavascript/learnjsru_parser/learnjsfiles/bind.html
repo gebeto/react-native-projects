@@ -1,0 +1,450 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Привязка контекста и карринг: "bind"' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Функции в JavaScript никак не привязаны к своему контексту <code>this</code>, с одной стороны, здорово – это позволяет быть максимально гибкими, одалживать методы и так далее.</p>
+<p>Но с другой стороны – в некоторых случаях контекст может быть потерян. То есть мы вроде как вызываем метод объекта, а на самом деле он получает <code>this = undefined</code>.</p>
+<p>Такая ситуация является типичной для начинающих разработчиков, но бывает и у «зубров» тоже. Конечно, «зубры» при этом знают, что с ней делать.</p>
+<cut>
+<h2><a class="main__anchor" href="#пример-потери-контекста" name="пример-потери-контекста">Пример потери контекста</a></h2><p>В браузере есть встроенная функция <code>setTimeout(func, ms)</code>, которая вызывает выполнение функции <code>func</code> через <code>ms</code> миллисекунд (=1/1000 секунды).</p>
+<p>Мы подробно остановимся на ней и её тонкостях позже, в главе <a href="/settimeout-setinterval">setTimeout и setInterval</a>, а пока просто посмотрим пример.</p>
+<p>Этот код выведет «Привет» через 1000 мс, то есть 1 секунду:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">setTimeout(function() {
+  alert( "Привет" );
+}, 1000);</code></pre>
+</div>
+</div>
+</div><p>Попробуем сделать то же самое с методом объекта, следующий код должен выводить имя пользователя через 1 секунду:</p>
+<div class="code-example" data-highlight-block="7-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  firstName: "Вася",
+  sayHi: function() {
+    alert( this.firstName );
+  }
+};
+
+setTimeout(user.sayHi, 1000); // undefined (не Вася!)</code></pre>
+</div>
+</div>
+</div><p>При запуске кода выше через секунду выводится вовсе не <code>"Вася"</code>, а <code>undefined</code>!</p>
+<p>Это произошло потому, что в примере выше <code>setTimeout</code> получил функцию <code>user.sayHi</code>, но не её контекст. То есть, последняя строчка аналогична двум таким:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var f = user.sayHi;
+setTimeout(f, 1000); // контекст user потеряли</code></pre>
+</div>
+</div>
+</div><p>Ситуация довольно типична – мы хотим передать метод объекта куда-то в другое место кода, откуда он потом может быть вызван. Как бы прикрепить к нему контекст, желательно, с минимумом плясок с бубном и при этом надёжно?</p>
+<p>Есть несколько способов решения, среди которых мы, в зависимости от ситуации, можем выбирать.</p>
+<h2><a class="main__anchor" href="#решение-1-сделать-обёртку" name="решение-1-сделать-обёртку">Решение 1: сделать обёртку</a></h2><p>Самый простой вариант решения – это обернуть вызов в анонимную функцию:</p>
+<div class="code-example" data-highlight-block="7-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  firstName: "Вася",
+  sayHi: function() {
+    alert( this.firstName );
+  }
+};
+
+setTimeout(function() {
+  user.sayHi(); // Вася
+}, 1000);</code></pre>
+</div>
+</div>
+</div><p>Теперь код работает, так как <code>user</code> достаётся из замыкания.</p>
+<p>Это решение также позволяет передать дополнительные аргументы:</p>
+<div class="code-example" data-highlight-block="7-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  firstName: "Вася",
+  sayHi: function(who) {
+    alert( this.firstName + ": Привет, " + who );
+  }
+};
+
+setTimeout(function() {
+  user.sayHi("Петя"); // Вася: Привет, Петя
+}, 1000);</code></pre>
+</div>
+</div>
+</div><p>Но тут же появляется и уязвимое место в структуре кода!</p>
+<p>А что, если до срабатывания <code>setTimeout</code> (ведь есть целая секунда) в переменную <code>user</code> будет записано другое значение? К примеру, в другом месте кода будет присвоено <code>user=(другой пользователь)</code>… В этом случае вызов неожиданно будет совсем не тот!</p>
+<p>Хорошо бы гарантировать правильность контекста.</p>
+<h2><a class="main__anchor" href="#решение-2-bind-для-привязки-контекста" name="решение-2-bind-для-привязки-контекста">Решение 2: bind для привязки контекста</a></h2><p>Напишем вспомогательную функцию <code>bind(func, context)</code>, которая будет жёстко фиксировать контекст для <code>func</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function bind(func, context) {
+  return function() { // (*)
+    return func.apply(context, arguments);
+  };
+}</code></pre>
+</div>
+</div>
+</div><p>Посмотрим, что она делает, как работает, на таком примере:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f() {
+  alert( this );
+}
+
+var g = bind(f, "Context");
+g(); // Context</code></pre>
+</div>
+</div>
+</div><p>То есть, <code>bind(f, "Context")</code> привязывает <code>"Context"</code> в качестве <code>this</code> для <code>f</code>.</p>
+<p>Посмотрим, за счёт чего это происходит.</p>
+<p>Результатом  <code>bind(f, "Context")</code>, как видно из кода, будет анонимная функция <code>(*)</code>.</p>
+<p>Вот она отдельно:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function() { // (*)
+  return func.apply(context, arguments);
+};</code></pre>
+</div>
+</div>
+</div><p>Если подставить наши конкретные аргументы, то есть <code>f</code> и <code>"Context"</code>, то получится так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function() { // (*)
+  return f.apply("Context", arguments);
+};</code></pre>
+</div>
+</div>
+</div><p>Эта функция запишется в переменную <code>g</code>.</p>
+<p>Далее, если вызвать <code>g</code>, то вызов будет передан в <code>f</code>, причём <code>f.apply("Context", arguments)</code> передаст в качестве контекста <code>"Context"</code>, который и будет выведен.</p>
+<p>Если вызвать <code>g</code> с аргументами, то также будет работать:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f(a, b) {
+  alert( this );
+  alert( a + b );
+}
+
+var g = bind(f, "Context");
+g(1, 2); // Context, затем 3</code></pre>
+</div>
+</div>
+</div><p>Аргументы, которые получила <code>g(...)</code>, передаются в <code>f</code> также благодаря методу <code>.apply</code>.</p>
+<p><strong>Иными словами, в результате вызова <code>bind(func, context)</code> мы получаем «функцию-обёртку», которая прозрачно передаёт вызов в <code>func</code>, с теми же аргументами, но фиксированным контекстом <code>context</code>.</strong></p>
+<p>Вернёмся к <code>user.sayHi</code>. Вариант с <code>bind</code>:</p>
+<div class="code-example" data-highlight-block="13-13" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function bind(func, context) {
+  return function() {
+    return func.apply(context, arguments);
+  };
+}
+
+var user = {
+  firstName: "Вася",
+  sayHi: function() {
+    alert( this.firstName );
+  }
+};
+
+setTimeout(bind(user.sayHi, user), 1000);</code></pre>
+</div>
+</div>
+</div><p>Теперь всё в порядке!</p>
+<p>Вызов <code>bind(user.sayHi, user)</code> возвращает такую функцию-обёртку, которая привязывает <code>user.sayHi</code> к контексту <code>user</code>. Она будет вызвана через 1000 мс.</p>
+<p>Полученную обёртку можно вызвать и с аргументами – они пойдут в <code>user.sayHi</code> без изменений, фиксирован лишь контекст.</p>
+<div class="code-example" data-highlight-block="2-2,9-11" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  firstName: "Вася",
+  sayHi: function(who) { // здесь у sayHi есть один аргумент
+    alert( this.firstName + ": Привет, " + who );
+  }
+};
+
+var sayHi = bind(user.sayHi, user);
+
+// контекст Вася, а аргумент передаётся "как есть"
+sayHi("Петя"); // Вася: Привет, Петя
+sayHi("Маша"); // Вася: Привет, Маша</code></pre>
+</div>
+</div>
+</div><p>В примере выше продемонстрирована другая частая цель использования <code>bind</code> – «привязать» функцию к контексту, чтобы в дальнейшем «не таскать за собой» объект, а просто вызывать <code>sayHi</code>.</p>
+<p>Результат <code>bind</code> можно передавать в любое место кода, вызывать как обычную функцию, он «помнит» свой контекст.</p>
+<h2><a class="main__anchor" href="#bind" name="bind">Решение 3: встроенный метод bind</a></h2><p>В современном JavaScript (или при подключении библиотеки <a href="https://github.com/kriskowal/es5-shim">es5-shim</a> для IE8-) у функций уже есть встроенный метод <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind">bind</a>, который мы можем использовать.</p>
+<p>Он работает примерно так же, как <code>bind</code>, который описан выше.</p>
+<p>Изменения очень небольшие:</p>
+<div class="code-example" data-highlight-block="5-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f(a, b) {
+  alert( this );
+  alert( a + b );
+}
+
+// вместо
+// var g = bind(f, "Context");
+var g = f.bind("Context");
+g(1, 2); // Context, затем 3</code></pre>
+</div>
+</div>
+</div><p>Синтаксис встроенного <code>bind</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var wrapper = func.bind(context[, arg1, arg2...])</code></pre>
+</div>
+</div>
+</div><dl>
+<dt><code>func</code></dt>
+<dd>Произвольная функция</dd>
+<dt><code>context</code></dt>
+<dd>Контекст, который привязывается к <code>func</code></dd>
+<dt><code>arg1</code>, <code>arg2</code>, …</dt>
+<dd>Если указаны аргументы <code>arg1, arg2...</code> – они будут прибавлены к каждому вызову новой функции, причем встанут <em>перед</em> теми, которые указаны при вызове.</dd>
+</dl>
+<p>Результат вызова <code>func.bind(context)</code> аналогичен вызову <code>bind(func, context)</code>, описанному выше. То есть, <code>wrapper</code> – это обёртка, фиксирующая контекст и передающая вызовы в <code>func</code>. Также можно указать аргументы, тогда и они будут фиксированы, но об этом чуть позже.</p>
+<p>Пример со встроенным методом <code>bind</code>:</p>
+<div class="code-example" data-highlight-block="7-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  firstName: "Вася",
+  sayHi: function() {
+    alert( this.firstName );
+  }
+};
+
+// setTimeout( bind(user.sayHi, user), 1000 );
+setTimeout(user.sayHi.bind(user), 1000); // аналог через встроенный метод</code></pre>
+</div>
+</div>
+</div><p>Получили простой и надёжный способ привязать контекст, причём даже встроенный в JavaScript.</p>
+<p>Далее мы будем использовать именно встроенный метод <code>bind</code>.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">bind не похож на call/apply</span></div>
+<div class="important__content"><p>Методы <code>bind</code> и <code>call/apply</code> близки по синтаксису, но есть важнейшее отличие.</p>
+<p>Методы <code>call/apply</code> вызывают функцию с заданным контекстом и аргументами.</p>
+<p>А <code>bind</code> не вызывает функцию. Он только возвращает «обёртку», которую мы можем вызвать позже, и которая передаст вызов в исходную функцию, с привязанным контекстом.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Привязать всё: <code>bindAll</code></span></div>
+<div class="important__content"><p>Если у объекта много методов и мы планируем их активно передавать, то можно привязать контекст для них всех в цикле:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">for (var prop in user) {
+  if (typeof user[prop] == 'function') {
+    user[prop] = user[prop].bind(user);
+  }
+}</code></pre>
+</div>
+</div>
+</div><p>В некоторых JS-фреймворках есть даже встроенные функции для этого, например <a href="http://lodash.com/docs#bindAll">_.bindAll(obj)</a>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#карринг" name="карринг">Карринг</a></h2><p>До этого мы говорили о привязке контекста. Теперь пойдём на шаг дальше. Привязывать можно не только контекст, но и аргументы. Используется это реже, но бывает полезно.</p>
+<p><a href="http://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D1%80%D1%80%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5">Карринг</a>  (currying) или <em>каррирование</em> – термин <a href="http://ru.wikipedia.org/wiki/%D0%A4%D1%83%D0%BD%D0%BA%D1%86%D0%B8%D0%BE%D0%BD%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D0%B5_%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5">функционального программирования</a>, который означает создание новой функции путём фиксирования аргументов существующей.</p>
+<p>Как было сказано выше, метод <code>func.bind(context, ...)</code> может создавать обёртку, которая фиксирует не только контекст, но и ряд аргументов функции.</p>
+<p>Например, есть функция умножения двух чисел <code>mul(a, b)</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function mul(a, b) {
+  return a * b;
+};</code></pre>
+</div>
+</div>
+</div><p>При помощи <code>bind</code> создадим функцию <code>double</code>, удваивающую значения. Это будет вариант функции <code>mul</code> с фиксированным первым аргументом:</p>
+<div class="code-example" data-highlight-block="0-1" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// double умножает только на два
+var double = mul.bind(null, 2); // контекст фиксируем null, он не используется
+
+alert( double(3) ); // = mul(2, 3) = 6
+alert( double(4) ); // = mul(2, 4) = 8
+alert( double(5) ); // = mul(2, 5) = 10</code></pre>
+</div>
+</div>
+</div><p>При вызове <code>double</code> будет передавать свои аргументы исходной функции <code>mul</code> после тех, которые указаны в <code>bind</code>, то есть в данном случае после зафиксированного первого аргумента <code>2</code>.</p>
+<p><strong>Говорят, что <code>double</code> является «частичной функцией» (partial function) от <code>mul</code>.</strong></p>
+<p>Другая частичная функция <code>triple</code> утраивает значения:</p>
+<div class="code-example" data-highlight-block="0-0" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var triple = mul.bind(null, 3); // контекст фиксируем null, он не используется
+
+alert( triple(3) ); // = mul(3, 3) = 9
+alert( triple(4) ); // = mul(3, 4) = 12
+alert( triple(5) ); // = mul(3, 5) = 15</code></pre>
+</div>
+</div>
+</div><p>При помощи <code>bind</code> мы можем получить из функции её «частный вариант» как самостоятельную функцию и дальше передать в <code>setTimeout</code> или сделать с ней что-то ещё.</p>
+<p>Наш выигрыш состоит в том, что эта самостоятельная функция, во-первых, имеет понятное имя (<code>double</code>, <code>triple</code>), а во-вторых, повторные вызовы позволяют не указывать каждый раз первый аргумент, он уже фиксирован благодаря <code>bind</code>.</p>
+<h2><a class="main__anchor" href="#функция-ask-для-задач" name="функция-ask-для-задач">Функция ask для задач</a></h2><p>В задачах этого раздела предполагается, что объявлена следующая «функция вопросов» <code>ask</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function ask(question, answer, ok, fail) {
+  var result = prompt(question, '');
+  if (result.toLowerCase() == answer.toLowerCase()) ok();
+  else fail();
+}</code></pre>
+</div>
+</div>
+</div><p>Её назначение – задать вопрос <code>question</code> и, если ответ совпадёт с <code>answer</code>, то запустить функцию <code>ok()</code>, а иначе – функцию <code>fail()</code>.</p>
+<p>Несмотря на внешнюю простоту, функции такого вида активно используются в реальных проектах. Конечно, они будут сложнее, вместо <code>alert/prompt</code> – вывод красивого  JavaScript-диалога с рамочками, кнопочками и так далее, но это нам сейчас не нужно.</p>
+<p>Пример использования:</p>
+<div class="code-example" data-highlight-block="0-0" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">ask("Выпустить птичку?", "да", fly, die);
+
+function fly() {
+  alert( 'улетела :)' );
+}
+
+function die() {
+  alert( 'птичку жалко :(' );
+}</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>
+<p>Функция сама по себе не запоминает контекст выполнения.</p>
+</li>
+<li>
+<p>Чтобы гарантировать правильный контекст для вызова <code>obj.func()</code>, нужно использовать функцию-обёртку, задать её через анонимную функцию:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">setTimeout(function() {
+  obj.func();
+})</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>…Либо использовать <code>bind</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">setTimeout(obj.func.bind(obj));</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Вызов <code>bind</code> часто используют для привязки функции к контексту, чтобы затем присвоить её в обычную переменную и вызывать уже без явного указания объекта.</p>
+</li>
+<li>
+<p>Вызов <code>bind</code> также позволяет фиксировать первые аргументы функции («каррировать» её), и таким образом из общей функции получить её «частные» варианты – чтобы использовать их многократно без повтора одних и тех же аргументов каждый раз.</p>
+</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

@@ -1,0 +1,122 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Кросс-доменные ограничения и их обход" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Ограничение «Same Origin» («тот же источник») ограничивает доступ окон и фреймов друг к другу, а также влияет на AJAX-запросы к серверу.</p>
+<p>Причина, по которой оно существует – безопасность. Если есть два окна, в одном из которых <code>vasya-pupkin.com</code>, а в другом <code>gmail.com</code>, то мы бы не хотели, чтобы скрипт из первого мог читать нашу почту.</p>
+<p>Сама концепция проста, но есть много важных исключений и особенностей, которые нужно знать для полного понимания этого правила.</p>
+<cut>
+<h2><a class="main__anchor" href="#same-origin" name="same-origin">Концепция Same Origin</a></h2><p>Два URL считаются имеющим один источник («same origin»), если у них одинаковый протокол, домен и порт.</p>
+<p>Эти URL имеют один источник:</p>
+<ul>
+<li><code>http://site.com</code></li>
+<li><code>http://site.com</code>/</li>
+<li><code>http://site.com/my/page.html</code></li>
+</ul>
+<p>А вот эти – все из других источников:</p>
+<ul>
+<li>http://<span style="color:red;font-weight:bold">www.</span>site.com (другой домен)</li>
+<li>http://site.<span style="color:red;font-weight:bold">org</span>  (другой домен)</li>
+<li>http<span style="color:red; font-weight:bold">s</span>://site.com  (другой протокол)</li>
+<li>http://site.com<span style="color:red; font-weight:bold">:8080</span>  (другой порт)</li>
+</ul>
+<p>Существует ряд исключений, позволяющих-таки окнам с разных доменов обмениваться информацией, но прямой вызов методов друг друга и чтение свойств запрещены.</p>
+<h2><a class="main__anchor" href="#в-действии" name="в-действии">В действии</a></h2><p>Если одно окно попытается обратиться к другому, то браузер проверит, из одного ли они источника. Если нет – доступ будет запрещён.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;iframe src="https://example.com"&gt;&lt;/iframe&gt;
+
+&lt;script&gt;
+  var iframe = document.body.children[0];
+
+  iframe.onload = function() {
+    try {
+      alert( iframe.contentWindow.document );
+    } catch (e) {
+      alert( "Ошибка: " + e.message );
+    }
+  }
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Пример выше выведет ошибку.</p>
+<h2><a class="main__anchor" href="#исключение-запись-в-location" name="исключение-запись-в-location">Исключение: запись в location</a></h2><p>Окна могут менять <code>location</code> друг друга, даже если они из разных источников.</p>
+<p>Причём <em>читать</em> свойства <code>location</code> нельзя, одно окно не имеет право знать, на каком URL пользователь в другом. А вот <em>запись</em> браузеры считают безопасной.</p>
+<p>Например, открыв на <code>javascript.ru</code> iframe с <code>http://example.com</code>, из этого ифрейма нельзя будет прочитать URL, а вот поменять его – запросто:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;iframe src="https://example.com"&gt;&lt;/iframe&gt;
+
+&lt;script&gt;
+  var iframe = document.body.children[0];
+
+  iframe.onload = function() {
+    try {
+      // не сработает (чтение)
+      alert( iframe.contentWindow.location.href );
+    } catch (e) {
+      alert( "Ошибка при чтении: " + e.message );
+    }
+
+    // сработает (запись)
+    iframe.contentWindow.location.href = 'https://wikipedia.org';
+
+    iframe.onload = null;
+  }
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Если запустить код выше, то окно сначала загрузит <code>example.com</code>, а потом будет перенаправлено на <code>wikipedia.org</code>.</p>
+<h2><a class="main__anchor" href="#исключение-поддомен-3-го-уровня" name="исключение-поддомен-3-го-уровня">Исключение: поддомен 3-го уровня</a></h2><p>Ещё одно важное исключение касается доменов третьего уровня.</p>
+<p>Если несколько окон имеют общий домен второго уровня, к примеру <code>john.site.com</code>, <code>peter.site.com</code>, <code>site.com</code>, и присваивают в <code>document.domain</code> свой общий поддомен 2-го уровня <code>site.com</code>, то все ограничения снимаются.</p>
+<p>То есть, на всех этих сайтах должен быть код:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">document.domain = 'site.com';</code></pre>
+</div>
+</div>
+</div><p>Тогда между ними не будет кросс-доменных ограничений.</p>
+<p>Обратим внимание: свойство <code>document.domain</code> должно быть присвоено на всех окнах, участвующих в коммуникации. Выглядит абсурдно, но даже на документе с <code>site.com</code> нужно вызвать: <code>document.domain="site.com"</code>. Иначе не  будет работать.</p>
+<p>Таким образом разные подсайты в рамках одного общего проекта могут взаимодействовать без ограничений.</p>
+<h2><a class="main__anchor" href="#исключения-в-ie" name="исключения-в-ie">Исключения в IE</a></h2><p>В браузере Internet Explorer есть два своих, дополнительных исключения из Same Origin Policy.</p>
+<ol>
+<li>
+<p>Порт не входит в понятие «источник» (origin).</p>
+<p>Это означает, что окно с <code>http://site.com</code> может свободно общаться с <code>http://site.com:8080</code>.</p>
+<p>Это иногда используют для общения серверов, использующих один IP-адрес. Но допустимо такое только в IE.</p>
+</li>
+<li>
+<p>Если сайт находится в зоне «Надёжные узлы», то в Internet Explorer ограничения к нему не применяются.</p>
+<p>При этом подразумевается, что для этой зоны в параметрах «Безопасность» включена опция «Доступ к источникам данных за пределами домена».</p>
+</li>
+</ol>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Ограничение «одного источника» запрещает окнам и фреймам с разных источников вызывать методы друг друга и читать данные друг из друга.</p>
+<p>При этом «из одного источника» означает «совпадают протокол, домен и порт».</p>
+<p>У этого подхода ряд существенных исключений:</p>
+<ul>
+<li>Свойства <code>window.location.*</code> нельзя читать, но можно менять.</li>
+<li>Домены третьего уровня с общим наддоменом могут поменять <code>document.domain</code> на их общий домен второго уровня, и тогда они смогут взаимодействовать без ограничений.</li>
+<li>IE не включает порт в понятие источника. Кроме того, он позволяет снять ограничения для конкретного сайта включением в доверенную зону.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

@@ -1,0 +1,217 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Создание объектов через "new"' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Обычный синтаксис <code>{...}</code> позволяет создать один объект. Но зачастую нужно создать много однотипных объектов.</p>
+<p>Для этого используют «функции-конструкторы», запуская их при помощи специального оператора <code>new</code>.</p>
+<cut>
+<h2><a class="main__anchor" href="#конструктор" name="конструктор">Конструктор</a></h2><p>Конструктором становится любая функция, вызванная через <code>new</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="5-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Animal(name) {
+  this.name = name;
+  this.canWalk = true;
+}
+
+var animal = new Animal("ёжик");</code></pre>
+</div>
+</div>
+</div><p>Заметим, что, технически, любая функция может быть использована как конструктор. То есть, любую функцию можно вызвать при помощи <code>new</code>. Как-то особым образом указывать, что она – конструктор – не надо.</p>
+<p>Но, чтобы выделить функции, задуманные как конструкторы, их называют с большой буквы: <code>Animal</code>, а не <code>animal</code>.</p>
+<p>Детальнее – функция, запущенная через <code>new</code>, делает следующее:</p>
+<ol>
+<li>Создаётся новый пустой объект.</li>
+<li>Ключевое слово <code>this</code> получает ссылку на этот объект.</li>
+<li>Функция выполняется. Как правило, она модифицирует <code>this</code>, добавляет методы, свойства.</li>
+<li>Возвращается <code>this</code>.</li>
+</ol>
+<p>В результате вызова <code>new Animal("ёжик");</code> получаем такой объект:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">animal = {
+  name: "ёжик",
+  canWalk: true
+}</code></pre>
+</div>
+</div>
+</div><p>Иными словами, при вызове <code>new Animal</code> происходит что-то в таком духе (первая и последняя строка – это то, что делает интерпретатор):</p>
+<div class="code-example" data-highlight-block="1-1,7-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Animal(name) {
+  // this = {};
+
+  // в this пишем свойства, методы
+  this.name = name;
+  this.canWalk = true;
+
+  // return this;
+}</code></pre>
+</div>
+</div>
+</div><p>Теперь многократными вызовами <code>new Animal</code> с разными параметрами мы можем создать столько объектов, сколько нужно. Поэтому такую функцию и называют <em>конструктором</em> – она предназначена для «конструирования» объектов.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">new function() { … }</span></div>
+<div class="important__content"><p>Иногда функцию-конструктор объявляют и тут же используют, вот так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var animal = new function() {
+  this.name = "Васька";
+  this.canWalk = true;
+};</code></pre>
+</div>
+</div>
+</div><p>Так делают, когда хотят создать единственный объект данного типа. Пример выше с тем же успехом можно было бы переписать как:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var animal = {
+  name: "Васька",
+  canWalk: true
+}</code></pre>
+</div>
+</div>
+</div><p>…Но обычный синтаксис <code>{...}</code> не подходит, когда при создании свойств объекта нужны более сложные вычисления. Их можно проделать в функции-конструкторе и записать результат в <code>this</code>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#правила-обработки-return" name="правила-обработки-return">Правила обработки return</a></h2><p>Как правило, конструкторы ничего не возвращают. Их задача – записать всё, что нужно, в <code>this</code>, который автоматически станет результатом.</p>
+<p>Но если явный вызов <code>return</code> всё же есть, то применяется простое правило:</p>
+<ul>
+<li>При вызове <code>return</code> с объектом, будет возвращён он, а не <code>this</code>.</li>
+<li>При вызове <code>return</code> с примитивным значением, оно будет отброшено.</li>
+</ul>
+<p>Иными словами, вызов <code>return</code> с объектом вернёт объект, а с чем угодно, кроме объекта – возвратит, как обычно, <code>this</code>.</p>
+<p>Например, возврат объекта:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function BigAnimal() {
+
+  this.name = "Мышь";
+
+  return { name: "Годзилла" };  // &lt;-- возвратим объект
+}
+
+alert( new BigAnimal().name );  // Годзилла, получили объект вместо this</code></pre>
+</div>
+</div>
+</div><p>А вот пример с возвратом строки:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function BigAnimal() {
+
+  this.name = "Мышь";
+
+  return "Годзилла"; // &lt;-- возвратим примитив
+}
+
+alert( new BigAnimal().name ); // Мышь, получили this (а Годзилла пропал)</code></pre>
+</div>
+</div>
+</div><p>Эта особенность работы <code>new</code> прописана в стандарте, но используется она весьма редко.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Можно без скобок</span></div>
+<div class="important__content"><p>Кстати, при вызове <code>new</code> без аргументов скобки можно не ставить:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var animal = new BigAnimal; // &lt;-- без скобок
+// то же самое что
+var animal = new BigAnimal();</code></pre>
+</div>
+</div>
+</div><p>Не сказать, что выбрасывание скобок – «хороший стиль», но такой синтаксис допустим стандартом.</p>
+</div></div>
+<h2><a class="main__anchor" href="#создание-методов-в-конструкторе" name="создание-методов-в-конструкторе">Создание методов в конструкторе</a></h2><p>Использование функций для создания объекта дает большую гибкость. Можно передавать конструктору параметры,  определяющие как его создавать, и он будет «клепать» объекты заданным образом.</p>
+<p>Добавим в создаваемый объект ещё и метод.</p>
+<p>Например, <code>new User(name)</code> создает объект с заданным значением свойства <code>name</code> и методом <code>sayHi</code>:</p>
+<div class="code-example" data-highlight-block="8-10" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function User(name) {
+  this.name = name;
+
+  this.sayHi = function() {
+    alert( "Моё имя: " + this.name );
+  };
+}
+
+var ivan = new User("Иван");
+
+ivan.sayHi(); // Моё имя: Иван
+
+/*
+ivan = {
+   name: "Иван",
+   sayHi: функция
+}
+*/</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#локальные-переменные" name="локальные-переменные">Локальные переменные</a></h2><p>В функции-конструкторе бывает удобно объявить вспомогательные локальные переменные и вложенные функции, которые будут видны только внутри:</p>
+<div class="code-example" data-highlight-block="1-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function User(firstName, lastName) {
+  // вспомогательная переменная
+  var phrase = "Привет";
+
+  //  вспомогательная вложенная функция
+  function getFullName() {
+      return firstName + " " + lastName;
+    }
+
+  this.sayHi = function() {
+    alert( phrase + ", " + getFullName() ); // использование
+  };
+}
+
+var vasya = new User("Вася", "Петров");
+vasya.sayHi(); // Привет, Вася Петров</code></pre>
+</div>
+</div>
+</div><p>Мы уже говорили об этом подходе ранее, в главе <a href="/closures-usage">Локальные переменные для объекта</a>.</p>
+<p>Те функции и данные, которые должны быть доступны для внешнего кода, мы пишем в <code>this</code> – и к ним можно будет обращаться, как например <code>vasya.sayHi()</code>, а вспомогательные, которые нужны только внутри самого объекта, сохраняем в локальной области видимости.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Объекты могут быть созданы при помощи функций-конструкторов:</p>
+<ul>
+<li>Любая функция может быть вызвана с <code>new</code>, при этом она получает новый пустой объект в качестве <code>this</code>, в который она добавляет свойства. Если функция не решит возвратить свой объект, то её результатом будет <code>this</code>.</li>
+<li>Функции, которые предназначены для создания объектов, называются <em>конструкторами</em>. Их названия пишут с большой буквы, чтобы отличать от обычных.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

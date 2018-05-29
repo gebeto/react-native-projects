@@ -1,0 +1,196 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Отладка в браузере Chrome" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Перед тем, как двигаться дальше, поговорим об отладке скриптов.</p>
+<p>Все современные браузеры поддерживают для этого «инструменты разработчика». Исправление ошибок с их помощью намного проще и быстрее.</p>
+<p>На текущий момент самые многофункциональные инструменты – в браузере Chrome. Также очень хорош Firebug (для Firefox).</p>
+<cut>
+<h2><a class="main__anchor" href="#общий-вид-панели-sources" name="общий-вид-панели-sources">Общий вид панели Sources</a></h2><p>В вашей версии Chrome панель может выглядеть несколько по-иному, но что где находится, должно быть понятно.</p>
+<p>Зайдите на <a href="/article/debugging-chrome/debugging/index.html">страницу с примером</a> браузером Chrome.</p>
+<p>Откройте инструменты разработчика: <kbd class="shortcut">F12</kbd> или в меню <code>Инструменты &gt; Инструменты Разработчика</code>.</p>
+<p>Выберите сверху <code>Sources</code>.</p>
+<figure><div class="image" style="width:677px">
+<div class="image__ratio" style="padding-top:44.608567208271786%"></div>
+<img alt="" class="image__image" height="302" src="article/debugging-chrome/chrome_sources.png" width="677">
+</img></div></figure><p>Вы видите три зоны:</p>
+<ol>
+<li><strong>Зона исходных файлов.</strong> В ней находятся все подключённые к странице файлы, включая JS/CSS. Выберите <code>pow.js</code>, если он не выбран.</li>
+<li><strong>Зона текста.</strong> В ней находится текст файлов.</li>
+<li><strong>Зона информации и контроля.</strong> Мы поговорим о ней позже.</li>
+</ol>
+<p>Обычно зона исходных файлов при отладке не нужна. Скройте её кнопкой <span class="devtools" style="background-position:-200px -76px"></span>.</p>
+<h2><a class="main__anchor" href="#общие-кнопки-управления" name="общие-кнопки-управления">Общие кнопки управления</a></h2><figure><div class="image" style="width:678px">
+<div class="image__ratio" style="padding-top:35.693215339233035%"></div>
+<img alt="" class="image__image" height="242" src="article/debugging-chrome/chrome_sources_buttons.png" width="678">
+</img></div></figure><p>Три наиболее часто используемые кнопки управления:</p>
+<dl>
+<dt>Формат <span class="devtools" style="background-position:-264px 94px"></span></dt>
+<dd>Нажатие форматирует текст текущего файла, расставляет отступы. Нужна, если вы хотите разобраться в чужом коде, плохо отформатированном или сжатом.</dd>
+<dt>Консоль <span class="devtools" style="background-position:-70px 94px"></span></dt>
+<dd>Очень полезная кнопка, открывает тут же консоль для запуска команд. Можно смотреть код и тут же запускать функции. Её нажатие можно заменить на клавишу <kbd class="shortcut">Esc</kbd>.</dd>
+<dt>Окно <span class="devtools" style="background-position:-6px 70px"></span></dt>
+<dd>Если код очень большой, то можно вынести инструменты разработки вбок или в отдельное окно, зажав эту кнопку и выбрав соответствующий вариант из списка.</dd>
+</dl>
+<h2><a class="main__anchor" href="#точки-останова" name="точки-останова">Точки останова</a></h2><p>Открыли файл <code>pow.js</code> во вкладке Sources? Кликните на 6-й строке файла <code>pow.js</code>, прямо на цифре 6.</p>
+<p>Поздравляю! Вы поставили точку останова или, как чаще говорят, «брейкпойнт».</p>
+<p>Выглядет это должно примерно так:</p>
+<figure><div class="image" style="width:677px">
+<div class="image__ratio" style="padding-top:35.745937961595274%"></div>
+<img alt="" class="image__image" height="242" src="article/debugging-chrome/chrome_sources_breakpoint.png" width="677">
+</img></div></figure><p>Слово <em>Брейкпойнт</em> (breakpoint) – часто используемый английский жаргонизм. Это то место в коде, где отладчик будет <em>автоматически</em> останавливать выполнение JavaScript, как только оно до него дойдёт.</p>
+<p><strong>В остановленном коде можно посмотреть текущие значения переменных, выполнять команды и т.п., в общем – отлаживать его.</strong></p>
+<p>Вы можете видеть, что информация о точке останова появилась справа, в подвкладке Breakpoints.</p>
+<p>Вкладка Breakpoints очень удобна, когда код большой, она позволяет:</p>
+<ul>
+<li>Быстро перейти на место кода, где стоит брейкпойнт кликом на текст.</li>
+<li>Временно выключить брейкпойнт кликом на чекбокс.</li>
+<li>Быстро удалить брейкпойнт правым кликом на текст и выбором Remove, и так далее.</li>
+</ul>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Дополнительные возможности</span></div>
+<div class="important__content"><ul>
+<li>
+<p>Останов можно инициировать и напрямую из кода скрипта, командой <code>debugger</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function pow(x, n) {
+  ...
+  debugger; // &lt;-- отладчик остановится тут
+  ...
+}</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p><em>Правый клик</em> на номер строки <code>pow.js</code> позволит создать условную точку останова (conditional breakpoint), т.е. задать условие, при котором точка останова сработает.</p>
+<p>Это удобно, если останов нужен только при определённом значении переменной или параметра функции.</p>
+</li>
+</ul>
+</div></div>
+<h2><a class="main__anchor" href="#остановиться-и-осмотреться" name="остановиться-и-осмотреться">Остановиться и осмотреться</a></h2><p>Наша функция выполняется сразу при загрузке страницы, так что самый простой способ активировать отладчик JavaScript – перезагрузить её. Итак, нажимаем <kbd class="shortcut">F5</kbd> (Windows, Linux) или <kbd class="shortcut">Cmd<span class="shortcut__plus">+</span>R</kbd> (Mac).</p>
+<p>Если вы сделали всё, как описано выше, то выполнение прервётся как раз на 6-й строке.</p>
+<figure><div class="image" style="width:677px">
+<div class="image__ratio" style="padding-top:48.89217134416543%"></div>
+<img alt="" class="image__image" height="331" src="article/debugging-chrome/chrome_sources_break.png" width="677">
+</img></div></figure><p>Обратите внимание на информационные вкладки справа (отмечены стрелками).</p>
+<p>В них мы можем посмотреть текущее состояние:</p>
+<ol>
+<li>
+<p><strong><code>Watch Expressions</code> – показывает текущие значения любых выражений.</strong></p>
+<p>Можно раскрыть эту вкладку, нажать мышью <code>+</code> на ней и ввести любое выражение. Отладчик будет отображать его значение на текущий момент, автоматически перевычисляя его при проходе по коду.</p>
+</li>
+<li>
+<p><strong><code>Call Stack</code> – стек вызовов, все вложенные вызовы, которые привели к текущему месту кода.</strong></p>
+<p>На текущий момент видно, отладчик находится в функции <code>pow</code> (pow.js, строка 6), вызванной из анонимного кода (index.html, строка 13).</p>
+</li>
+<li>
+<p><strong><code>Scope Variables</code> – переменные.</strong></p>
+<p>На текущий момент строка 6 ещё не выполнилась, поэтому <code>result</code> равен <code>undefined</code>.</p>
+<p>В <code>Local</code> показываются переменные функции: объявленные через <code>var</code> и параметры. Вы также можете там видеть ключевое слово <code>this</code>, если вы не знаете, что это такое – ничего страшного, мы это обсудим позже, в следующих главах учебника.</p>
+<p>В <code>Global</code> – глобальные переменные и функции.</p>
+</li>
+</ol>
+<h2><a class="main__anchor" href="#управление-выполнением" name="управление-выполнением">Управление выполнением</a></h2><p>Пришло время, как говорят, «погонять» скрипт и «оттрейсить» (от англ. trace – отслеживать) его работу.</p>
+<p>Обратим внимание на панель управления справа-сверху, в ней есть 6 кнопок:</p>
+<dl>
+<dt><img alt="" height="21" src="article/debugging-chrome/manage1.png" style="vertical-align:middle" width="26"> – продолжить выполнение, горячая клавиша <kbd class="shortcut">F8</kbd>.</img></dt>
+<dd>
+<p>Продолжает выполнения скрипта с текущего момента в обычном режиме. Если скрипт не встретит новых точек останова, то в отладчик управление больше не вернётся.</p>
+<p>Нажмите на эту кнопку.</p>
+<p>Скрипт продолжится, далее, в 6-й строке находится рекурсивный вызов функции <code>pow</code>, т.е. управление перейдёт в неё опять (с другими аргументами) и сработает точка останова, вновь включая отладчик.</p>
+<p>При этом вы увидите, что выполнение стоит на той же строке, но в <code>Call Stack</code> появился новый вызов.</p>
+<p>Походите по стеку вверх-вниз – вы увидите, что действительно аргументы разные.</p>
+</dd>
+<dt><img alt="" height="21" src="article/debugging-chrome/manage2.png" style="vertical-align:middle" width="26"> – сделать шаг, не заходя внутрь функции, горячая клавиша <kbd class="shortcut">F10</kbd>.</img></dt>
+<dd>
+<p>Выполняет одну команду скрипта. Если в ней есть вызов функции – то отладчик обходит его стороной, т.е. не переходит на код внутри.</p>
+<p>Эта кнопка очень удобна, если в текущей строке вызывается функция JS-фреймворка или какая-то другая, которая нас ну совсем не интересует. Тогда выполнение продолжится дальше, без захода в эту функцию, что нам и нужно.</p>
+<p>Обратим внимание, в данном случае эта кнопка при нажатии всё-таки перейдёт внутрь вложенного вызова <code>pow</code>, так как внутри <code>pow</code> находится брейкпойнт, а на включённых брейкпойнтах отладчик останавливается всегда.</p>
+</dd>
+<dt><img alt="" height="21" src="article/debugging-chrome/manage3.png" style="vertical-align:middle" width="26"> – сделать шаг, горячая клавиша <kbd class="shortcut">F11</kbd>.</img></dt>
+<dd>
+<p>Выполняет одну команду скрипта и переходит к следующей. Если есть вложенный вызов, то заходит внутрь функции.</p>
+<p>Эта кнопка позволяет подробнейшим образом пройтись по очереди по командам скрипта.</p>
+</dd>
+<dt><img alt="" height="21" src="article/debugging-chrome/manage4.png" style="vertical-align:middle" width="26"> – выполнять до выхода из текущей функции, горячая клавиша <kbd class="shortcut">Shift<span class="shortcut__plus">+</span>F11</kbd>.</img></dt>
+<dd>
+<p>Выполняет команды до завершения текущей функции.</p>
+<p>Эта кнопка очень удобна в случае, если мы нечаянно вошли во вложенный вызов, который нам не интересен – чтобы быстро из него выйти.</p>
+</dd>
+<dt><img alt="" height="21" src="article/debugging-chrome/manage5.png" style="vertical-align:middle" width="26"> – отключить/включить все точки останова.</img></dt>
+<dd>
+<p>Эта кнопка никак не двигает нас по коду, она позволяет временно отключить все точки останова в файле.</p>
+</dd>
+<dt><img alt="" height="21" src="article/debugging-chrome/manage6.png" style="vertical-align:middle" width="26"> – включить/отключить автоматическую останова при ошибке.</img></dt>
+<dd>
+<p>Эта кнопка – одна из самых важных.</p>
+<p>Нажмите её несколько раз. В старых версиях Chrome у неё три режима  – нужен фиолетовый, в новых – два, тогда достаточно синего.</p>
+<p>Когда она включена, то при ошибке в коде он автоматически остановится и мы сможем посмотреть в отладчике текущие значения переменных, при желании выполнить команды и выяснить, как так получилось.</p>
+</dd>
+</dl>
+<p><strong>Процесс отладки заключается в том, что мы останавливаем скрипт, смотрим, что с переменными, переходим дальше и ищем, где поведение отклоняется от правильного.</strong></p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Continue to here</span></div>
+<div class="important__content"><p>Правый клик на номер строки открывает контекстное меню, в котором можно запустить выполнение кода до неё (Continue to here). Это удобно, когда хочется сразу прыгнуть вперёд и breakpoint неохота ставить.</p>
+</div></div>
+<h2><a class="main__anchor" href="#консоль" name="консоль">Консоль</a></h2><p>При отладке, кроме просмотра переменных и передвижения по скрипту, бывает полезно запускать команды JavaScript. Для этого нужна консоль.</p>
+<p>В неё можно перейти, нажав кнопку «Console» вверху-справа, а можно и открыть в дополнение к отладчику, нажав на кнопку <span class="devtools" style="background-position:-72px -28px"></span> или клавишей <kbd class="shortcut">ESC</kbd>.</p>
+<p><strong>Самая любимая команда разработчиков: <code>console.log(...)</code>.</strong></p>
+<p>Она пишет переданные ей аргументы в консоль, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// результат будет виден в консоли
+for (var i = 0; i &lt; 5; i++) {
+  console.log("значение", i);
+}</code></pre>
+</div>
+</div>
+</div><p>Полную информацию по специальным командам консоли вы можете получить на странице <a href="https://developer.chrome.com/devtools/docs/console-api">Chrome Console API</a> и <a href="https://developer.chrome.com/devtools/docs/commandline-api">Chrome CommandLine API</a>. Почти все команды также действуют в Firebug (отладчик для браузера Firefox).</p>
+<p>Консоль поддерживают все браузеры, и, хотя IE10- поддерживает далеко не все функции, но <code>console.log</code> работает везде. Используйте его для вывода отладочной информации по ходу работы скрипта.</p>
+<h2><a class="main__anchor" href="#ошибки" name="ошибки">Ошибки</a></h2><p>Ошибки JavaScript выводятся в консоли.</p>
+<p>Например, прервите отладку – для этого достаточно закрыть инструменты разработчика – и откройте <a href="/article/debugging-chrome/error/index.html">страницу с ошибкой</a>.</p>
+<p>Перейдите во вкладку Console инструментов разработчика (<kbd class="shortcut">Ctrl<span class="shortcut__plus">+</span>Shift<span class="shortcut__plus">+</span>J</kbd> / <kbd class="shortcut">Cmd<span class="shortcut__plus">+</span>Shift<span class="shortcut__plus">+</span>J</kbd>).</p>
+<p>В консоли вы увидите что-то подобное:
+<img alt="" height="269" src="article/debugging-chrome/console_error.png" width="673"/></p>
+<p>Красная строка – это сообщение об ошибке.</p>
+<p>Если кликнуть на ссылке <code>pow.js</code> в консоли, справа в строке с ошибкой, то мы перейдём непосредственно к месту в скрипте, где возникла ошибка.</p>
+<p>Однако почему она возникла?</p>
+<p>Более подробно прояснить произошедшее нам поможет отладчик. Он может «заморозить» выполнение скрипта на момент ошибки и дать нам возможность посмотреть значения переменных и стека на тот момент.</p>
+<p>Для этого:</p>
+<ol>
+<li>Перейдите на вкладку Sources.</li>
+<li>Включите останов при ошибке, кликнув на кнопку <img alt="" height="21" src="article/debugging-chrome/manage6.png" style="vertical-align:middle" width="26"/></li>
+<li>Перезагрузите страницу.</li>
+</ol>
+<p>После перезагрузки страницы JavaScript-код запустится снова и отладчик остановит выполнение на строке с ошибкой:</p>
+<figure><div class="image" style="width:673px">
+<div class="image__ratio" style="padding-top:39.9702823179792%"></div>
+<img alt="" class="image__image" height="269" src="article/debugging-chrome/chrome_break_error.png" width="673">
+</img></div></figure><p>Можно посмотреть значения переменных. Открыть консоль и попробовать запустить что-то в ней. Поставить брейкпойнты раньше по коду и посмотреть, что привело к такой печальной картине, и так далее.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Отладчик позволяет:</p>
+<ul>
+<li>Останавливаться на отмеченном месте (breakpoint) или по команде <code>debugger</code>.</li>
+<li>Выполнять код – по одной строке или до определённого места.</li>
+<li>Смотреть переменные, выполнять команды в консоли и т.п.</li>
+</ul>
+<p>В этой главе кратко описаны возможности отладчика Google Chrome, относящиеся именно к работе с кодом.</p>
+<p>Пока что это всё, что нам надо, но, конечно, инструменты разработчика умеют много чего ещё. В частности, вкладка Elements – позволяет работать со страницей (понадобится позже), Timeline – смотреть, что именно делает браузер и сколько это у него занимает и т.п.</p>
+<p>Осваивать можно двумя путями:</p>
+<ol>
+<li><a href="https://developer.chrome.com/devtools">Официальная документация</a> (на англ.)</li>
+<li>Кликать в разных местах и смотреть, что получается. Не забывать о клике правой кнопкой мыши.</li>
+</ol>
+<p>Мы ещё вернёмся к отладчику позже, когда будем работать с HTML.</p>
+</cut></div></meta></article></main></div></body></html>

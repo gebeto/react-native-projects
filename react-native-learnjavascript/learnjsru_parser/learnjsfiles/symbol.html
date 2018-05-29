@@ -1,0 +1,269 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Тип данных Symbol" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Новый примитивный тип данных Symbol служит для создания уникальных идентификаторов.</p>
+<p>Мы вначале рассмотрим объявление и особенности символов, а затем – их использование.</p>
+<h2><a class="main__anchor" href="#объявление" name="объявление">Объявление</a></h2><p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">let sym = Symbol();</code></pre>
+</div>
+</div>
+</div><p>Обратим внимание, не <code>new Symbol</code>, а просто <code>Symbol</code>, так как это – примитив.</p>
+<p>У символов есть и соответствующий <code>typeof</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let sym = Symbol();
+alert( typeof sym ); // symbol</code></pre>
+</div>
+</div>
+</div><p>Каждый символ – уникален. У функции <code>Symbol</code> есть необязательный аргумент «имя символа». Его можно использовать для описания символа, в целях отладки:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let sym = Symbol("name");
+alert( sym.toString() ); // Symbol(name)</code></pre>
+</div>
+</div>
+</div><p>…Но при этом, если у двух символов одинаковое имя, то это не значит, что они равны:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( Symbol("name") == Symbol("name") ); // false</code></pre>
+</div>
+</div>
+</div><p>Если хочется из разных частей программы использовать именно одинаковый символ, то можно передавать между ними объект символа или же – использовать «глобальные символы» и «реестр глобальных символов», которые мы рассмотрим далее.</p>
+<h2><a class="main__anchor" href="#глобальные-символы" name="глобальные-символы">Глобальные символы</a></h2><p>Существует «глобальный реестр» символов, который позволяет, при необходимости, иметь общие «глобальные» символы, которые можно получить из реестра по имени.</p>
+<p>Для чтения (или создания, при отсутствии) «глобального» символа служит вызов <code>Symbol.for(имя)</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+// создание символа в реестре
+let name = Symbol.for("name");
+
+// символ уже есть, чтение из реестра
+alert( Symbol.for("name") == name ); // true</code></pre>
+</div>
+</div>
+</div><p>Таким образом, можно из разных частей программы, обратившись к реестру, получить единый глобальный символ с именем <code>"name"</code>.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">На заметку:</span></div>
+<div class="important__content"><p>В некоторых языках программирования, например Ruby, имя однозначно идентифицирует символ. В JavaScript, как мы видим, это верно для глобальных символов.</p>
+</div></div>
+<p>У вызова <code>Symbol.for</code>, который возвращает символ по имени, есть обратный вызов – <code>Symbol.keyFor(sym)</code>. Он позволяет получить по глобальному символу его имя:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+// создание символа в реестре
+let name = Symbol.for("name");
+
+// получение имени символа
+alert( Symbol.keyFor(name) ); // name</code></pre>
+</div>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type"><code>Symbol.keyFor</code> возвращает <code>undefined</code>, если символ не глобальный</span></div>
+<div class="important__content"><p>Заметим, что <code>Symbol.keyFor</code> работает <em>только для глобальных символов</em>, для остальных будет возвращено <code>undefined</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+alert( Symbol.keyFor(Symbol.for("name")) ); // name, глобальный
+alert( Symbol.keyFor(Symbol("name2")) ); // undefined, обычный символ</code></pre>
+</div>
+</div>
+</div><p>Таким образом, имя символа, если этот символ не глобальный, не имеет особого применения, оно полезно лишь в целях вывода и отладки.</p>
+</div></div>
+<h2><a class="main__anchor" href="#использование-символов" name="использование-символов">Использование символов</a></h2><p>Символы можно использовать в качестве имён для свойств объекта следующим образом:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let isAdmin = Symbol("isAdmin");
+
+let user = {
+  name: "Вася",
+  [isAdmin]: true
+};
+
+alert(user[isAdmin]); // true</code></pre>
+</div>
+</div>
+</div><p>Особенность символов в том, что если в объект записать свойство-символ, то оно не участвует в итерации:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let user = {
+  name: "Вася",
+  age: 30,
+  [Symbol.for("isAdmin")]: true
+};
+
+// в цикле for..in также не будет символа
+alert( Object.keys(user) ); // name, age
+
+// доступ к свойству через глобальный символ — работает
+alert( user[Symbol.for("isAdmin")] );</code></pre>
+</div>
+</div>
+</div><p>Кроме того, свойство-символ недоступно, если обратиться к его названию: <code>user.isAdmin</code> не существует.</p>
+<p>Зачем всё это, почему просто не использовать строки?</p>
+<p>Резонный вопрос. На ум могут прийти соображения производительности, так как символы – это по сути специальные идентификаторы, они компактнее, чем строка. Но при современных оптимизациях объектов это редко имеет значение.</p>
+<p>Самое широкое применение символов предусмотрено внутри самого стандарта JavaScript. В современном стандарте есть много системных символов. Их список есть в спецификации, в таблице <a href="http://www.ecma-international.org/ecma-262/6.0/index.html#table-1">Well-known Symbols</a>. В спецификации для краткости символы принято обозначать как „@@имя“, например <code>@@iterator</code>, но доступны они как свойства <code>Symbol</code>.</p>
+<p>Например:</p>
+<ul>
+<li><code>Symbol.toPrimitive</code> – идентификатор для свойства, задающего функцию преобразования объекта в примитив.</li>
+<li><code>Symbol.iterator</code> – идентификатор для свойства, задающего функцию итерации по объекту.</li>
+<li>…и т.п.</li>
+</ul>
+<p><strong>Мы легко поймём смысл введения нового типа «символ», если поставим себя на место создателей языка JavaScript.</strong></p>
+<p>Допустим, в новом стандарте нам надо добавить к объекту «особый» функционал, например, функцию, которая задаёт преобразование объекта к примитиву. Как <code>obj.toString</code>, но для преобразования в примитивы.</p>
+<p>Мы ведь не можем просто сказать, что «свойство obj.toPrimitive теперь будет задавать преобразование к примитиву и автоматически вызываться в таких-то ситуациях». Это опасно. Мы не можем так просто взять и придать особый смысл свойству. Мало ли, вполне возможно, что свойство с таким именем уже используется в существующем коде, и если сделать его особым, то он сломается.</p>
+<p>Нельзя просто взять и зарезервировать какие-то свойства существующих объектов для нового функционала.</p>
+<p>Поэтому ввели целый тип «символы». Их можно использовать для задания таких свойств, так как они:</p>
+<ul>
+<li>а) уникальны,</li>
+<li>б) не участвуют в циклах,</li>
+<li>в) заведомо не сломают старый код, который о них слыхом не слыхивал.</li>
+</ul>
+<p>Продемонстрируем отсутствие конфликта для нового системного свойства <code>Symbol.iterator</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let obj = {
+  iterator: 1,
+  [Symbol.iterator]() {}
+}
+
+alert(obj.iterator); // 1
+alert(obj[Symbol.iterator]) // function, символ не конфликтует</code></pre>
+</div>
+</div>
+</div><p>Выше мы использовали системный символ <code>Symbol.iterator</code>, поскольку он один из самых широко поддерживаемых. Мы подробно разберём его смысл в главе про <a href="/iterator">итераторы</a>, пока же – это просто пример символа.</p>
+<p>Чтобы получить все символы объекта, есть особый вызов <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols">Object.getOwnPropertySymbols</a>.</p>
+<p>Эта функция возвращает все символы в объекте (и только их). Заметим, что старая функция <code>getOwnPropertyNames</code> символы не возвращает, что опять же гарантирует отсутствие конфликтов со старым кодом.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let obj = {
+  iterator: 1,
+  [Symbol.iterator]: function() {}
+}
+
+// один символ в объекте
+alert( Object.getOwnPropertySymbols(obj) ); // Symbol(Symbol.iterator)
+
+// и одно обычное свойство
+alert( Object.getOwnPropertyNames(obj) ); // iterator</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Символы – новый примитивный тип, предназначенный для уникальных идентификаторов.</li>
+<li>Все символы уникальны. Символы с одинаковым именем не равны друг другу.</li>
+<li>Существует глобальный реестр символов, доступных через метод <code>Symbol.for(name)</code>. Для глобального символа можно получить имя вызовом и <code>Symbol.keyFor(sym)</code>.</li>
+</ul>
+<p>Основная область использования символов – это системные свойства объектов, которые задают разные аспекты их поведения. Поддержка у них пока небольшая, но она растёт. Системные символы позволяют разработчикам стандарта добавлять новые «особые» свойства объектов, при этом не резервируя соответствующие строковые значения.</p>
+<p>Системные символы доступны как свойства функции <code>Symbol</code>, например <code>Symbol.iterator</code>.</p>
+<p>Мы можем создавать и свои символы, использовать их в объектах. Записывать их как свойства <code>Symbol</code>, разумеется, нельзя. Если нужен глобально доступный символ, то используется <code>Symbol.for(имя)</code>.</p>
+</div></meta></article></main></div></body></html>

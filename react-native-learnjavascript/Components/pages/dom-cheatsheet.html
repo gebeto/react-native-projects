@@ -1,0 +1,118 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Итого" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В этой главе кратко перечислены основные свойства и методы DOM, которые мы изучили. Их уже довольно много.</p>
+<p>Используйте её, чтобы по-быстрому вспомнить и прокрутить в голове то, что изучали ранее. Все ли эти свойства вам знакомы?</p>
+<p>Кое-где стоит ограничение на версии IE, но на все свойства можно сделать или найти полифилл, с которым их можно использовать везде.</p>
+<cut>
+<dl>
+<dt><code>document.createElement(tag)</code></dt>
+<dd>Создать элемент с тегом <code>tag</code></dd>
+<dt><code>document.createTextNode(txt)</code></dt>
+<dd>Создать текстовый узел с текстом <code>txt</code></dd>
+<dt><code>node.cloneNode(deep)</code></dt>
+<dd>Клонировать существующий узел, если <code>deep=false</code>, то без потомков.</dd>
+</dl>
+<h2><a class="main__anchor" href="#свойства-узлов" name="свойства-узлов">Свойства узлов</a></h2><dl>
+<dt><code>node.nodeType</code></dt>
+<dd>Тип узла: 1(элемент) / 3(текст) / другие.</dd>
+<dt><code>elem.tagName</code></dt>
+<dd>Тег элемента.</dd>
+<dt><code>elem.innerHTML</code></dt>
+<dd>HTML внутри элемента.</dd>
+<dt><code>elem.outerHTML</code></dt>
+<dd>Весь HTML элемента, включая сам тег. На запись использовать с осторожностью, так как не модифицирует элемент, а вставляет новый вместо него.</dd>
+<dt><code>node.data</code> / <code>node.nodeValue</code></dt>
+<dd>Содержимое узла любого типа, кроме элемента.</dd>
+<dt><code>node.textContent</code></dt>
+<dd>Текстовое содержимое узла, для элементов содержит текст с вырезанными тегами (IE9+).</dd>
+<dt><code>elem.hidden</code></dt>
+<dd>Если поставить <code>true</code>, то элемент будет скрыт (IE10+).</dd>
+</dl>
+<h2><a class="main__anchor" href="#атрибуты" name="атрибуты">Атрибуты</a></h2><dl>
+<dt><code>elem.getAttribute(name)</code>, <code>elem.hasAttribute(name)</code>, <code>elem.setAttribute(name, value)</code></dt>
+<dd>Чтение атрибута, проверка наличия и запись.</dd>
+<dt><code>elem.dataset.*</code></dt>
+<dd>Значения атрибутов вида <code>data-*</code> (IE10+).</dd>
+</dl>
+<h2><a class="main__anchor" href="#ссылки" name="ссылки">Ссылки</a></h2><dl>
+<dt><code>document.documentElement</code></dt>
+<dd>Элемент <code>&lt;HTML&gt;</code></dd>
+<dt><code>document.body</code></dt>
+<dd>Элемент <code>&lt;BODY&gt;</code></dd>
+<dt><code>document.head</code></dt>
+<dd>Элемент <code>&lt;HEAD&gt;</code> (IE9+)</dd>
+</dl>
+<p>По всем узлам:</p>
+<ul>
+<li><code>parentNode</code></li>
+<li><code>nextSibling</code> <code>previousSibling</code></li>
+<li><code>childNodes</code> <code>firstChild</code> <code>lastChild</code></li>
+</ul>
+<p>Только по элементам:</p>
+<ul>
+<li><code>parentElement</code></li>
+<li><code>nextElementSibling</code> <code>previousElementSibling</code></li>
+<li><code>children</code>, <code>firstElementChild</code> <code>lastElementChild</code></li>
+</ul>
+<p>Все они IE9+, кроме <code>children</code>, который работает в IE8-, но содержит не только элементы, но и комментарии (ошибка в браузере).</p>
+<p>Дополнительно у некоторых типов элементов могут быть и другие ссылки, свойства, коллекции для навигации,
+например для таблиц:</p>
+<dl>
+<dt><code>table.rows[N]</code></dt>
+<dd>строка <code>TR</code> номер <code>N</code>.</dd>
+<dt><code>tr.cells[N]</code></dt>
+<dd>ячейка <code>TH/TD</code> номер <code>N</code>.</dd>
+<dt><code>tr.sectionRowIndex</code></dt>
+<dd>номер строки в таблице в секции <code>THEAD/TBODY</code>.</dd>
+<dt><code>td.cellIndex</code></dt>
+<dd>номер ячейки в строке.</dd>
+</dl>
+<h2><a class="main__anchor" href="#поиск" name="поиск">Поиск</a></h2><dl>
+<dt><code>*.querySelector(css)</code></dt>
+<dd>По селектору, только первый элемент</dd>
+<dt><code>*.querySelectorAll(css)</code></dt>
+<dd>По селектору CSS3, в IE8 по CSS 2.1</dd>
+<dt><code>document.getElementById(id)</code></dt>
+<dd>По уникальному <code>id</code></dd>
+<dt><code>document.getElementsByName(name)</code></dt>
+<dd>По атрибуту <code>name</code>,  в IE9- работает только для элементов, где <code>name</code> предусмотрен стандартом.</dd>
+<dt><code>*.getElementsByTagName(tag)</code></dt>
+<dd>По тегу <code>tag</code></dd>
+<dt><code>*.getElementsByClassName(class)</code></dt>
+<dd>По классу, IE9+, корректно работает с элементами, у которых несколько классов.</dd>
+</dl>
+<p>Вообще, обычно можно использовать только <code>querySelector/querySelectorAll</code>. Методы <code>getElement*</code> работают быстрее (за счёт более оптимальной внутренней реализации), но в 99% случаев это различие очень небольшое и роли не играет.</p>
+<p>Дополнительно есть методы:</p>
+<dl>
+<dt><code>elem.matches(css)</code></dt>
+<dd>Проверяет, подходит ли элемент под CSS-селектор.</dd>
+<dt><code>elem.closest(css)</code></dt>
+<dd>Ищет ближайший элемент сверху по иерархии DOM, подходящий под CSS-селектор. Первым проверяется сам <code>elem</code>. Этот элемент возвращается.</dd>
+<dt><code>elemA.contains(elemB)</code></dt>
+<dd>Возвращает <code>true</code>, если <code>elemA</code> является предком (содержит) <code>elemB</code>.</dd>
+<dt><code>elemA.compareDocumentPosition(elemB)</code></dt>
+<dd>Возвращает битовую маску, которая включает в себя отношение вложенности между <code>elemA</code> и <code>elemB</code>, а также – какой из элементов появляется в DOM первым.</dd>
+</dl>
+<h2><a class="main__anchor" href="#изменение" name="изменение">Изменение</a></h2><ul>
+<li><code>parent.appendChild(newChild)</code></li>
+<li><code>parent.removeChild(child)</code></li>
+<li><code>parent.insertBefore(newChild, refNode)</code></li>
+<li><code>parent.insertAdjacentHTML("beforeBegin|afterBegin|beforeEnd|afterEnd", html)</code></li>
+<li><code>parent.insertAdjacentElement("beforeBegin|...|afterEnd", text)</code> (кроме FF)</li>
+<li><code>parent.insertAdjacentText("beforeBegin|...|afterEnd", text)</code> (кроме FF)</li>
+<li><code>document.write(...)</code></li>
+</ul>
+<p>Скорее всего, понадобятся полифиллы для:</p>
+<ul>
+<li><code>node.append(...nodes)</code></li>
+<li><code>node.prepend(...nodes)</code></li>
+<li><code>node.after(...nodes)</code>,</li>
+<li><code>node.before(...nodes)</code></li>
+<li><code>node.replaceWith(...nodes)</code></li>
+</ul>
+<h2><a class="main__anchor" href="#классы-и-стили" name="классы-и-стили">Классы и стили</a></h2><dl>
+<dt><code>elem.className</code></dt>
+<dd>Атрибут <code>class</code></dd></dl></cut></div></meta></article></main></div></body></html>

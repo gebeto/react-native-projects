@@ -1,0 +1,234 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Итераторы" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В современный JavaScript добавлена новая концепция «итерируемых» (iterable) объектов.</p>
+<p>Итерируемые или, иными словами, «перебираемые» объекты – это те, содержимое которых можно перебрать в цикле.</p>
+<p>Например, перебираемым объектом является массив. Но не только он. В браузере существует множество объектов, которые не являются массивами, но содержимое которых можно перебрать (к примеру, список DOM-узлов).</p>
+<p>Для перебора таких объектов добавлен новый синтаксис цикла: <code>for..of</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let arr = [1, 2, 3]; // массив — пример итерируемого объекта
+
+for (let value of arr) {
+  alert(value); // 1, затем 2, затем 3
+}</code></pre>
+</div>
+</div>
+</div><p>Также итерируемой является строка:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+for (let char of "Привет") {
+  alert(char); // Выведет по одной букве: П, р, и, в, е, т
+}</code></pre>
+</div>
+</div>
+</div><p>Итераторы – расширяющая понятие «массив» концепция, которая пронизывает современный стандарт JavaScript сверху донизу.</p>
+<p>Практически везде, где нужен перебор, он осуществляется через итераторы. Это включает в себя не только строки, массивы, но и вызов функции с оператором spread <code>f(...args)</code>, и многое другое.</p>
+<p>В отличие от массивов, «перебираемые» объекты могут не иметь «длины» <code>length</code>. Как мы увидим далее, итераторы дают возможность сделать «перебираемыми» любые объекты.</p>
+<h2><a class="main__anchor" href="#свой-итератор" name="свой-итератор">Свой итератор</a></h2><p>Допустим, у нас есть некий объект, который надо «умным способом» перебрать.</p>
+<p>Например, <code>range</code> – диапазон чисел от <code>from</code> до <code>to</code>, и мы хотим, чтобы <code>for (let num of range)</code> «перебирал» этот объект. При этом под перебором мы подразумеваем перечисление чисел от <code>from</code> до <code>to</code>.</p>
+<p>Объект <code>range</code> без итератора:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">let range = {
+  from: 1,
+  to: 5
+};
+
+// хотим сделать перебор
+// for (let num of range) ...</code></pre>
+</div>
+</div>
+</div><p>Для возможности использовать объект в <code>for..of</code> нужно создать в нём свойство с названием <code>Symbol.iterator</code> (системный символ).</p>
+<p>При вызове метода <code>Symbol.iterator</code> перебираемый объект должен возвращать другой объект («итератор»), который умеет осуществлять перебор.</p>
+<p>По стандарту у такого объекта должен быть метод <code>next()</code>, который при каждом вызове возвращает очередное значение и окончен ли перебор.</p>
+<p>В коде это выглядит следующим образом:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let range = {
+  from: 1,
+  to: 5
+}
+
+// сделаем объект range итерируемым
+range[Symbol.iterator] = function() {
+
+  let current = this.from;
+  let last = this.to;
+
+  // метод должен вернуть объект с методом next()
+  return {
+    next() {
+      if (current &lt;= last) {
+        return {
+          done: false,
+          value: current++
+        };
+      } else {
+        return {
+          done: true
+        };
+      }
+    }
+
+  }
+};
+
+for (let num of range) {
+  alert(num); // 1, затем 2, 3, 4, 5
+}</code></pre>
+</div>
+</div>
+</div><p>Как видно из кода выше, здесь имеет место разделение сущностей:</p>
+<ul>
+<li>Перебираемый объект <code>range</code> сам не реализует методы для своего перебора.</li>
+<li>Для этого создаётся другой объект, который хранит текущее состояние перебора и возвращает значение. Этот объект называется итератором и возвращается при вызове метода <code>range[Symbol.iterator]</code>.</li>
+<li>У итератора должен быть метод <code>next()</code>, который при каждом вызове возвращает объект со свойствами:
+<ul>
+<li><code>value</code> – очередное значение,</li>
+<li><code>done</code> – равно <code>false</code> если есть ещё значения, и <code>true</code> – в конце.</li>
+</ul>
+</li>
+</ul>
+<p>Конструкция <code>for..of</code> в начале своего выполнения автоматически вызывает <code>Symbol.iterator()</code>, получает итератор и далее вызывает метод <code>next()</code> до получения <code>done: true</code>. Такова внутренняя механика. Внешний код при переборе через <code>for..of</code> видит только значения.</p>
+<p>Такое отделение функционала перебора от самого объекта даёт дополнительную гибкость. Например, объект может возвращать разные итераторы в зависимости от своего настроения и времени суток. Однако, бывают ситуации когда оно не нужно.</p>
+<p>Если функционал по перебору (метод <code>next</code>) предоставляется самим объектом, то можно вернуть <code>this</code> в качестве итератора:</p>
+<div class="code-example" data-highlight-block="6-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let range = {
+  from: 1,
+  to: 5,
+
+  [Symbol.iterator]() {
+    return this;
+  },
+
+  next() {
+    if (this.current === undefined) {
+      // инициализация состояния итерации
+      this.current = this.from;
+    }
+
+    if (this.current &lt;= this.to) {
+      return {
+        done: false,
+        value: this.current++
+      };
+    } else {
+      // очистка текущей итерации
+      delete this.current;
+      return {
+        done: true
+      };
+    }
+  }
+
+};
+
+for (let num of range) {
+  alert(num); // 1, затем 2, 3, 4, 5
+}
+
+// Произойдёт вызов Math.max(1,2,3,4,5);
+alert( Math.max(...range) ); // 5 (*)</code></pre>
+</div>
+</div>
+</div><p>При таком подходе сам объект и хранит состояние итерации (текущий перебираемый элемент).</p>
+<p>В данном случае это работает, но для большей гибкости и понятности кода рекомендуется, всё же, выделять итератор в отдельный объект со своим состоянием и кодом.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Оператор spread <code>...</code> и итераторы</span></div>
+<div class="important__content"><p>В последней строке <code>(*)</code> примера выше можно видеть, что итерируемый объект передаётся через spread для <code>Math.max</code>.</p>
+<p>При этом <code>...range</code> автоматически превращает итерируемый объект в массив. То есть произойдёт цикл <code>for..of</code> по <code>range</code>, и его результаты будут использованы в качестве списка аргументов.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Бесконечные итераторы</span></div>
+<div class="important__content"><p>Возможны и бесконечные итераторы. Например, пример выше при <code>range.to = Infinity</code> будет таковым. Или можно сделать итератор, генерирующий бесконечную последовательность псевдослучайных чисел. Тоже полезно.</p>
+<p>Нет никаких ограничений на <code>next</code>, он может возвращать всё новые и новые значения, и это нормально.</p>
+<p>Разумеется, цикл <code>for..of</code> по такому итератору тоже будет бесконечным, нужно его прерывать, например, через <code>break</code>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#встроенные-итераторы" name="встроенные-итераторы">Встроенные итераторы</a></h2><p>Встроенные в JavaScript итераторы можно получить и явным образом, без <code>for..of</code>, прямым вызовом <code>Symbol.iterator</code>.</p>
+<p>Например, этот код получает итератор для строки и вызывает его полностью «вручную»:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let str = "Hello";
+
+// Делает то же, что и
+// for (var letter of str) alert(letter);
+
+let iterator = str[Symbol.iterator]();
+
+while(true) {
+  let result = iterator.next();
+  if (result.done) break;
+  alert(result.value); // Выведет все буквы по очереди
+}</code></pre>
+</div>
+</div>
+</div><p>То же самое будет работать и для массивов.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li><em>Итератор</em> – объект, предназначенный для перебора другого объекта.</li>
+<li>У итератора должен быть метод <code>next()</code>, возвращающий объект <code>{done: Boolean, value: any}</code>, где <code>value</code> – очередное значение, а <code>done: true</code> в конце.</li>
+<li>Метод <code>Symbol.iterator</code> предназначен для получения итератора из объекта. Цикл <code>for..of</code> делает это автоматически, но можно и вызвать его напрямую.</li>
+<li>В современном стандарте есть много мест, где вместо массива используются более абстрактные «итерируемые» (со свойством <code>Symbol.iterator</code>) объекты, например оператор spread <code>...</code>.</li>
+<li>Встроенные объекты, такие как массивы и строки, являются итерируемыми, в соответствии с описанным выше.</li>
+</ul>
+</div></meta></article></main></div></body></html>

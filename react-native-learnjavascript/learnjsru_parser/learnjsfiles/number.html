@@ -1,0 +1,894 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Числа" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Все числа в JavaScript, как целые так и дробные, имеют тип <code>Number</code> и хранятся в 64-битном формате <a href="http://en.wikipedia.org/wiki/IEEE_754-1985">IEEE-754</a>, также известном как  «double precision».</p>
+<p>Здесь мы рассмотрим различные тонкости, связанные с работой с числами в JavaScript.</p>
+<h2><a class="main__anchor" href="#способы-записи" name="способы-записи">Способы записи</a></h2><p>В JavaScript можно записывать числа не только в десятичной, но и в шестнадцатеричной (начинается с <code>0x</code>) системе счисления:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 0xFF ); // 255 в шестнадцатиричной системе</code></pre>
+</div>
+</div>
+</div><p>Также доступна запись в <em>«научном формате»</em> (ещё говорят «запись с плавающей точкой»), который выглядит как <code>&lt;число&gt;e&lt;кол-во нулей&gt;</code>.</p>
+<p>Например, <code>1e3</code> – это <code>1</code> с <code>3</code> нулями, то есть <code>1000</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// еще пример научной формы: 3 с 5 нулями
+alert( 3e5 ); // 300000</code></pre>
+</div>
+</div>
+</div><p>Если количество нулей отрицательно, то число сдвигается вправо за десятичную точку, так что получается десятичная дробь:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// здесь 3 сдвинуто 5 раз вправо, за десятичную точку.
+alert( 3e-5 ); // 0.00003  &lt;-- 5 нулей, включая начальный ноль</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#деление-на-ноль-infinity" name="деление-на-ноль-infinity">Деление на ноль, Infinity</a></h2><p>Представьте, что вы собираетесь создать новый язык… Люди будут называть его «JavaScript» (или «LiveScript»… неважно).</p>
+<p>Что должно происходить при попытке деления на ноль?</p>
+<p>Как правило, ошибка в программе… Во всяком случае, в большинстве языков программирования это именно так.</p>
+<p>Но создатель JavaScript решил пойти математически правильным путем. Ведь чем меньше делитель, тем больше результат. При делении на очень-очень маленькое число должно получиться очень большое. В математическом анализе это описывается через <a href="https://ru.wikipedia.org/wiki/%D0%9F%D1%80%D0%B5%D0%B4%D0%B5%D0%BB_(%D0%BC%D0%B0%D1%82%D0%B5%D0%BC%D0%B0%D1%82%D0%B8%D0%BA%D0%B0)">пределы</a>, и если подразумевать предел, то в качестве результата деления на <code>0</code> мы получаем «бесконечность», которая обозначается символом <code>∞</code> или, в JavaScript: <code>"Infinity"</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 1 / 0 ); // Infinity
+alert( 12345 / 0 ); // Infinity</code></pre>
+</div>
+</div>
+</div><p><strong><code>Infinity</code> – особенное численное значение, которое ведет себя в точности как математическая бесконечность <code>∞</code>.</strong></p>
+<ul>
+<li><code>Infinity</code> больше любого числа.</li>
+<li>Добавление к бесконечности не меняет её.</li>
+</ul>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( Infinity &gt; 1234567890 ); // true
+alert( Infinity + 5 == Infinity ); // true</code></pre>
+</div>
+</div>
+</div><p><strong>Бесконечность можно присвоить и в явном виде: <code>var x = Infinity</code>.</strong></p>
+<p>Бывает и минус бесконечность <code>-Infinity</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( -1 / 0 ); // -Infinity</code></pre>
+</div>
+</div>
+</div><p>Бесконечность можно получить также, если сделать ну очень большое число, для которого количество разрядов в двоичном представлении не помещается в соответствующую часть стандартного 64-битного формата, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 1e500 ); // Infinity</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#nan" name="nan">NaN</a></h2><p>Если математическая операция не может быть совершена, то возвращается специальное значение <code>NaN</code> (Not-A-Number).</p>
+<p>Например, деление <code>0/0</code> в математическом смысле неопределено, поэтому его результат <code>NaN</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 0 / 0 ); // NaN</code></pre>
+</div>
+</div>
+</div><p>Значение <code>NaN</code> используется для обозначения математической ошибки и обладает следующими свойствами:</p>
+<ul>
+<li>
+<p>Значение <code>NaN</code> – единственное, в своем роде, которое <em>не равно ничему, включая себя</em>.</p>
+<p>Следующий код ничего не выведет:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">if (NaN == NaN) alert( "==" ); // Ни один вызов
+if (NaN === NaN) alert( "===" ); // не сработает</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Значение <code>NaN</code> можно проверить специальной функцией <code>isNaN(n)</code>, которая преобразует аргумент к числу и возвращает <code>true</code>, если получилось <code>NaN</code>, и <code>false</code> – для любого другого значения.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var n = 0 / 0;
+
+alert( isNaN(n) ); // true
+alert( isNaN("12") ); // false, строка преобразовалась к обычному числу 12</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Значение <code>NaN</code> «прилипчиво». Любая операция с <code>NaN</code> возвращает <code>NaN</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( NaN + 1 ); // NaN</code></pre>
+</div>
+</div>
+</div></li>
+</ul>
+<p>Если аргумент <code>isNaN</code> – не число, то он автоматически преобразуется к числу.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Забавный способ проверки на <code>NaN</code></span></div>
+<div class="important__content"><p>Отсюда вытекает забавный способ проверки значения на <code>NaN</code>: можно проверить значение на равенство самому себе, если не равно – то <code>NaN</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var n = 0 / 0;
+
+if (n !== n) alert( 'n = NaN!' );</code></pre>
+</div>
+</div>
+</div><p>Это работает, но для наглядности лучше использовать <code>isNaN(n)</code>.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Математические операции в JS безопасны</span></div>
+<div class="important__content"><p>Никакие математические операции в JavaScript не могут привести к ошибке или «обрушить» программу.</p>
+<p>В худшем случае, результат будет <code>NaN</code>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#isfinite-n" name="isfinite-n">isFinite(n)</a></h2><p>Итак, в JavaScript есть обычные числа и три специальных числовых значения: <code>NaN</code>, <code>Infinity</code> и <code>-Infinity</code>.</p>
+<p>Тот факт, что они, хоть и особые, но – числа, демонстрируется работой оператора <code>+</code>:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var value = prompt("Введите Infinity", 'Infinity');
+
+var number = +value;
+
+alert( number ); // Infinity, плюс преобразовал строку "Infinity" к такому "числу"</code></pre>
+</div>
+</div>
+</div><p>Обычно если мы хотим от посетителя получить число, то <code>Infinity</code> или <code>NaN</code> нам не подходят. Для того, чтобы отличить «обычные» числа от таких специальных значений, существует функция <code>isFinite</code>.</p>
+<p><strong>Функция <code>isFinite(n)</code> преобразует аргумент к числу и возвращает <code>true</code>, если это не <code>NaN/Infinity/-Infinity</code>:</strong></p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( isFinite(1) ); // true
+alert( isFinite(Infinity) ); // false
+alert( isFinite(NaN) ); // false</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#преобразование-к-числу" name="преобразование-к-числу">Преобразование к числу</a></h2><p>Большинство арифметических операций и математических функций преобразуют значение в число автоматически.</p>
+<p>Для того, чтобы сделать это явно, обычно перед значением ставят унарный плюс <code>'+'</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var s = "12.34";
+alert( +s ); // 12.34</code></pre>
+</div>
+</div>
+</div><p>При этом, если строка не является в точности числом, то результат будет <code>NaN</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( +"12test" ); // NaN</code></pre>
+</div>
+</div>
+</div><p>Единственное исключение – пробельные символы в начале и в конце строки, которые игнорируются:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( +"  -12" ); // -12
+alert( +" \n34  \n" ); // 34, перевод строки \n является пробельным символом
+alert( +"" ); // 0, пустая строка становится нулем
+alert( +"1 2" ); // NaN, пробел посередине числа - ошибка</code></pre>
+</div>
+</div>
+</div><p>Аналогичным образом происходит преобразование и в других математических операторах и функциях:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( '12.34' / "-2" ); // -6.17</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#мягкое-преобразование-parseint-и-parsefloat" name="мягкое-преобразование-parseint-и-parsefloat">Мягкое преобразование: parseInt и parseFloat</a></h2><p>В мире HTML/CSS многие значения не являются в точности числами. Например, метрики CSS: <code>10pt</code> или <code>-12px</code>.</p>
+<p>Оператор <code>'+'</code> для таких значений возвратит <code>NaN</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert(+"12px") // NaN</code></pre>
+</div>
+</div>
+</div><p>Для удобного чтения таких значений существует функция <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseInt">parseInt</a>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( parseInt('12px') ); // 12</code></pre>
+</div>
+</div>
+</div><p><strong>Функция <code>parseInt</code> и ее аналог <code>parseFloat</code> преобразуют строку символ за символом, пока это возможно.</strong></p>
+<p>При возникновении ошибки возвращается число, которое получилось. Функция <code>parseInt</code> читает из строки целое число, а <code>parseFloat</code> – дробное.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( parseInt('12px') ) // 12, ошибка на символе 'p'
+alert( parseFloat('12.3.4') ) // 12.3, ошибка на второй точке</code></pre>
+</div>
+</div>
+</div><p>Конечно, существуют ситуации, когда <code>parseInt/parseFloat</code> возвращают <code>NaN</code>. Это происходит при ошибке на первом же символе:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( parseInt('a123') ); // NaN</code></pre>
+</div>
+</div>
+</div><p>Функция <code>parseInt</code> также позволяет указать систему счисления, то есть считывать числа, заданные в шестнадцатиричной и других системах счисления:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( parseInt('FF', 16) ); // 255</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#проверка-на-число" name="проверка-на-число">Проверка на число</a></h2><p>Для проверки строки на число можно использовать функцию <code>isNaN(str)</code>.</p>
+<p>Она преобразует строку в число аналогично <code>+</code>, а затем вернёт <code>true</code>, если это <code>NaN</code>, т.е. если преобразование не удалось:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var x = prompt("Введите значение", "-11.5");
+
+if (isNaN(x)) {
+  alert( "Строка преобразовалась в NaN. Не число" );
+} else {
+  alert( "Число" );
+}</code></pre>
+</div>
+</div>
+</div><p>Однако, у такой проверки есть две особенности:</p>
+<ol>
+<li>Пустая строка и строка из пробельных символов преобразуются к <code>0</code>, поэтому считаются числами.</li>
+<li>Если применить такую проверку не к строке, то могут быть сюрпризы, в частности <code>isNaN</code> посчитает числами значения <code>false, true, null</code>, так как они хотя и не числа, но преобразуются к ним.</li>
+</ol>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( isNaN(null) ); //  false - не NaN, т.е. "число"
+alert( isNaN("\n  \n") ); //  false - не NaN, т.е. "число"</code></pre>
+</div>
+</div>
+</div><p>Если такое поведение допустимо, то <code>isNaN</code> – приемлемый вариант.</p>
+<p>Если же нужна действительно точная проверка на число, которая не считает числом строку из пробелов, логические и специальные значения, а также отсекает <code>Infinity</code> – используйте следующую функцию <code>isNumeric</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function isNumeric(n) {
+  return !isNaN(parseFloat(n)) &amp;&amp; isFinite(n);
+}</code></pre>
+</div>
+</div>
+</div><p>Разберёмся, как она работает. Начнём справа.</p>
+<ul>
+<li>
+<p>Функция <code>isFinite(n)</code> преобразует аргумент к числу и возвращает <code>true</code>, если это не <code>Infinity/-Infinity/NaN</code>.</p>
+<p>Таким образом, правая часть отсеет заведомо не-числа, но оставит такие значения как <code>true/false/null</code> и пустую строку <code>''</code>, т.к. они корректно преобразуются в числа.</p>
+</li>
+<li>
+<p>Для их проверки нужна левая часть. Вызов <code>parseFloat(true/false/null/'')</code> вернёт <code>NaN</code> для этих значений.</p>
+<p>Так устроена функция <code>parseFloat</code>: она преобразует аргумент к строке, т.е. <code>true/false/null</code> становятся <code>"true"/"false"/"null"</code>, а затем считывает из неё число, при этом пустая строка даёт <code>NaN</code>.</p>
+</li>
+</ul>
+<p>В результате отсеивается всё, кроме строк-чисел и обычных чисел.</p>
+<h2><a class="main__anchor" href="#tostring-система-счисления" name="tostring-система-счисления">toString(система счисления)</a></h2><p>Как показано выше, числа можно записывать не только в 10-чной, но и в 16-ричной системе. Но бывает и противоположная задача: получить 16-ричное представление числа. Для этого используется метод <code>toString(основание системы)</code>, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var n = 255;
+
+alert( n.toString(16) ); // ff</code></pre>
+</div>
+</div>
+</div><p>В частности, это используют для работы с цветовыми значениями в браузере, вида <code>#AABBCC</code>.</p>
+<p>Основание может быть любым от <code>2</code> до <code>36</code>.</p>
+<ul>
+<li>
+<p>Основание <code>2</code> бывает полезно для отладки побитовых операций:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var n = 4;
+alert( n.toString(2) ); // 100</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Основание <code>36</code> (по количеству букв в английском алфавите – 26, вместе с цифрами, которых 10) используется для того, чтобы «кодировать» число в виде буквенно-цифровой строки. В этой системе счисления сначала используются цифры, а затем буквы от <code>a</code> до <code>z</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var n = 1234567890;
+alert( n.toString(36) ); // kf12oi</code></pre>
+</div>
+</div>
+</div><p>При помощи такого кодирования можно «укоротить» длинный цифровой идентификатор, например чтобы выдать его в качестве URL.</p>
+</li>
+</ul>
+<h2><a class="main__anchor" href="#округление" name="округление">Округление</a></h2><p>Одна из самых частых операций с числом – округление. В JavaScript существуют целых 3 функции для этого.</p>
+<dl>
+<dt><code>Math.floor</code></dt>
+<dd>Округляет вниз</dd>
+<dt><code>Math.ceil</code></dt>
+<dd>Округляет вверх</dd>
+<dt><code>Math.round</code></dt>
+<dd>Округляет до ближайшего целого</dd>
+</dl>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( Math.floor(3.1) );  // 3
+alert( Math.ceil(3.1) );   // 4
+alert( Math.round(3.1) );  // 3</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">Округление битовыми операторами</span></div>
+<div class="important__content"><p><a href="/bitwise-operators">Битовые операторы</a> делают любое число 32-битным целым, обрезая десятичную часть.</p>
+<p>В результате побитовая операция, которая не изменяет число, например, двойное битовое НЕ – округляет его:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( ~~12.3 ); // 12</code></pre>
+</div>
+</div>
+</div><p>Любая побитовая операция такого рода подойдет, например XOR (исключающее ИЛИ, <code>"^"</code>) с нулем:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 12.3 ^ 0 ); // 12
+alert( 1.2 + 1.3 ^ 0 ); // 2, приоритет ^ меньше, чем +</code></pre>
+</div>
+</div>
+</div><p>Это удобно в первую очередь тем, что легко читается и не заставляет ставить дополнительные скобки как <code>Math.floor(...)</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var x = a * b / c ^ 0; // читается как "a * b / c и округлить"</code></pre>
+</div>
+</div>
+</div></div></div>
+<h3><a class="main__anchor" href="#округление-до-заданной-точности" name="округление-до-заданной-точности">Округление до заданной точности</a></h3><p>Для округления до нужной цифры после запятой можно умножить и поделить на 10 с нужным количеством нулей. Например, округлим <code>3.456</code> до 2-го знака после запятой:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var n = 3.456;
+alert( Math.round(n * 100) / 100 ); // 3.456 -&gt; 345.6 -&gt; 346 -&gt; 3.46</code></pre>
+</div>
+</div>
+</div><p>Таким образом можно округлять число и вверх и вниз.</p>
+<h3><a class="main__anchor" href="#num-tofixed-precision" name="num-tofixed-precision">num.toFixed(precision)</a></h3><p>Существует также специальный метод <code>num.toFixed(precision)</code>, который округляет число <code>num</code> до точности <code>precision</code> и возвращает результат <em>в виде строки</em>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var n = 12.34;
+alert( n.toFixed(1) ); // "12.3"</code></pre>
+</div>
+</div>
+</div><p>Округление идёт до ближайшего значения, аналогично <code>Math.round</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var n = 12.36;
+alert( n.toFixed(1) ); // "12.4"</code></pre>
+</div>
+</div>
+</div><p>Итоговая строка, при необходимости, дополняется нулями до нужной точности:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var n = 12.34;
+alert( n.toFixed(5) ); // "12.34000", добавлены нули до 5 знаков после запятой</code></pre>
+</div>
+</div>
+</div><p>Если нам нужно именно число, то мы можем получить его, применив <code>'+'</code> к результату <code>n.toFixed(..)</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var n = 12.34;
+alert( +n.toFixed(5) ); // 12.34</code></pre>
+</div>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Метод <code>toFixed</code> не эквивалентен <code>Math.round</code>!</span></div>
+<div class="important__content"><p>Например, произведём округление до одного знака после запятой с использованием двух способов: <code>toFixed</code> и <code>Math.round</code> с умножением и делением:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var price = 6.35;
+
+alert( price.toFixed(1) ); // 6.3
+alert( Math.round(price * 10) / 10 ); // 6.4</code></pre>
+</div>
+</div>
+</div><p>Как видно, результат разный! Вариант округления через <code>Math.round</code> получился более корректным, так как по общепринятым правилам <code>5</code> округляется вверх. А <code>toFixed</code> может округлить его как вверх, так и вниз. Почему? Скоро узнаем!</p>
+</div></div>
+<h2><a class="main__anchor" href="#неточные-вычисления" name="неточные-вычисления">Неточные вычисления</a></h2><p>Запустите этот пример:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 0.1 + 0.2 == 0.3 );</code></pre>
+</div>
+</div>
+</div><p>Запустили? Если нет – все же сделайте это.</p>
+<p>Ок, вы запустили его. Он вывел <code>false</code>. Результат несколько странный, не так ли? Возможно, ошибка в браузере? Поменяйте браузер, запустите еще раз.</p>
+<p>Хорошо, теперь мы можем быть уверены: <code>0.1 + 0.2</code> это не <code>0.3</code>. Но тогда что же это?</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 0.1 + 0.2 ); // 0.30000000000000004</code></pre>
+</div>
+</div>
+</div><p>Как видите, произошла небольшая вычислительная ошибка, результат сложения <code>0.1 + 0.2</code> немного больше, чем <code>0.3</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 0.1 + 0.2 &gt; 0.3 ); // true</code></pre>
+</div>
+</div>
+</div><p>Всё дело в том, что в стандарте IEEE 754 на число выделяется ровно 8 байт(=64 бита), не больше и не меньше.</p>
+<p>Число <code>0.1 (одна десятая)</code> записывается просто в десятичном формате. Но в двоичной системе счисления это бесконечная дробь, так как единица на десять в двоичной системе так просто не делится. Также бесконечной дробью является <code>0.2 (=2/10)</code>.</p>
+<p>Двоичное значение бесконечных дробей хранится только до определенного знака, поэтому возникает неточность. Её даже можно увидеть:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 0.1.toFixed(20) ); // 0.10000000000000000555</code></pre>
+</div>
+</div>
+</div><p>Когда мы складываем <code>0.1</code> и <code>0.2</code>, то две неточности складываются, получаем незначительную, но всё же ошибку в вычислениях.</p>
+<p>Конечно, это не означает, что точные вычисления для таких чисел невозможны. Они возможны. И даже необходимы.</p>
+<p>Например, есть два способа сложить <code>0.1</code> и <code>0.2</code>:</p>
+<ol>
+<li>
+<p>Сделать их целыми, сложить, а потом поделить:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( (0.1 * 10 + 0.2 * 10) / 10 ); // 0.3</code></pre>
+</div>
+</div>
+</div><p>Это работает, т.к. числа <code>0.1*10 = 1</code> и <code>0.2*10 = 2</code> могут быть точно представлены в двоичной системе.</p>
+</li>
+<li>
+<p>Сложить, а затем округлить до разумного знака после запятой. Округления до 10-го знака обычно бывает достаточно, чтобы отсечь ошибку вычислений:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var result = 0.1 + 0.2;
+alert( +result.toFixed(10) ); // 0.3</code></pre>
+</div>
+</div>
+</div></li>
+</ol>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Забавный пример</span></div>
+<div class="important__content"><p>Привет! Я – число, растущее само по себе!</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 9999999999999999 ); // выведет 10000000000000000</code></pre>
+</div>
+</div>
+</div><p>Причина та же – потеря точности.</p>
+<p>Из <code>64</code> бит, отведённых на число, сами цифры числа занимают до <code>52</code> бит, остальные <code>11</code> бит хранят позицию десятичной точки и один бит – знак. Так что если <code>52</code> бит не хватает на цифры, то при записи пропадут младшие разряды.</p>
+<p>Интерпретатор не выдаст ошибку, но в результате получится «не совсем то число», что мы и видим в примере выше. Как говорится: «как смог, так записал».</p>
+</div></div>
+<p>Ради справедливости заметим, что в точности то же самое происходит в любом другом языке, где используется формат IEEE 754, включая Java, C, PHP, Ruby, Perl.</p>
+<h2><a class="main__anchor" href="#другие-математические-методы" name="другие-математические-методы">Другие математические методы</a></h2><p>JavaScript предоставляет базовые тригонометрические и некоторые другие функции для работы с числами.</p>
+<h3><a class="main__anchor" href="#тригонометрия" name="тригонометрия">Тригонометрия</a></h3><p>Встроенные функции для тригонометрических вычислений:</p>
+<dl>
+<dt><code>Math.acos(x)</code></dt>
+<dd>Возвращает арккосинус <code>x</code> (в радианах)</dd>
+<dt><code>Math.asin(x)</code></dt>
+<dd>Возвращает арксинус <code>x</code> (в радианах)</dd>
+<dt><code>Math.atan(x)</code></dt>
+<dd>Возвращает арктангенс <code>x</code> (в радианах)</dd>
+<dt><code>Math.atan2(y, x)</code></dt>
+<dd>Возвращает угол до точки <code>(y, x)</code>. Описание функции: <a href="http://en.wikipedia.org/wiki/Atan2">Atan2</a>.</dd>
+<dt><code>Math.sin(x)</code></dt>
+<dd>Вычисляет синус <code>x</code> (в радианах)</dd>
+<dt><code>Math.cos(x)</code></dt>
+<dd>Вычисляет косинус <code>x</code> (в радианах)</dd>
+<dt><code>Math.tan(x)</code></dt>
+<dd>Возвращает тангенс <code>x</code> (в радианах)</dd>
+</dl>
+<h3><a class="main__anchor" href="#функции-общего-назначения" name="функции-общего-назначения">Функции общего назначения</a></h3><p>Разные полезные функции:</p>
+<dl>
+<dt><code>Math.sqrt(x)</code></dt>
+<dd>Возвращает квадратный корень из <code>x</code>.</dd>
+<dt><code>Math.log(x)</code></dt>
+<dd>Возвращает натуральный (по основанию <code>e</code>) логарифм <code>x</code>.</dd>
+<dt><code>Math.pow(x, exp)</code></dt>
+<dd>Возводит число в степень, возвращает <code>x<sup>exp</sup></code>, например <code>Math.pow(2,3) = 8</code>. Работает в том числе с дробными и отрицательными степенями, например: <code>Math.pow(4, -1/2) = 0.5</code>.</dd>
+<dt><code>Math.abs(x)</code></dt>
+<dd>Возвращает абсолютное значение числа</dd>
+<dt><code>Math.exp(x)</code></dt>
+<dd>Возвращает <code>e<sup>x</sup></code>, где <code>e</code> – основание натуральных логарифмов.</dd>
+<dt><code>Math.max(a, b, c...)</code></dt>
+<dd>Возвращает наибольший из списка аргументов</dd>
+<dt><code>Math.min(a, b, c...)</code></dt>
+<dd>Возвращает наименьший из списка аргументов</dd>
+<dt><code>Math.random()</code></dt>
+<dd>Возвращает псевдо-случайное число в интервале [0,1) – то есть между 0(включительно) и 1(не включая). Генератор случайных чисел инициализуется текущим временем.</dd>
+</dl>
+<h3><a class="main__anchor" href="#форматирование" name="форматирование">Форматирование</a></h3><p>Для красивого вывода чисел в стандарте <a href="http://www.ecma-international.org/ecma-402/1.0/ECMA-402.pdf">ECMA 402</a> есть метод <code>toLocaleString()</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var number = 123456789;
+
+alert( number.toLocaleString() ); // 123 456 789</code></pre>
+</div>
+</div>
+</div><p>Его поддерживают все современные браузеры, кроме IE10- (для которых нужно подключить библиотеку <a href="https://github.com/andyearnshaw/Intl.js/">Intl.JS</a>). Он также умеет форматировать валюту и проценты. Более подробно про устройство этого метода можно будет узнать в статье <a href="/intl">Intl: интернационализация в JavaScript</a>, когда это вам понадобится.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Числа могут быть записаны в шестнадцатиричной, восьмеричной системе, а также «научным» способом.</li>
+<li>В JavaScript существует числовое значение бесконечность <code>Infinity</code>.</li>
+<li>Ошибка вычислений дает <code>NaN</code>.</li>
+<li>Арифметические и математические функции преобразуют строку в точности в число, игнорируя начальные и конечные пробелы.</li>
+<li>Функции <code>parseInt/parseFloat</code> делают числа из строк, которые начинаются с числа.</li>
+<li>Есть четыре способа округления: <code>Math.floor</code>, <code>Math.round</code>, <code>Math.ceil</code> и битовый оператор. Для округления до нужного знака используйте <code>+n.toFixed(p)</code> или трюк с умножением и делением на <code>10<sup>p</sup></code>.</li>
+<li>Дробные числа дают ошибку вычислений. При необходимости ее можно отсечь округлением до нужного знака.</li>
+<li>Случайные числа от <code>0</code> до <code>1</code> генерируются с помощью <code>Math.random()</code>, остальные – преобразованием из них.</li>
+</ul>
+<p>Существуют и другие математические функции. Вы можете ознакомиться с ними в справочнике в разделах <a href="http://javascript.ru/Number">Number</a> и <a href="http://javascript.ru/Math">Math</a>.</p>
+</div></meta></article></main></div></body></html>

@@ -1,0 +1,440 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Навигация по DOM-элементам" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>DOM позволяет делать что угодно с HTML-элементом и его содержимым, но для этого нужно сначала нужный элемент получить.</p>
+<p>Доступ к DOM начинается с объекта <code>document</code>. Из него можно добраться до любых узлов.</p>
+<cut>
+<p>Так выглядят основные ссылки, по которым можно переходить между узлами DOM:</p>
+<figure><div class="image" style="width:420px">
+<div class="image__ratio" style="padding-top:92.38095238095238%"></div>
+<img alt="" class="image__image" height="388" src="article/traversing-dom/dom-links.png" width="420">
+</img></div></figure><p>Посмотрим на них повнимательнее.</p>
+<h2><a class="main__anchor" href="#сверху-documentelement-и-body" name="сверху-documentelement-и-body">Сверху documentElement и body</a></h2><p>Самые верхние элементы дерева доступны напрямую из <code>document</code>.</p>
+<dl>
+<dt><code>&lt;HTML&gt;</code> = <code>document.documentElement</code></dt>
+<dd>Первая точка входа – <code>document.documentElement</code>. Это свойство ссылается на DOM-объект для тега <code>&lt;html&gt;</code>.</dd>
+<dt><code>&lt;BODY&gt;</code> = <code>document.body</code></dt>
+<dd>Вторая точка входа – <code>document.body</code>, который соответствует тегу <code>&lt;body&gt;</code>.</dd>
+</dl>
+<p>В современных браузерах (кроме IE8-) также есть <code>document.head</code> – прямая ссылка на <code>&lt;head&gt;</code></p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Есть одна тонкость: <code>document.body</code> может быть равен <code>null</code></span></div>
+<div class="important__content"><p>Нельзя получить доступ к элементу, которого еще не существует в момент выполнения скрипта.</p>
+<p>В частности, если скрипт находится в <code>&lt;head&gt;</code>, то в нём недоступен <code>document.body</code>.</p>
+<p>Поэтому в следующем примере первый <code>alert</code> выведет <code>null</code>:</p>
+<div class="code-example" data-highlight-block="5-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;script&gt;
+    alert( "Из HEAD: " + document.body ); // null, body ещё нет
+  &lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;script&gt;
+    alert( "Из BODY: " + document.body ); // body есть
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div></div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">В DOM активно используется <code>null</code></span></div>
+<div class="important__content"><p>В мире DOM в качестве значения, обозначающего «нет такого элемента» или «узел не найден», используется не <code>undefined</code>, а <code>null</code>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#дети-childnodes-firstchild-lastchild" name="дети-childnodes-firstchild-lastchild">Дети: childNodes, firstChild, lastChild</a></h2><p>Здесь и далее мы будем использовать два принципиально разных термина.</p>
+<ul>
+<li><strong>Дочерние элементы (или дети)</strong> – элементы, которые лежат <em>непосредственно</em> внутри данного. Например, внутри <code>&lt;HTML&gt;</code> обычно лежат <code>&lt;HEAD&gt;</code> и <code>&lt;BODY&gt;</code>.</li>
+<li><strong>Потомки</strong> – все элементы, которые лежат внутри данного, вместе с их детьми, детьми их детей и так далее. То есть, всё поддерево DOM.</li>
+</ul>
+<p>Псевдо-массив <code>childNodes</code> хранит все дочерние элементы, включая текстовые.</p>
+<p>Пример ниже последовательно выведет дочерние элементы <code>document.body</code>:</p>
+<div class="code-example" data-highlight-block="13-15" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;body&gt;
+  &lt;div&gt;Начало&lt;/div&gt;
+
+  &lt;ul&gt;
+    &lt;li&gt;Информация&lt;/li&gt;
+  &lt;/ul&gt;
+
+  &lt;div&gt;Конец&lt;/div&gt;
+
+  &lt;script&gt;
+    for (var i = 0; i &lt; document.body.childNodes.length; i++) {
+      alert( document.body.childNodes[i] ); // Text, DIV, Text, UL, ..., SCRIPT
+    }
+  &lt;/script&gt;
+  ...
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div><p>Обратим внимание на маленькую деталь. Если запустить пример выше, то последним будет выведен элемент <code>&lt;script&gt;</code>. На самом-то деле в документе есть ещё текст (обозначенный троеточием), но на момент выполнения скрипта браузер ещё до него не дошёл.</p>
+<p>Пробельный узел будет в <em>итоговом документе</em>, но его еще нет на момент выполнения скрипта.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Список детей – только для чтения!</span></div>
+<div class="important__content"><p>Скажем больше – все навигационные свойства, которые перечислены в этой главе – только для чтения. Нельзя просто заменить элемент присвоением <code>childNodes[i] = ...</code>.</p>
+<p>Изменение DOM осуществляется другими методами, которые мы рассмотрим далее, все навигационные ссылки при этом обновляются автоматически.</p>
+</div></div>
+<p>Свойства <code>firstChild</code> и <code>lastChild</code> обеспечивают быстрый доступ к первому и последнему элементу.</p>
+<p>При наличии дочерних узлов всегда верно:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">elem.childNodes[0] === elem.firstChild
+elem.childNodes[elem.childNodes.length - 1] === elem.lastChild</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#коллекции-не-массивы" name="коллекции-не-массивы">Коллекции – не массивы</a></h2><p>DOM-коллекции, такие как <code>childNodes</code> и другие, которые мы увидим далее, не являются JavaScript-массивами.</p>
+<p>В них нет методов массивов, таких как <code>forEach</code>, <code>map</code>, <code>push</code>, <code>pop</code> и других.</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var elems = document.documentElement.childNodes;
+
+elems.forEach(function(elem) { // нет такого метода!
+  /* ... */
+});</code></pre>
+</div>
+</div>
+</div><p>Именно поэтому <code>childNodes</code> и называют «коллекция» или «псевдомассив».</p>
+<p>Можно для перебора коллекции использовать обычный цикл <code>for(var i=0; i&lt;elems.length; i++) ...</code> Но что делать, если уж очень хочется воспользоваться методами массива?</p>
+<p>Это возможно, основных варианта два:</p>
+<ol>
+<li>
+<p>Применить метод массива через <code>call/apply</code>:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var elems = document.documentElement.childNodes;
+
+[].forEach.call(elems, function(elem) {
+  alert( elem ); // HEAD, текст, BODY
+});</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>При помощи <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice">Array.prototype.slice</a> сделать из коллекции массив.</p>
+<p>Обычно вызов <code>arr.slice(a, b)</code> делает новый массив и копирует туда элементы <code>arr</code> с индексами от <code>a</code> до <code>b-1</code> включительно. Если же вызвать его без аргументов <code>arr.slice()</code>, то он делает новый массив и копирует туда все элементы  <code>arr</code>.</p>
+<p>Это работает и для коллекции:</p>
+<div class="code-example" data-highlight-block="1-1" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var elems = document.documentElement.childNodes;
+elems = Array.prototype.slice.call(elems); // теперь elems - массив
+
+elems.forEach(function(elem) {
+  alert( elem.tagName ); // HEAD, текст, BODY
+});</code></pre>
+</div>
+</div>
+</div></li>
+</ol>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Нельзя перебирать коллекцию через <code>for..in</code></span></div>
+<div class="important__content"><p>Ранее мы говорили, что не рекомендуется использовать для перебора массива цикл <code>for..in</code>.</p>
+<p><strong>Коллекции – наглядный пример, почему нельзя. Они похожи на массивы, но у них есть свои свойства и методы, которых в массивах нет.</strong></p>
+<p>К примеру, код ниже должен перебрать все дочерние элементы <code>&lt;html&gt;</code>. Их, естественно, два: <code>&lt;head&gt;</code> и <code>&lt;body&gt;</code>. Максимум, три, если взять ещё и текст между ними.</p>
+<p>Но в примере ниже <code>alert</code> сработает не три, а целых 5 раз!</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var elems = document.documentElement.childNodes;
+
+for (var key in elems) {
+  alert( key ); // 0, 1, 2, length, item
+}</code></pre>
+</div>
+</div>
+</div><p>Цикл <code>for..in</code> выведет не только ожидаемые индексы <code>0</code>, <code>1</code>, <code>2</code>, по которым лежат узлы в коллекции, но и свойство <code>length</code> (в коллекции оно enumerable), а также функцию <code>item(n)</code> – она никогда не используется, возвращает <code>n-й</code> элемент коллекции, проще обратиться по индексу <code>[n]</code>.</p>
+<p>В реальном коде нам нужны только элементы, мы же будем работать с ними, а служебные свойства – не нужны. Поэтому желательно использовать <code>for(var i=0; i&lt;elems.length; i++)</code>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#соседи-и-родитель" name="соседи-и-родитель">Соседи и родитель</a></h2><p>Доступ к элементам слева и справа данного можно получить по ссылкам <code>previousSibling</code> / <code>nextSibling</code>.</p>
+<p>Родитель доступен через <code>parentNode</code>. Если долго идти от одного элемента к другому, то рано или поздно дойдёшь до корня DOM, то есть до <code>document.documentElement</code>, а затем и <code>document</code>.</p>
+<h2><a class="main__anchor" href="#навигация-только-по-элементам" name="навигация-только-по-элементам">Навигация только по элементам</a></h2><p>Навигационные ссылки, описанные выше, равно касаются всех узлов в документе. В частности, в <code>childNodes</code> сосуществуют и текстовые узлы и узлы-элементы и узлы-комментарии, если есть.</p>
+<p>Но для большинства задач текстовые узлы нам не интересны.</p>
+<p>Поэтому посмотрим на дополнительный набор ссылок, которые их не учитывают:</p>
+<figure><div class="image" style="width:440px">
+<div class="image__ratio" style="padding-top:71.81818181818181%"></div>
+<img alt="" class="image__image" height="316" src="article/traversing-dom/dom-links-elements.png" width="440">
+</img></div></figure><p>Эти ссылки похожи на те, что раньше, только в ряде мест стоит слово <code>Element</code>:</p>
+<ul>
+<li><code>children</code> – только дочерние узлы-элементы, то есть соответствующие тегам.</li>
+<li><code>firstElementChild</code>, <code>lastElementChild</code> – соответственно, первый и последний дети-элементы.</li>
+<li><code>previousElementSibling</code>, <code>nextElementSibling</code> – соседи-элементы.</li>
+<li><code>parentElement</code> – родитель-элемент.</li>
+</ul>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Зачем <code>parentElement</code>? Неужели бывают родители не-элементы?</span></div>
+<div class="important__content"><p>Свойство <code>elem.parentNode</code> возвращает родитель элемента.</p>
+<p>Оно всегда равно <code>parentElement</code>, кроме одного исключения:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( document.documentElement.parentNode ); // document
+alert( document.documentElement.parentElement ); // null</code></pre>
+</div>
+</div>
+</div><p>Иногда это имеет значение, если хочется перебрать всех предков и вызвать какой-то метод, а на документе его нет.</p>
+</div></div>
+<p>Модифицируем предыдущий пример, применив <code>children</code> вместо <code>childNodes</code>.</p>
+<p>Теперь он будет выводить не все узлы, а только узлы-элементы:</p>
+<div class="code-example" data-highlight-block="13-15" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;body&gt;
+  &lt;div&gt;Начало&lt;/div&gt;
+
+  &lt;ul&gt;
+    &lt;li&gt;Информация&lt;/li&gt;
+  &lt;/ul&gt;
+
+  &lt;div&gt;Конец&lt;/div&gt;
+
+  &lt;script&gt;
+    for (var i = 0; i &lt; document.body.children.length; i++) {
+      alert( document.body.children[i] ); // DIV, UL, DIV, SCRIPT
+    }
+  &lt;/script&gt;
+  ...
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div><p>Всегда верны равенства:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">elem.firstElementChild === elem.children[0]
+elem.lastElementChild === elem.children[elem.children.length - 1]</code></pre>
+</div>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">В IE8- поддерживается только <code>children</code></span></div>
+<div class="important__content"><p>Других навигационных свойств в этих браузерах нет. Впрочем, как мы увидим далее, можно легко сделать полифилл, и они, всё же, будут.</p>
+</div></div>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">В IE8- в <code>children</code> присутствуют узлы-комментарии</span></div>
+<div class="important__content"><p>С точки зрения стандарта это ошибка, но IE8- также включает в <code>children</code> узлы, соответствующие HTML-комментариям.</p>
+<p>Это может привести к сюрпризам при использовании свойства <code>children</code>, поэтому HTML-комментарии либо убирают либо используют фреймворк, к примеру, jQuery, который даёт свои методы перебора и отфильтрует их.</p>
+</div></div>
+<h2><a class="main__anchor" href="#dom-navigation-tables" name="dom-navigation-tables">Особые ссылки для таблиц</a></h2><p>У конкретных элементов DOM могут быть свои дополнительные ссылки для большего удобства навигации.</p>
+<p>Здесь мы рассмотрим таблицу, так как это важный частный случай и просто для примера.</p>
+<p>В списке ниже выделены наиболее полезные:</p>
+<dl>
+<dt><code>TABLE</code></dt>
+<dd>
+<ul>
+<li><strong><code>table.rows</code></strong> – коллекция строк <code>TR</code> таблицы.</li>
+</ul>
+</dd>
+</dl>
+<ul>
+<li><code>table.caption/tHead/tFoot</code> – ссылки на элементы таблицы <code>CAPTION</code>, <code>THEAD</code>, <code>TFOOT</code>.</li>
+<li><code>table.tBodies</code> – коллекция элементов таблицы <code>TBODY</code>, по спецификации их может быть несколько.</li>
+</ul>
+<dl>
+<dt><code>THEAD/TFOOT/TBODY</code></dt>
+<dd>
+<ul>
+<li><code>tbody.rows</code> – коллекция строк <code>TR</code> секции.</li>
+</ul>
+</dd>
+<dt><code>TR</code></dt>
+<dd>
+<ul>
+<li><strong><code>tr.cells</code></strong> – коллекция ячеек <code>TD/TH</code></li>
+</ul>
+</dd>
+</dl>
+<ul>
+<li><strong><code>tr.sectionRowIndex</code></strong> – номер строки в текущей секции <code>THEAD/TBODY</code></li>
+<li><code>tr.rowIndex</code> – номер строки в таблице</li>
+</ul>
+<dl>
+<dt><code>TD/TH</code></dt>
+<dd>
+<ul>
+<li><strong><code>td.cellIndex</code></strong> – номер ячейки в строке</li>
+</ul>
+</dd>
+</dl>
+<p>Пример использования:</p>
+<div class="code-example" data-demo-height="100" data-highlight-inline="12:13-29" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;table&gt;
+  &lt;tr&gt;
+    &lt;td&gt;один&lt;/td&gt; &lt;td&gt;два&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;три&lt;/td&gt;  &lt;td&gt;четыре&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;script&gt;
+var table = document.body.children[0];
+
+alert( table.rows[0].cells[0].innerHTML ) // "один"
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Спецификация: <a href="http://www.w3.org/TR/html5/tabular-data.html">HTML5: tabular data</a>.</p>
+<p>Даже если эти свойства не нужны вам прямо сейчас, имейте их в виду на будущее, когда понадобится пройтись по таблице.</p>
+<p>Конечно же, таблицы – не исключение.</p>
+<p>Аналогичные полезные свойства есть у HTML-форм, они позволяют из формы получить все её элементы, а из них – в свою очередь, форму. Мы рассмотрим их позже.</p>
+<h1><a class="main__anchor" href="#интерактивное-путешествие" name="интерактивное-путешествие">Интерактивное путешествие</a></h1><p>Для того, чтобы убедиться, что вы разобрались с навигацией по DOM-ссылкам – вашему вниманию предлагается интерактивное путешествие по DOM.</p>
+<p>Ниже вы найдёте документ (в ифрейме), и кнопки для перехода по нему.</p>
+<p>Изначальный элемент – <code>&lt;html&gt;</code>. Попробуйте по ссылкам найти «информацию». Или ещё чего-нибудь.</p>
+<p>Вы также можете открыть документ <a href="/article/traversing-dom/travel/">в отдельном окне</a> и походить по нему в браузерной консоли разработчика, чтобы лучше понять разницу между показанным там DOM и реальным.</p>
+<p>Разметка:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;meta charset="utf-8"&gt;
+    &lt;title&gt;Документ&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div id="header"&gt;Шапка&lt;/div&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;span style="background-color:red"&gt;Осторожно&lt;/span&gt;
+      &lt;/li&gt;
+      &lt;li class="info"&gt;&lt;input type="text" value="Информация"&gt;&lt;/li&gt;
+
+    &lt;/ul&gt;
+    &lt;div id="footer"&gt;Подвал. &amp;copy; javascript.ru&lt;/div&gt;
+    &lt;!-- комментарий --&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div><p>Документ:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" id="travel-dom-iframe" src="article/traversing-dom/travel/" style="height:150px"></iframe>
+</div><div id="travel-dom-control">
+<p>Навигация:</p>
+<ul>
+<li>
+<input data-travel-dir="parentNode" type="button" value="Вверх (parentNode)">
+<ul>
+<li><input data-travel-dir="previousSibling" type="button" value="previousSibling">
+  - <b>Здесь стоите вы <code data-travel-prop="nodeText"></code></b>
+<ul>
+<li><input data-travel-dir="firstChild" type="button" value="firstChild">
+      - <input data-travel-dir="lastChild" type="button" value="lastChild">
+</input></input></li>
+<li><input data-travel-dir="nextSibling" type="button" value="nextSibling"/></li>
+</ul>
+</input></li>
+</ul>
+</input></li>
+</ul>
+<div id="travel-dom-comment"></div>
+</div>
+<script src="script/travel.js"></script>
+<h1><a class="main__anchor" href="#итого" name="итого">Итого</a></h1><p>В DOM доступна навигация по соседним узлам через ссылки:</p>
+<ul>
+<li>По любым узлам.</li>
+<li>Только по элементам.</li>
+</ul>
+<p>Также некоторые виды элементов предоставляют дополнительные ссылки для большего удобства, например у таблиц есть свойства для доступа к строкам/ячейкам.</p>
+</cut></div></meta></article></main></div></body></html>

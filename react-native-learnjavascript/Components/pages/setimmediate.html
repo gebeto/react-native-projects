@@ -1,0 +1,115 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Асинхронное выполнение: setImmediate" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Функция, отложенная через <code>setTimeout(..0)</code> выполнится не ранее следующего «тика» таймера, минимальная частота которого может составлять от 4 до 1000 мс. И, конечно же, это произойдёт после того, как все текущие изменения будут перерисованы.</p>
+<p>Но нужна ли нам эта дополнительная задержка? Как правило, используя <code>setTimeout(func, 0)</code>, мы хотим перенести выполнение <code>func</code> на «ближайшее время после текущего кода», и какая-то дополнительная задержка нам не нужна. Если бы была нужна – мы бы её указали вторым аргументом вместо <code>0</code>.</p>
+<cut>
+<h2><a class="main__anchor" href="#метод-setimmediate-func" name="метод-setimmediate-func">Метод setImmediate(func)</a></h2><p>Для того, чтобы поставить функцию в очередь на выполнение без задержки, в Microsoft предложили метод <a href="http://msdn.microsoft.com/en-us/library/ie/hh773176.aspx">setImmediate(func)</a>. Он реализован в IE10+ и на платформе Node.JS.</p>
+<p>У <code>setImmediate</code> единственный аргумент – это функция, выполнение которой нужно запланировать.</p>
+<p>В других браузерах <code>setImmediate</code> нет, но его можно эмулировать, используя, к примеру, метод <a href="https://developer.mozilla.org/en-US/docs/DOM/window.postMessage">postMessage</a>, предназначенный для пересылки сообщений от одного окна другому. Детали работы с <code>postMessage</code> вы найдёте в статье <a href="/cross-window-messaging-with-postmessage">Общение окон с разных доменов: postMessage</a>. Желательно читать её после освоения темы «События».</p>
+<p>Полифилл для <code>setImmediate</code> через <code>postMessage</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">if (!window.setImmediate) window.setImmediate = (function() {
+  var head = { }, tail = head; // очередь вызовов, 1-связный список
+
+  var ID = Math.random(); // уникальный идентификатор
+
+  function onmessage(e) {
+    if(e.data != ID) return; // не наше сообщение
+    head = head.next;
+    var func = head.func;
+    delete head.func;
+    func();
+  }
+
+  if(window.addEventListener) { // IE9+, другие браузеры
+    window.addEventListener('message', onmessage);
+  } else { // IE8
+    window.attachEvent( 'onmessage', onmessage );
+  }
+
+  return function(func) {
+    tail = tail.next = { func: func };
+    window.postMessage(ID, "*");
+  };
+}());</code></pre>
+</div>
+</div>
+</div><p>Есть и более сложные эмуляции, включая <a href="http://www.w3.org/TR/webmessaging/#channel-messaging">MessageChannel</a> для работы с <a href="http://www.w3.org/TR/workers/">Web Workers</a> и хитрый метод для поддержки IE8-: <a href="https://github.com/NobleJS/setImmediate">https://github.com/NobleJS/setImmediate</a>. Все они по существу являются «хаками», направленными на то, чтобы обеспечить поддержку <code>setImmediate</code> в тех браузерах, где его нет.</p>
+<h2><a class="main__anchor" href="#тест-производительности" name="тест-производительности">Тест производительности</a></h2><p>Чтобы сравнить реальную частоту срабатывания – измерим время на 100 последовательных вызовов при <code>setTimeout(..0)</code> по сравнению с <code>setImmediate</code>:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">setImmediate.js</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/setimmediate/setimmediate/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/esRloHI71ylNKXVAwv6V?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/setimmediate/setimmediate/"></iframe></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>if (!window.setImmediate) window.setImmediate = (function() {
+  var head = {},
+    tail = head; // очередь вызовов, 1-связный список
+
+  var ID = Math.random(); // уникальный идентификатор
+
+  function onmessage(e) {
+    if (e.data != ID) return; // не наше сообщение
+    head = head.next;
+    var func = head.func;
+    delete head.func;
+    func();
+  }
+
+  if (window.addEventListener) { // IE9+, другие браузеры
+    window.addEventListener('message', onmessage);
+  } else { // IE8
+    window.attachEvent('onmessage', onmessage);
+  }
+
+  return function(func) {
+    tail = tail.next = {
+      func: func
+    };
+    window.postMessage(ID, "*");
+  };
+}());</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta http-equiv="X-UA-Compatible" content="IE=edge"&gt;
+  &lt;script src="setImmediate.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;button onclick="testTimeout()"&gt;testTimeout&lt;/button&gt;
+  &lt;button onclick="testImmediate()"&gt;testImmediate&lt;/button&gt;
+
+  &lt;script&gt;
+    function testTimeout() {
+      var start = new Date();
+      var i = 0;
+      setTimeout(function go() {
+        i++;
+        if (i == 100) {
+          alert(new Date - start);
+        } else {
+          setTimeout(go, 0);
+        }
+      }, 0);
+    }
+
+    function testImmediate() {
+      var start = new Date();
+      var i = 0;
+      setImmediate(function go() {
+        i++;
+        if (i == 100) {
+          alert(new Date - start);
+        } else {
+          setImmediate(go);
+        }
+      });
+    }
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>Запустите пример выше – и вы увидите реальную разницу во времени между <code>setTimeout(.., 0)</code> и <code>setImmediate</code>. Да, она может быть более в 50, 100 и более раз.</p>
+</cut></div></meta></article></main></div></body></html>

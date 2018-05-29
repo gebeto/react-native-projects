@@ -1,0 +1,410 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Центрирование горизонтальное и вертикальное" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В CSS есть всего несколько техник центрирования элементов. Если их знать, то большинство задач решаются просто.</p>
+<cut>
+<h2><a class="main__anchor" href="#горизонтальное" name="горизонтальное">Горизонтальное</a></h2><h3><a class="main__anchor" href="#text-align" name="text-align">text-align</a></h3><p>Для центрирования инлайновых элементов – достаточно поставить родителю <code>text-align: center</code>.:</p>
+<div class="code-example" data-autorun="true" data-demo-height="50" data-highlight-inline="2:4-23" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  .outer {
+    text-align: center;
+    border: 1px solid blue;
+  }
+&lt;/style&gt;
+
+&lt;div class="outer"&gt;Текст&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-gj7jni" src="about:blank" style="height:50px"></iframe>
+</div>
+</div><p>Для центрирования блока это уже не подойдёт, свойство просто не подействует. Например:</p>
+<div class="code-example" data-autorun="true" data-demo-height="50" data-highlight-inline="2:4-23" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  .outer {
+    text-align: center;
+    border: 1px solid blue;
+  }
+  .inner {
+    width: 100px;
+    border: 1px solid red;
+  }
+&lt;/style&gt;
+
+&lt;div class="outer"&gt;
+  &lt;div class="inner"&gt;Текст&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-4poilf" src="about:blank" style="height:50px"></iframe>
+</div>
+</div><h3><a class="main__anchor" href="#margin-auto" name="margin-auto">margin: auto</a></h3><p>Блок по горизонтали центрируется <code>margin: auto</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="50" data-highlight-inline="7:4-17" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  .outer {
+    border: 1px solid blue;
+  }
+  .inner {
+    width: 100px;
+    border: 1px solid red;
+    margin: auto;
+  }
+&lt;/style&gt;
+
+&lt;div class="outer"&gt;
+  &lt;div class="inner"&gt;Текст&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-80d4qj" src="about:blank" style="height:50px"></iframe>
+</div>
+</div><p>В отличие от <code>width/height</code>, значение <code>auto</code> для <code>margin</code> само не появляется. Обычно <code>margin</code> равно конкретной величине для элемента, например <code>0</code> для <code>DIV</code>. Нужно поставить его явно.</p>
+<p>Значение <code>margin-left:auto/margin-right:auto</code> заставляет браузер выделять под <code>margin</code> всё доступное сбоку пространство. А если и то и другое <code>auto</code>, то слева и справа будет одинаковый отступ, таким образом элемент окажется в середине. Детали вычислений описаны в разделе спецификации <a href="http://www.w3.org/TR/CSS21/visudet.html#Computing_widths_and_margins">Calculating widths and margins</a>.</p>
+<h2><a class="main__anchor" href="#вертикальное" name="вертикальное">Вертикальное</a></h2><p>Для горизонтального центрирования всё просто. Вертикальное же изначальное не было предусмотрено в спецификации  CSS и по сей день вызывает ряд проблем.</p>
+<p>Есть три основных решения.</p>
+<h3><a class="main__anchor" href="#position-absolute-margin" name="position-absolute-margin">position:absolute + margin</a></h3><p>Центрируемый элемент позиционируем абсолютно и опускаем до середины по вертикали при помощи <code>top:50%</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-highlight-block="8-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  .outer {
+    position: relative;
+    height: 5em;
+    border: 1px solid blue;
+  }
+
+  .inner {
+    position: absolute;
+    top: 50%;
+    border: 1px solid red;
+  }
+&lt;/style&gt;
+
+&lt;div class="outer"&gt;
+  &lt;div class="inner"&gt;Текст&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-cuzjpd" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><p>Это, конечно, не совсем центр. По центру находится верхняя граница. Нужно ещё приподнять элемент на половину своей высоты.</p>
+<p><strong>Высота центрируемого элемента должна быть известна.</strong> Родитель может иметь любую высоту.</p>
+<p>Если мы знаем, что это ровно одна строка, то её высота равна <code>line-height</code>.</p>
+<p><strong>Приподнимем элемент на пол-высоты при помощи <code>margin-top</code>:</strong></p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-highlight-block="10-10" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  .outer {
+    position: relative;
+    height: 5em;
+    border: 1px solid blue;
+  }
+
+  .inner {
+    position: absolute;
+    top: 50%;
+    margin-top: -0.625em;
+    border: 1px solid red;
+  }
+&lt;/style&gt;
+
+&lt;div class="outer"&gt;
+  &lt;div class="inner"&gt;Текст&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-dzvfcw" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">Почему&amp;#8209;0.625em?</span></div>
+<div class="important__content"><p>При стандартных настройках браузера высота строки <code>line-height: 1.25</code>, если поделить на два <code>1.25em / 2 = 0.625em</code>.</p>
+<p>Конечно, высота может быть и другой, главное чтобы мы её знали заранее.</p>
+</div></div>
+<p>Можно аналогично центрировать и по горизонтали, если известен горизонтальный размер, при помощи <code>left:50%</code> и отрицательного <code>margin-left</code>.</p>
+<h3><a class="main__anchor" href="#одна-строка-line-height" name="одна-строка-line-height">Одна строка: line-height</a></h3><p>Вертикально отцентрировать одну строку в элементе с известной высотой <code>height</code> можно, указав эту высоту в свойстве <code>line-height</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-highlight-block="3-3" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  .outer {
+    height: 5em;
+    line-height: 5em;
+    border: 1px solid blue;
+  }
+&lt;/style&gt;
+
+&lt;div class="outer"&gt;
+  &lt;span style="border:1px solid red"&gt;Текст&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-d5kefy" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><p>Это работает, но лишь до тех пор, пока строка одна, а если содержимое вдруг переносится на другую строку, то начинает выглядеть довольно уродливо.</p>
+<h3><a class="main__anchor" href="#таблица-с-vertical-align" name="таблица-с-vertical-align">Таблица с vertical-align</a></h3><p>У свойства <a href="http://www.w3.org/TR/CSS2/visudet.html#propdef-vertical-align">vertical-align</a>, которое управляет вертикальным расположением элемента, есть два режима работы.</p>
+<p><strong>В таблицах свойство <code>vertical-align</code> указывает расположение <em>содержимого</em> ячейки.</strong></p>
+<p>Его возможные значения:</p>
+<dl>
+<dt><code>baseline</code></dt>
+<dd>Значение по умолчанию.</dd>
+<dt><code>middle</code>, <code>top</code>, <code>bottom</code></dt>
+<dd>Располагать содержимое посередине, вверху, внизу ячейки.</dd>
+</dl>
+<p>Например, ниже есть таблица со всеми 3-мя значениями:</p>
+<div class="code-example" data-autorun="true" data-demo-height="130" data-highlight-block="10-12" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  table {  border-collapse: collapse; }
+  td {
+    border: 1px solid blue;
+    height: 100px;
+  }
+&lt;/style&gt;
+
+&lt;table&gt;
+&lt;tr&gt;
+  &lt;td style="vertical-align: top"&gt;top&lt;/td&gt;
+  &lt;td style="vertical-align: middle"&gt;middle&lt;/td&gt;
+  &lt;td style="vertical-align: bottom"&gt;bottom&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-1piv9d" src="about:blank" style="height:130px"></iframe>
+</div>
+</div><p>Обратим внимание, что в ячейке с <code>vertical-align: middle</code> содержимое находится по центру. Таким образом, можно обернуть нужный элемент в таблицу размера <code>width:100%;height:100%</code> с одной ячейкой, у которой указать <code>vertical-align:middle</code>, и он будет отцентрирован.</p>
+<p>Но мы рассмотрим более красивый способ, который поддерживается во всех современных браузерах, и в IE8+. В них не обязательно делать таблицу, так как доступно значение <code>display:table-cell</code>. Для элемента с таким <code>display</code> используются те же алгоритмы вычисления ширины и центрирования, что и в <code>TD</code>. И, в том числе, работает <code>vertical-align</code>:</p>
+<p>Пример центрирования:</p>
+<div class="code-example" data-autorun="true" data-demo-height="130" data-highlight-inline="0:12-57" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div style="display: table-cell; vertical-align: middle;  height: 100px; border: 1px solid red"&gt;
+  &lt;button&gt;Кнопка&lt;br&gt;с любой высотой&lt;br&gt;и шириной&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-awwbqf" src="about:blank" style="height:130px"></iframe>
+</div>
+</div><p><strong>Этот способ замечателен тем, что он не требует знания высоты элементов.</strong></p>
+<p>Однако у него есть особенность. Вместе с <code>vertical-align</code> родительский блок получает табличный алгоритм вычисления ширины и начинает подстраиваться под содержимое. Это не всегда желательно.</p>
+<p>Чтобы его растянуть, нужно указать <code>width</code> явно, например: <code>300px</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="130" data-highlight-inline="0:72-84" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div style="display: table-cell; vertical-align: middle; height: 100px; width: 300px; border: 1px solid red"&gt;
+  &lt;button&gt;Кнопка&lt;br&gt;с любой высотой&lt;br&gt;и шириной&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-467rr9" src="about:blank" style="height:130px"></iframe>
+</div>
+</div><p>Можно и в процентах, но в примере выше они не сработают, потому что структура таблицы «сломана» – ячейка есть, а собственно таблицы-то нет.</p>
+<p>Это можно починить, завернув «псевдоячейку» в элемент с <code>display:table</code>, которому и поставим ширину:</p>
+<div class="code-example" data-autorun="true" data-demo-height="130" data-highlight-inline="0:12-39" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div style="display: table; width: 100%"&gt;
+&lt;div style="display: table-cell; vertical-align: middle; height: 100px; border: 1px solid blue"&gt;
+  &lt;button&gt;Кнопка&lt;br&gt;с любой высотой&lt;br&gt;и шириной&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-fe7bfy" src="about:blank" style="height:130px"></iframe>
+</div>
+</div><p>Если дополнительно нужно горизонтальное центрирование – оно обеспечивается другими средствами, например <code>margin: 0 auto</code> для блочных элементов или <code>text-align:center</code> на родителе – для других.</p>
+<h3><a class="main__anchor" href="#центрирование-в-строке-с-vertical-align" name="центрирование-в-строке-с-vertical-align">Центрирование в строке с vertical-align</a></h3><p>Для инлайновых элементов (<code>display:inline/inline-block</code>), включая картинки, свойство <code>vertical-align</code> центрирует <em>сам инлайн-элемент в окружающем его тексте</em>.</p>
+<p>В этом случае набор значений несколько другой:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/css-center/vertical-align/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="ypXNZPt6gzuUoIBeBBVT" href="http://plnkr.co/edit/ypXNZPt6gzuUoIBeBBVT?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/css-center/vertical-align/" style="height:300px"></iframe>
+</div><p>Это можно использовать и для центрирования, если высота родителя известна, а центрируемого элемента – нет.</p>
+<p>Допустим, высота внешнего элемента <code>120px</code>. Укажем её в свойстве <code>line-height</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="150" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  .outer {
+    line-height: 120px;
+  }
+  .inner {
+    display: inline-block; /* центрировать..*/
+    vertical-align: middle;  /* ..по вертикали */
+    line-height: 1.25; /* переопределить высоту строки на обычную */
+    border: 1px solid red;
+  }
+&lt;/style&gt;
+&lt;div class="outer" style="height: 120px;border: 1px solid blue"&gt;
+  &lt;span class="inner"&gt;Центрирован&lt;br&gt;вертикально&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-6jjtww" src="about:blank" style="height:150px"></iframe>
+</div>
+</div><p>Работает во всех браузерах и IE8+.</p>
+<p>Свойство <code>line-height</code> наследуется, поэтому надо знать «правильную» высоту строки и переопределять её для <code>inner</code>.</p>
+<h3><a class="main__anchor" href="#центрирование-с-vertical-align-без-таблиц" name="центрирование-с-vertical-align-без-таблиц">Центрирование с vertical-align без таблиц</a></h3><p>Если центрирование должно работать для любой высоты родителя и центрируемого элемента, то обычно используют таблицы или <code>display:table-cell</code> с <code>vertical-align</code>.</p>
+<p>Если центрируются не-блочные элементы, например <code>inline</code> или <code>inline-block</code>, то <code>vertical-align</code> может решить задачу без всяких таблиц. Правда, понадобится вспомогательный элемент (можно через <code>:before</code>).</p>
+<p>Пример:</p>
+<div class="code-example" data-autorun="true" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+.before {
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+
+.inner {
+  display: inline-block;
+  vertical-align: middle;
+}
+&lt;/style&gt;
+
+&lt;div class="outer" style="height:100px;border:1px solid blue"&gt;
+  &lt;span class="before"&gt;&lt;/span&gt;
+  &lt;span class="inner" style="border:1px solid red"&gt;
+    Центрированный&lt;br&gt;Элемент
+  &lt;/span&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-cd5e1v" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><ul>
+<li>Перед центрируемым элементом помещается вспомогательный инлайн-блок <code>before</code>, занимающий всю возможную высоту.</li>
+<li>Центрируемый блок выровнен по его середине.</li>
+</ul>
+<p>Для всех современных браузеров и IE8 можно добавить вспомогательный элемент через <code>:before</code>:</p>
+<div class="code-example" data-autorun="true" data-highlight-inline="1:0-13" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+.outer:before {
+  content: '';
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+
+.inner {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* добавим горизонтальное центрирование */
+.outer {
+  text-align: center;
+}
+&lt;/style&gt;
+
+&lt;div class="outer" style="height:100px; width: 100%; border:1px solid black"&gt;
+  &lt;span class="inner" style="border:1px solid red"&gt;
+    Центрированный&lt;br&gt;Элемент
+  &lt;/span&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-3f02ca" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><p>В пример выше добавлено также горизонтальное центрирование <code>text-align: center</code>. Но вы можете видеть, что на самом деле внутренний элемент не центрирован горизонтально, он немного сдвинут вправо.</p>
+<p>Это происходит потому, что центрируется <em>весь текст</em>, а перед <code>inner</code> находится пробел, который занимает место.</p>
+<p>Варианта два:</p>
+<ol>
+<li>Убрать лишний пробел между <code>div</code> и началом <code>inner</code>, будет <code>&lt;div class="outer"&gt;&lt;span class="inner"&gt;...</code>.</li>
+<li>Оставить пробел, но сделать отрицательный <code>margin-left</code> у <code>inner</code>, равный размеру пробела, чтобы <code>inner</code> сместился левее.</li>
+</ol>
+<p>Второе решение:</p>
+<div class="code-example" data-autorun="true" data-highlight-block="11-11" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+.outer:before {
+  content: '';
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+
+.inner {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: -0.35em;
+}
+
+.outer {
+  text-align: center;
+}
+&lt;/style&gt;
+
+&lt;div class="outer" style="height:100px; width: 100%; border:1px solid black"&gt;
+  &lt;span class="inner" style="border:1px solid red"&gt;
+    Центрированный&lt;br&gt;Элемент
+  &lt;/span&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-pbgnb" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Обобщим решения, которые обсуждались в этой статье.</p>
+<p>Для горизонтального центрирования:</p>
+<ul>
+<li><code>text-align: center</code> – центрирует инлайн-элементы в блоке.</li>
+<li><code>margin: 0 auto</code> – центрирует блок внутри родителя. У блока должна быть указана ширина.</li>
+</ul>
+<p>Для вертикального центрирования одного блока внутри другого:</p>
+<dl>
+<dt>Если размер центрируемого элемента известен, а родителя – нет</dt>
+<dd>
+<p>Родителю <code>position:relative</code>, потомку <code>position:absolute; top:50%</code> и <code>margin-top:-&lt;половина-высоты-потомка&gt;</code>. Аналогично можно отцентрировать и по горизонтали.</p>
+</dd>
+<dt>Если нужно отцентрировать одну строку в блоке, высота которого известна</dt>
+<dd>
+<p>Поставить блоку <code>line-height: &lt;высота&gt;</code>. Нужны конкретные единицы высоты (<code>px</code>,<code>em</code>…). Значение <code>line-height:100%</code> не будет работать, т.к. проценты берутся не от высоты блока, а от текущей <code>line-height</code>.</p>
+</dd>
+<dt>Высота родителя известна, а центрируемого элемента – нет.</dt>
+<dd>
+<p>Поставить <code>line-height</code> родителю во всю его высоту, а потомку поставить <code>display:inline-block</code>.</p>
+</dd>
+<dt>Высота обоих элементов неизвестна.</dt>
+<dd>
+<p>Два варианта:</p>
+<ol>
+<li>Сделать элемент-родитель ячейкой таблицы при помощи <code>display:table-cell</code>(IE8) или реальной таблицы, и поставить ему <code>vertical-align:middle</code>. Отлично работает, но мы имеем дело с таблицей вместо обычного блока.</li>
+</ol>
+</dd>
+</dl>
+<ol start="2">
+<li>Решение с вспомогательным элементом <code>outer:before</code> и инлайн-блоками. Вполне универсально и не создаёт таблицу.</li>
+</ol>
+</cut></div></meta></article></main></div></body></html>

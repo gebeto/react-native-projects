@@ -1,0 +1,65 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Мышь: IE8-, исправление события" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Ранее мы говорили о различных несовместимостях при работе с событиями для IE8-. Самая главная – это, конечно, назначение событий при помощи <code>attachEvent/detachEvent</code> вместо <code>addEventListener/removeEventListener</code> и отсутствие фазы перехвата. Но и в самом объекте события есть различия.</p>
+<p>Что касается событий мыши, различия в свойствах можно легко исправить при помощи функции <code>fixEvent</code>, которая описана в этой главе.</p>
+<cut>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Только IE8-</span></div>
+<div class="important__content"><p>Эта глава и описанная далее функция <code>fixEvent</code> нужны только для поддержки IE8-.</p>
+<p>Если IE8- для Вас неактуален, то пролистывайте дальше, это читать Вам не надо.</p>
+</div></div>
+<p>Функция <code>fixEvent</code> предназначена для запуска в начале обработчика, вот так:</p>
+<div class="code-example" data-highlight-block="1-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">elem.onclick = function(event) {
+  // если IE8-, то получить объект события window.event и исправить его
+  event = event || fixEvent.call(this, window.event);
+  ...
+}</code></pre>
+</div>
+</div>
+</div><p>Она добавит объекту события в IE8- следующие стандартные свойства:</p>
+<ul>
+<li><code>target</code></li>
+<li><code>currentTarget</code> – если обработчик назначен не через <code>attachEvent</code>.</li>
+<li><code>relatedTarget</code> – для <code>mouseover/mouseout</code> и <code>mouseenter/mouseleave</code>.</li>
+<li><code>pageX/pageY</code></li>
+<li><code>which</code></li>
+</ul>
+<p>Код функции:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function fixEvent(e) {
+
+  e.currentTarget = this;
+  e.target = e.srcElement;
+
+  if (e.type == 'mouseover' || e.type == 'mouseenter') e.relatedTarget = e.fromElement;
+  if (e.type == 'mouseout' || e.type == 'mouseleave') e.relatedTarget = e.toElement;
+
+  if (e.pageX == null &amp;&amp; e.clientX != null) {
+    var html = document.documentElement;
+    var body = document.body;
+
+    e.pageX = e.clientX + (html.scrollLeft || body &amp;&amp; body.scrollLeft || 0);
+    e.pageX -= html.clientLeft || 0;
+
+    e.pageY = e.clientY + (html.scrollTop || body &amp;&amp; body.scrollTop || 0);
+    e.pageY -= html.clientTop || 0;
+  }
+
+  if (!e.which &amp;&amp; e.button) {
+    e.which = e.button &amp; 1 ? 1 : (e.button &amp; 2 ? 3 : (e.button &amp; 4 ? 2 : 0));
+  }
+
+  return e;
+}</code></pre>
+</div>
+</div>
+</div><p>Эта функция может быть полезна, если не используются JavaScript-фреймворки, в которых есть свои средства сглаживания кросс-браузерных различий.</p>
+</cut></div></meta></article></main></div></body></html>

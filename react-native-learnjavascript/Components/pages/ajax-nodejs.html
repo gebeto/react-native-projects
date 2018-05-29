@@ -1,0 +1,124 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Node.JS для решения задач" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В этом разделе предлагаются задачи по теме AJAX.</p>
+<p>Конечно же, они требуют взаимодействия с сервером. Мы будем использовать серверную часть, написанную на JavaScript, на <a href="http://nodejs.org">Node.JS</a>.</p>
+<cut>
+<p>Если вы не использовали Node.JS ранее – не беспокойтесь. Здесь нашей целью является преимущественно клиентская часть, поэтому прямо сейчас изучать Node.JS не обязательно. Серверные скрипты уже готовы. Нужно только поставить Node.JS и модули, чтобы их запускать.</p>
+<h2><a class="main__anchor" href="#установка" name="установка">Установка</a></h2><p>Для настройки окружения будет достаточно сделать два шага:</p>
+<ol>
+<li>
+<p>Сначала установите сам сервер Node.JS.</p>
+<p>Если у вас Unix-система – рекомендуется собрать последнюю версию из исходников, а также NPM. Вы справитесь.</p>
+<p>Если Windows – посетите сайт <a href="http://nodejs.org">http://nodejs.org</a> или скачайте установщик (32 или 64-битный) с расширением <code>.msi</code> из <a href="http://nodejs.org/dist/latest/">http://nodejs.org/dist/latest/</a>.</p>
+</li>
+<li>
+<p>Выберите директорию, в которой будете решать задачи. Запустите в ней:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">npm install node-static</code></pre>
+</div>
+</div>
+</div><p>Это установит в текущую директорию модуль <a href="https://github.com/cloudhead/node-static">node-static</a>, который станет автоматически доступным для скриптов из поддиректорий.</p>
+<p><strong>Если у вас Windows и команда не сработала, то скорее всего дело в том, что «не подхватились» новые пути. Перезапустите ваш файловый менеджер или консоль.</strong></p>
+</li>
+</ol>
+<h2><a class="main__anchor" href="#проверка" name="проверка">Проверка</a></h2><p>Проверьте инсталяцию.</p>
+<p>Для этого:</p>
+<ol>
+<li>
+<p>Создайте какую-нибудь поддиректорию и в ней файл <code>server.js</code> с таким содержимым:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var http = require('http');
+var static = require('node-static');
+var file = new static.Server('.');
+
+http.createServer(function(req, res) {
+  file.serve(req, res);
+}).listen(8080);
+
+console.log('Server running on port 8080');</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Запустите его: <code>node server.js</code>.</p>
+<p>Должно вывести:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">Server running on port 8080</code></pre>
+</div>
+</div>
+</div></li>
+</ol>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Нельзя запустить больше одного сервера одновременно!</span></div>
+<div class="important__content"><p>При попытке запуска двух серверов (например, в разных консолях) – будет конфликт портов и ошибка.</p>
+</div></div>
+<ol start="3">
+<li>
+<p>Откройте в браузере <a href="http://127.0.0.1:8080/server.js">http://127.0.0.1:8080/server.js</a>.</p>
+<p>Должно вывести код файла <code>server.js</code>.</p>
+</li>
+</ol>
+<p>Если всё работает – отлично, теперь вы готовы решать задачи.</p>
+<h2><a class="main__anchor" href="#примеры" name="примеры">Примеры</a></h2><p>В примерах, за редким исключением, для краткости будет приводиться не полный скрипт на Node.JS, а только код обработки запроса.</p>
+<p>Например, вместо:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var http = require('http');
+var url = require('url');
+var querystring = require('querystring');
+
+function accept(req, res) {
+
+  res.writeHead(200, {
+    'Content-Type': 'text/plain',
+    'Cache-Control': 'no-cache'
+  });
+
+  res.end("OK");
+}
+
+http.createServer(accept).listen(8080);</code></pre>
+</div>
+</div>
+</div><p>…Будет только функция <code>accept</code>, или даже только её содержимое:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">res.writeHead(200, {
+  'Content-Type': 'text/plain',
+  'Cache-Control': 'no-cache'
+});</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#основные-методы" name="основные-методы">Основные методы</a></h2><p>В функции <code>accept</code> используются два объекта:</p>
+<ul>
+<li><code>req</code> – объект запроса («request»), то есть то, что прислал клиент (обычно браузер), из него читаем данные.</li>
+<li><code>res</code> – объект ответа («response»), в него пишем данные в ответ клиенту.
+<ul>
+<li>вызов <code>res.writeHead(HTTP-код, [строка статуса], {заголовки})</code> пишет заголовки.</li>
+<li>вызов <code>res.write(txt)</code> пишет текст в ответ.</li>
+<li>вызов <code>res.end(txt)</code> – завершает запрос ответом.</li>
+</ul>
+</li>
+</ul>
+<h2><a class="main__anchor" href="#демо" name="демо">Демо</a></h2><p>Кроме просмотра кода, можно будет попробовать и скачать различные демки.</p>
+<p>Вот пример демо, можете попробовать нажать на кнопку – она работает.</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_download" href="/tutorial/zipview/example.zip?plunkId=SlaWzDdPQTTzsMO3QeQT" target="_blank" title="скачать архив"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/ajax-nodejs/example/" style="height:80px"></iframe>
+</div><p>Если хотите посмотреть пример поближе и поиграть с ним – скачайте архив (кнопка справа-сверху в примере выше), он будет работать и на вашем Node.JS.</p>
+<h2><a class="main__anchor" href="#больше-о-node-js" name="больше-о-node-js">Больше о Node.JS</a></h2><p>Больше о сервере Node.JS можно узнать в <a href="/nodejs-screencast">скринкасте по Node.JS</a>.</p>
+</cut></div></meta></article></main></div></body></html>

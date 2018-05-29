@@ -1,0 +1,249 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Знаете ли вы селекторы?" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>CSS3-селекторы – фундаментально полезная вещь.</p>
+<p>Даже если вы почему-то (старый IE?) не пользуетесь ими в CSS, есть много фреймворков для их кросс-браузерного использования CSS3 из JavaScript.</p>
+<p>Поэтому эти селекторы необходимо знать.</p>
+<cut>
+<h2><a class="main__anchor" href="#основные-виды-селекторов" name="основные-виды-селекторов">Основные виды селекторов</a></h2><p>Основных видов селекторов всего несколько:</p>
+<ul>
+<li><code>*</code> – любые элементы.</li>
+<li><code>div</code> – элементы с таким тегом.</li>
+<li><code>#id</code> – элемент с данным <code>id</code>.</li>
+<li><code>.class</code> – элементы с таким классом.</li>
+<li><code>[name="value"]</code> – селекторы на атрибут (см. далее).</li>
+<li><code>:visited</code> – «псевдоклассы», остальные разные условия на элемент (см. далее).</li>
+</ul>
+<p><strong>Селекторы можно комбинировать, записывая последовательно, без пробела:</strong></p>
+<ul>
+<li><code>.c1.c2</code> – элементы одновременно с двумя классами <code>c1</code> и <code>c2</code></li>
+<li><code>a#id.c1.c2:visited</code> – элемент <code>a</code> с данным <code>id</code>, классами <code>c1</code> и <code>c2</code>, и псевдоклассом <code>visited</code></li>
+</ul>
+<h2><a class="main__anchor" href="#отношения" name="отношения">Отношения</a></h2><p>В CSS3 предусмотрено четыре вида отношений между элементами.</p>
+<p>Самые известные вы наверняка знаете:</p>
+<ul>
+<li><code>div p</code> – элементы <code>p</code>, являющиеся потомками <code>div</code>.</li>
+<li><code>div &gt; p</code> – только непосредственные потомки</li>
+</ul>
+<p>Есть и два более редких:</p>
+<ul>
+<li><code>div ~ p</code> – правые соседи: все <code>p</code> на том же уровне вложенности, которые идут после <code>div</code>.</li>
+<li><code>div + p</code> – первый правый сосед: <code>p</code> на том же уровне вложенности, который идёт сразу после <code>div</code> (если есть).</li>
+</ul>
+<p>Посмотрим их на примере HTML:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;h3&gt;Балтославянские языки&lt;/h3&gt;
+
+&lt;ol id="languages"&gt;
+  ...Вложенный OL/LI список языков...
+&lt;/ol&gt;</code></pre>
+</div>
+</div>
+</div><p>CSS-селекторы:</p>
+<div class="code-example" data-highlight-block="11-13,23-25" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+#languages li {
+  color: brown;   /* потомки #languages, подходящие под селектор  LI */
+}
+
+#languages &gt; li {
+  color: black;   /* первый уровень детей #languages подходящих под LI */
+}
+
+#e-slavic { font-style: italic; }
+
+#e-slavic ~ li {  /* правые соседи #e-slavic с селектором LI */
+  color: red;
+}
+
+#latvian {
+  font-style: italic;
+}
+
+#latvian * {      /* потомки #latvian, подходяще под * (т.е. любые) */
+  font-style: normal;
+}
+
+#latvian + li {  /* первый правый сосед #latvian с селектором LI */
+ color: green;
+}</code></pre>
+</div>
+</div>
+</div><p>Результат:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/css-selectors/relation/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="2NwEOrLmpa7dRZCKHNzQ" href="http://plnkr.co/edit/2NwEOrLmpa7dRZCKHNzQ?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/css-selectors/relation/" style="height:300px"></iframe>
+</div><h2><a class="main__anchor" href="#фильтр-по-месту-среди-соседей" name="фильтр-по-месту-среди-соседей">Фильтр по месту среди соседей</a></h2><p>При выборе элемента можно указать его место среди соседей.</p>
+<p>Список псевдоклассов для этого:</p>
+<ul>
+<li>
+<p><code>:first-child</code> – первый потомок своего родителя.</p>
+</li>
+<li>
+<p><code>:last-child</code> – последний потомок своего родителя.</p>
+</li>
+<li>
+<p><code>:only-child</code> – единственный потомок своего родителя, соседних элементов нет.</p>
+</li>
+<li>
+<p><code>:nth-child(a)</code> – потомок номер <code>a</code> своего родителя, например <code>:nth-child(2)</code> – второй потомок. Нумерация начинается с <code>1</code>.</p>
+</li>
+<li>
+<p><code>:nth-child(an+b)</code> – расширение предыдущего селектора через указание номера потомка формулой, где <code>a,b</code> – константы, а под <code>n</code> подразумевается любое целое число.</p>
+<p>Этот псевдокласс будет фильтровать все элементы, которые попадают под формулу при каком-либо <code>n</code>. Например:
+-<code>:nth-child(2n)</code> даст элементы номер <code>2</code>, <code>4</code>, <code>6</code>…, то есть чётные.</p>
+<ul>
+<li><code>:nth-child(2n+1)</code> даст элементы номер <code>1</code>, <code>3</code>…, то есть нечётные.</li>
+<li><code>:nth-child(3n+2)</code> даст элементы номер <code>2</code>, <code>5</code>, <code>8</code> и так далее.</li>
+</ul>
+</li>
+</ul>
+<p>Пример использования для выделения в списке:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/css-selectors/nthchild/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="AFu2ZrxH5JXGHQXz9jgb" href="http://plnkr.co/edit/AFu2ZrxH5JXGHQXz9jgb?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/css-selectors/nthchild/" style="height:300px"></iframe>
+</div><div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ hide="CSS к примеру выше"  no-beautify */
+li:nth-child(2n) { /* чётные */
+  background: #eee;
+}
+
+li:nth-child(3) {  /* 3-ий потомок */
+  color: red;
+}</code></pre>
+</div>
+</div>
+</div><ul>
+<li><code>:nth-last-child(a)</code>, <code>:nth-last-child(an+b)</code> – то же самое, но отсчёт начинается с конца, например <code>:nth-last-child(2)</code> – второй элемент с конца.</li>
+</ul>
+<h2><a class="main__anchor" href="#фильтр-по-месту-среди-соседей-с-тем-же-тегом" name="фильтр-по-месту-среди-соседей-с-тем-же-тегом">Фильтр по месту среди соседей с тем же тегом</a></h2><p>Есть аналогичные псевдоклассы, которые учитывают не всех соседей, а только с тем же тегом:</p>
+<ul>
+<li><code>:first-of-type</code></li>
+<li><code>:last-of-type</code></li>
+<li><code>:only-of-type</code></li>
+<li><code>:nth-of-type</code></li>
+<li><code>:nth-last-of-type</code></li>
+</ul>
+<p>Они имеют в точности тот же смысл, что и обычные <code>:first-child</code>, <code>:last-child</code> и так далее, но во время подсчёта игнорируют элементы с другими тегами, чем тот, к которому применяется фильтр.</p>
+<p>Пример использования для раскраски списка <code>DT</code> «через один» и предпоследнего <code>DD</code>:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/css-selectors/nthchild-type/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="x80won4MjMQlT70Y4uCW" href="http://plnkr.co/edit/x80won4MjMQlT70Y4uCW?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/css-selectors/nthchild-type/" style="height:300px"></iframe>
+</div><div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ hide="CSS к примеру выше"  no-beautify */
+dt:nth-of-type(2n) {
+  /* чётные dt (соседи с другими тегами игнорируются) */
+  background: #eee;
+}
+
+dd:nth-last-of-type(2) {
+  /* второй dd снизу */
+  color: red;
+}</code></pre>
+</div>
+</div>
+</div><p>Как видим, селектор <code>dt:nth-of-type(2n)</code> выбрал каждый второй элемент <code>dt</code>, причём другие элементы (<code>dd</code>) в подсчётах не участвовали.</p>
+<h2><a class="main__anchor" href="#селекторы-атрибутов" name="селекторы-атрибутов">Селекторы атрибутов</a></h2><p>На атрибут целиком:</p>
+<ul>
+<li><code>[attr]</code> – атрибут установлен,</li>
+<li><code>[attr="val"]</code> – атрибут равен <code>val</code>.</li>
+</ul>
+<p>На начало атрибута:</p>
+<ul>
+<li><code>[attr^="val"]</code> – атрибут начинается с <code>val</code>, например <code>"value"</code>.</li>
+<li><code>[attr|="val"]</code> – атрибут равен <code>val</code> <em>или</em> начинается с <code>val-</code>, например равен <code>"val-1"</code>.</li>
+</ul>
+<p>На содержание:</p>
+<ul>
+<li><code>[attr*="val"]</code> – атрибут содержит подстроку <code>val</code>, например равен <code>"myvalue"</code>.</li>
+<li><code>[attr~="val"]</code> – атрибут содержит <code>val</code> как одно из значений через пробел.</li>
+</ul>
+<p>Например: <code>[attr~="delete"]</code> верно для <code>"edit delete"</code> и неверно для <code>"undelete"</code> или <code>"no-delete"</code>.</p>
+<p>На конец атрибута:</p>
+<ul>
+<li><code>[attr$="val"]</code> – атрибут заканчивается на <code>val</code>, например равен <code>"myval"</code>.</li>
+</ul>
+<h2><a class="main__anchor" href="#другие-псевдоклассы" name="другие-псевдоклассы">Другие псевдоклассы</a></h2><ul>
+<li>
+<p><code>:not(селектор)</code> – все, кроме подходящих под селектор.</p>
+</li>
+<li>
+<p><code>:focus</code> – в фокусе.</p>
+</li>
+<li>
+<p><code>:hover</code> – под мышью.</p>
+</li>
+<li>
+<p><code>:empty</code> – без детей (даже без текстовых).</p>
+</li>
+<li>
+<p><code>:checked</code>, <code>:disabled</code>, <code>:enabled</code> – состояния <code>INPUT</code>.</p>
+</li>
+<li>
+<p><code>:target</code> – этот фильтр сработает для элемента, <code>ID</code> которого совпадает с анкором  <code>#...</code> текущего URL.</p>
+<p>Например, если на странице есть элемент с <code>id="intro"</code>, то правило <code>:target { color: red }</code> подсветит его в том случае, если текущий URL имеет вид <code>http://...#intro</code>.</p>
+</li>
+</ul>
+<h2><a class="main__anchor" href="#псевдоэлементы-before-after" name="псевдоэлементы-before-after">Псевдоэлементы ::before, ::after</a></h2><p>«Псевдоэлементы» – различные вспомогательные элементы, которые браузер записывает или может записать в документ.</p>
+<p>При помощи <em>псевдоэлементов</em> <code>::before</code> и <code>::after</code> можно добавлять содержимое в начало и конец элемента:</p>
+<div class="code-example" data-autorun="true" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  li::before {
+    content: " [[ ";
+  }
+
+  li::after {
+    content: " ]] ";
+  }
+&lt;/style&gt;
+
+Обратите внимание: содержимое добавляется &lt;b&gt;внутрь&lt;/b&gt; LI.
+
+&lt;ul&gt;
+  &lt;li&gt;Первый элемент&lt;/li&gt;
+  &lt;li&gt;Второй элемент&lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-294h1l" src="about:blank" style="height:200px"></iframe>
+</div>
+</div><p>Псевдоэлементы <code>::before</code>/<code>::after</code> добавили содержимое в начало и конец каждого <code>LI</code>.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type"><code>:before</code> или <code>::before</code>?</span></div>
+<div class="important__content"><p>Когда-то все браузеры реализовали эти псевдоэлементы с одним двоеточием: <code>:after/:before</code>.</p>
+<p>Стандарт с тех пор изменился и сейчас все, кроме IE8, понимают также современную запись с двумя двоеточиями. А для IE8 нужно по-прежнему одно.</p>
+<p>Поэтому если вам важна поддержка IE8, то имеет смысл использовать одно двоеточие.</p>
+</div></div>
+<h2><a class="main__anchor" href="#практика" name="практика">Практика</a></h2><p>Вы можете использовать информацию выше как справочную для решения задач ниже, которые уже реально покажут, владеете вы CSS-селекторами или нет.</p>
+</cut></div></meta></article></main></div></body></html>

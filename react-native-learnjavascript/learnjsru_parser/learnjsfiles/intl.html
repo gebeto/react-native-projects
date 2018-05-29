@@ -1,0 +1,537 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Intl: интернационализация в JavaScript" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Общая проблема строк, дат, чисел в JavaScript – они «не в курсе» языка и особенностей стран, где находится посетитель.</p>
+<p>В частности:</p>
+<dl>
+<dt>Строки</dt>
+<dd>При сравнении сравниваются коды символов, а это неправильно, к примеру, в русском языке оказывается, что <code>"ё" &gt; "я"</code> и <code>"а" &gt; "Я"</code>, хотя всем известно, что <code>я</code> – последняя буква алфавита и это она должна быть больше любой другой.</dd>
+<dt>Даты</dt>
+<dd>В разных странах принята разная запись дат. Где-то пишут 31.12.2014 (Россия), а где-то 12/31/2014 (США), где-то иначе.</dd>
+<dt>Числа</dt>
+<dd>В одних странах выводятся цифрами, в других – иероглифами, длинные числа разделяются где-то пробелом, где-то запятой.</dd>
+</dl>
+<p>Все современные браузеры, кроме IE10- (но есть библиотеки и для него) поддерживают стандарт <a href="http://www.ecma-international.org/ecma-402/1.0/ECMA-402.pdf">ECMA 402</a>, предназначенный решить эти проблемы навсегда.</p>
+<cut>
+<h2><a class="main__anchor" href="#основные-объекты" name="основные-объекты">Основные объекты</a></h2><dl>
+<dt><code>Intl.Collator</code></dt>
+<dd>Умеет правильно сравнивать и сортировать строки.</dd>
+<dt><code>Intl.DateTimeFormat</code></dt>
+<dd>Умеет форматировать дату и время в соответствии с нужным языком.</dd>
+<dt><code>Intl.NumberFormat</code></dt>
+<dd>Умеет форматировать числа в соответствии с нужным языком.</dd>
+</dl>
+<h2><a class="main__anchor" href="#локаль" name="локаль">Локаль</a></h2><p><em>Локаль</em> – первый и самый важный аргумент всех методов, связанных с интернационализацией.</p>
+<p>Локаль описывается строкой из трёх компонентов, которые разделяются дефисом:</p>
+<ol>
+<li>Код языка.</li>
+<li>Код способа записи.</li>
+<li>Код страны.</li>
+</ol>
+<p>На практике не всегда указаны три, обычно меньше:</p>
+<ol>
+<li><code>ru</code> – русский язык, без уточнений.</li>
+<li><code>en-GB</code> – английский язык, используемый в Англии (<code>GB</code>).</li>
+<li><code>en-US</code> – английский язык, используемый в США (<code>US</code>).</li>
+<li><code>zh-Hans-CN</code> – китайский язык (<code>zh</code>), записываемый упрощённой иероглифической письменностью (<code>Hans</code>), используемый в китае.</li>
+</ol>
+<p>Также через суффикс <code>-u-*</code> можно указать расширения локалей, например <code>"th-TH-u-nu-thai"</code> – тайский язык (<code>th</code>), используемый в Тайланде (<code>TH</code>), с записью чисел тайскими буквами (๐, ๑, ๒, ๓, ๔, ๕, ๖, ๗, ๘, ๙) .</p>
+<p>Стандарт, который описывает локали – <a href="http://tools.ietf.org/html/rfc5646">RFC 5464</a>, языки описаны в <a href="http://www.iana.org/assignments/language-subtag-registry/language-subtag-registry">IANA language registry</a>.</p>
+<p>Все методы принимают локаль в виде строки или массива, содержащего несколько локалей в порядке предпочтения.</p>
+<p>Если локаль не указана или <code>undefined</code> – берётся локаль по умолчанию, установленная в окружении (браузере).</p>
+<h3><a class="main__anchor" href="#подбор-локали-localematcher" name="подбор-локали-localematcher">Подбор локали localeMatcher</a></h3><p><code>localeMatcher</code> – вспомогательная настройка, которую тоже можно везде указать, она определяет способ подбора локали, если желаемая недоступна.</p>
+<p>У него два значения:</p>
+<ul>
+<li><code>"lookup"</code> – означает простейший порядок поиска путём обрезания суффикса, например <code>zh-Hans-CN</code> → <code>zh-Hans</code> → <code>zh</code> → локаль по умолчанию.</li>
+<li><code>"best fit"</code> – использует встроенные алгоритмы и предпочтения браузера (или другого окружения) для выбора подходящей локали.</li>
+</ul>
+<p><strong>По умолчанию стоит <code>"best fit"</code>.</strong></p>
+<p>Если локалей несколько, например <code>["zh-Hans-CN", "ru-RU"]</code> то <code>localeMatcher</code> пытается подобрать наиболее подходящую локаль для первой из списка (китайская), если не получается – переходит ко второй (русской) и так далее. Если ни одной не нашёл, например на компьютере не совсем поддерживается ни китайский ни русский, то используется локаль по умолчанию.</p>
+<p>Как правило, <code>"best fit"</code> является здесь наилучшим выбором.</p>
+<h2><a class="main__anchor" href="#intl-collator" name="intl-collator">Строки, Intl.Collator</a></h2><p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// создание
+var collator = new Intl.Collator([locales, [options]])</code></pre>
+</div>
+</div>
+</div><p>Параметры:</p>
+<dl>
+<dt><code>locales</code></dt>
+<dd>
+<p>Локаль, одна или массив в порядке предпочтения.</p>
+</dd>
+<dt><code>options</code></dt>
+<dd>
+<p>Объект с дополнительными настройками:</p>
+<ul>
+<li>
+<p><code>localeMatcher</code> – алгоритм выбора подходящей локали.</p>
+</li>
+<li>
+<p><code>usage</code> – цель сравнения: сортировка <code>"sort"</code> или поиск <code>"search"</code>, по умолчанию <code>"sort"</code>.</p>
+</li>
+<li>
+<p><code>sensitivity</code> – чувствительность: какие различия в символах учитывать, а какие – нет, варианты:</p>
+<ul>
+<li><code>base</code> – учитывать только разные символы, без диакритических знаков и регистра, например: <code>а ≠ б</code>, <code>е = ё</code>, <code>а = А</code>.</li>
+<li><code>accent</code> – учитывать символы и диакритические знаки, например: <code>а ≠ б</code>, <code>е ≠ ё</code>, <code>а = А</code>.</li>
+<li><code>case</code> –  учитывать символы и регистр, например: <code>а ≠ б</code>, <code>е = ё</code>, <code>а ≠ А</code>.</li>
+<li><code>variant</code> – учитывать всё: символ, диакритические знаки, регистр, например: <code>а ≠ б</code>, <code>е ≠ ё</code>, <code>а ≠ А</code>, используется по умолчанию.</li>
+</ul>
+</li>
+<li>
+<p><code>ignorePunctuation</code> – игнорировать знаки пунктуации: <code>true/false</code>, по умолчанию <code>false</code>.</p>
+</li>
+<li>
+<p><code>numeric</code> – использовать ли численное сравнение: <code>true/false</code>, если <code>true</code>, то будет <code>12 &gt; 2</code>, иначе <code>12 &lt; 2</code>.</p>
+</li>
+<li>
+<p><code>caseFirst</code> – в сортировке должны идти первыми прописные или строчные буквы,  варианты: <code>"upper"</code> (прописные), <code>lower</code> (строчные) или <code>false</code> (стандартное для локали, также является значением по умолчанию). Не поддерживается IE11-.</p>
+</li>
+</ul>
+</dd>
+</dl>
+<p>В подавляющем большинстве случаев подходят стандартные параметры, то есть <code>options</code> указывать не нужно.</p>
+<p>Использование:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var result = collator.compare(str1, str2);</code></pre>
+</div>
+</div>
+</div><p>Результат <code>compare</code> имеет значение <code>1</code> (больше), <code>0</code> (равно) или <code>-1</code> (меньше).</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var collator = new Intl.Collator();
+
+alert( "ёжик" &gt; "яблоко" ); // true (ёжик больше, что неверно)
+alert( collator.compare("ёжик", "яблоко") ); // -1 (ёжик меньше, верно)</code></pre>
+</div>
+</div>
+</div><p>Выше были использованы полностью стандартные настройки. Они различают регистр символа, но это различие можно убрать, если настроить чувствительность <code>sensitivity</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var collator = new Intl.Collator();
+alert( collator.compare("ЁжиК", "ёжик") ); // 1, разные
+
+var collator = new Intl.Collator(undefined, {
+  sensitivity: "accent"
+});
+alert( collator.compare("ЁжиК", "ёжик") ); // 0, одинаковые</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#intl-dateformatter" name="intl-dateformatter">Даты, Intl.DateFormatter</a></h2><p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// создание
+var formatter = new Intl.DateFormatter([locales, [options]])</code></pre>
+</div>
+</div>
+</div><p>Первый аргумент – такой же, как и в <code>Collator</code>, а в объекте <code>options</code> мы можем определить, какие именно части даты показывать (часы, месяц, год…) и в каком формате.</p>
+<p>Полный список свойств <code>options</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Свойство</th>
+<th>Описание</th>
+<th>Возможные значения</th>
+<th>По умолчанию</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>localeMatcher</code> </td>
+<td> Алгоритм подбора локали</td>
+<td>
+      lookup,best fit
+    </td>
+<td>
+      best fit
+    </td>
+</tr>
+<tr>
+<td><code>formatMatcher</code> </td>
+<td>
+      Алгоритм подбора формата
+    </td>
+<td> <code>basic</code>, <code>best fit</code> </td>
+<td> <code>best fit</code> </td>
+</tr>
+<tr>
+<td><code>hour12</code></td>
+<td>Включать ли время в 12-часовом формате</td>
+<td><code>true</code> -- 12-часовой формат, <code>false</code> -- 24-часовой</td>
+<td></td>
+</tr>
+<tr>
+<td><code>timeZone</code></td>
+<td>Временная зона</td>
+<td>Временная зона, например <code>Europe/Moscow</code></td>
+<td><code>UTC</code></td>
+</tr>
+<tr>
+<td><code>weekday</code></td>
+<td>День недели</td>
+<td><code>narrow</code>, <code>short</code>, <code>long</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>era</code></td>
+<td>Эра</td>
+<td><code>narrow</code>, <code>short</code>, <code>long</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>year</code></td>
+<td>Год</td>
+<td><code>2-digit</code>, <code>numeric</code></td>
+<td><code>undefined</code> или <code>numeric</code></td>
+</tr>
+<tr>
+<td><code>month</code></td>
+<td>Месяц</td>
+<td><code>2-digit</code>, <code>numeric</code>, <code>narrow</code>, <code>short</code>, <code>long</code> </td>
+<td><code>undefined</code> или <code>numeric</code></td>
+</tr>
+<tr>
+<td><code>day</code></td>
+<td>День</td>
+<td><code>2-digit</code>, <code>numeric</code></td>
+<td><code>undefined</code> или <code>numeric</code></td>
+</tr>
+<tr>
+<td><code>hour</code></td>
+<td>Час</td>
+<td> <code>2-digit</code>, <code>numeric</code> </td>
+<td></td>
+</tr>
+<tr>
+<td><code>minute</code></td>
+<td>Минуты </td>
+<td> <code>2-digit</code>, <code>numeric</code> </td>
+<td></td>
+</tr>
+<tr>
+<td>second
+    </td>
+<td>Секунды</td>
+<td><code>2-digit</code>, <code>numeric</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>timeZoneName</code></td>
+<td>Название таймзоны (нет в IE11)</td>
+<td><code>short</code>, <code>long</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Все локали обязаны поддерживать следующие наборы настроек:</strong></p>
+<ul>
+<li>weekday, year, month, day, hour, minute, second</li>
+<li>weekday, year, month, day</li>
+<li>year, month, day</li>
+<li>year, month</li>
+<li>month, day</li>
+<li>hour, minute, second</li>
+</ul>
+<p>Если указанный формат не поддерживается, то настройка <code>formatMatcher</code> задаёт алгоритм подбора наиболее близкого формата: <code>basic</code> – по <a href="http://www.ecma-international.org/ecma-402/1.0/#BasicFormatMatcher">стандартным правилам</a> и <code>best fit</code> – по умолчанию, на усмотрение окружения (браузера).</p>
+<p>Использование:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var dateString = formatter.format(date);</code></pre>
+</div>
+</div>
+</div><p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var date = new Date(2014, 11, 31, 12, 30, 0);
+
+var formatter = new Intl.DateTimeFormat("ru");
+alert( formatter.format(date) ); // 31.12.2014
+
+var formatter = new Intl.DateTimeFormat("en-US");
+alert( formatter.format(date) ); // 12/31/2014</code></pre>
+</div>
+</div>
+</div><p>Длинная дата, с настройками:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var date = new Date(2014, 11, 31, 12, 30, 0);
+
+var formatter = new Intl.DateTimeFormat("ru", {
+  weekday: "long",
+  year: "numeric",
+  month: "long",
+  day: "numeric"
+});
+
+alert( formatter.format(date) ); // среда, 31 декабря 2014 г.</code></pre>
+</div>
+</div>
+</div><p>Только время:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var date = new Date(2014, 11, 31, 12, 30, 0);
+
+var formatter = new Intl.DateTimeFormat("ru", {
+  hour: "numeric",
+  minute: "numeric",
+  second: "numeric"
+});
+
+alert( formatter.format(date) ); // 12:30:00</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#числа-intl-numberformat" name="числа-intl-numberformat">Числа: Intl.NumberFormat</a></h2><p>Форматтер <code>Intl.NumberFormat</code> умеет красиво форматировать не только числа, но и валюту, а также проценты.</p>
+<p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var formatter = new Intl.NumberFormat([locales[, options]]);
+
+formatter.format(number); // форматирование</code></pre>
+</div>
+</div>
+</div><p>Параметры, как и раньше – локаль и опции.</p>
+<p>Список опций:</p>
+<table>
+<tr>
+<th>Свойство </th>
+<th>Описание </th>
+<th>Возможные значения </th>
+<th>По умолчанию </th>
+</tr>
+<tr>
+<td> <code>localeMatcher</code> </td>
+<td>Алгоритм подбора локали </td>
+<td> <code>lookup</code>, <code>best fit</code> </td>
+<td> <code>best fit</code> </td>
+</tr>
+<tr>
+<td> <code>style</code> </td>
+<td>Стиль форматирования </td>
+<td> <code>decimal</code>, <code>percent</code>, <code>currency</code> </td>
+<td> <code>decimal</code> </td>
+</tr>
+<tr>
+<td> <code>currency</code> </td>
+<td> Алфавитный код валюты</td>
+<td> См. [Список кодов валюты](http://www.currency-iso.org/en/home/tables/table-a1.html), например <code>USD</code> </td>
+<td> </td>
+</tr>
+<tr>
+<td> <code>currencyDisplay</code> </td>
+<td>Показывать валюту в виде кода, локализованного символа или локализованного названия
+    </td>
+<td> <code>code</code>, <code>symbol</code>, <code>name</code> </td>
+<td> <code>symbol</code> </td>
+</tr>
+<tr>
+<td> <code>useGrouping</code> </td>
+<td>Разделять ли цифры на группы</td>
+<td> <code>true</code>, <code>false</code> </td>
+<td> <code>true</code> </td>
+</tr>
+<tr>
+<td><code>minimumIntegerDigits</code></td>
+<td>Минимальное количество цифр целой части</td>
+<td>от `1` до `21`
+    </td>
+<td><code>21</code></td>
+</tr>
+<tr>
+<td><code>minimumFractionDigits</code> </td>
+<td>Минимальное количество десятичных цифр
+    </td>
+<td>от <code>0</code> до <code>20</code> </td>
+<td>для чисел и процентов <code>0</code>, для валюты зависит от кода.</td>
+</tr>
+<tr>
+<td><code>maximumFractionDigits</code></td>
+<td>Максимальное количество десятичных цифр </td>
+<td>от <code>minimumFractionDigits</code> до <code>20</code>. </td>
+<td>для чисел <code>max(minimumFractionDigits, 3)</code>, для процентов <code>0</code>, для валюты зависит от кода.</td>
+</tr>
+<tr>
+<td><code>minimumSignificantDigits</code></td>
+<td>Минимальное количество значимых цифр</td>
+<td>от <code>1</code> до <code>21</code></td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td><code>maximumSignificantDigits</code></td>
+<td>Максимальное количество значимых цифр</td>
+<td>от <code>minimumSignificantDigits</code> до <code>21</code></td>
+<td><code>minimumSignificantDigits</code></td>
+</tr>
+</table>
+<p>Пример без опций:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var formatter = new Intl.NumberFormat("ru");
+alert( formatter.format(1234567890.123) ); // 1 234 567 890,123</code></pre>
+</div>
+</div>
+</div><p>С ограничением значимых цифр (важны только первые 3):</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var formatter = new Intl.NumberFormat("ru", {
+  maximumSignificantDigits: 3
+});
+alert( formatter.format(1234567890.123) ); // 1 230 000 000</code></pre>
+</div>
+</div>
+</div><p>С опциями для валюты:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var formatter = new Intl.NumberFormat("ru", {
+  style: "currency",
+  currency: "GBP"
+});
+
+alert( formatter.format(1234.5) ); // 1 234,5 £</code></pre>
+</div>
+</div>
+</div><p>С двумя цифрами после запятой:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var formatter = new Intl.NumberFormat("ru", {
+  style: "currency",
+  currency: "GBP",
+  minimumFractionDigits: 2
+});
+
+alert( formatter.format(1234.5) ); // 1 234,50 £</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#методы-в-date-string-number" name="методы-в-date-string-number">Методы в Date, String, Number</a></h2><p>Методы форматирования также поддерживаются в обычных строках, датах, числах:</p>
+<dl>
+<dt><code>String.prototype.localeCompare(that [, locales [, options]])</code></dt>
+<dd>
+<p>Сравнивает строку с другой, с учётом локали, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = "ёжик";
+
+alert( str.localeCompare("яблоко", "ru") ); // -1</code></pre>
+</div>
+</div>
+</div></dd>
+<dt><code>Date.prototype.toLocaleString([locales [, options]])</code></dt>
+<dd>
+<p>Форматирует дату в соответствии с локалью, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var date = new Date(2014, 11, 31, 12, 00);
+
+alert( date.toLocaleString("ru", { year: 'numeric', month: 'long' }) ); // Декабрь 2014</code></pre>
+</div>
+</div>
+</div></dd>
+<dt><code>Date.prototype.toLocaleDateString([locales [, options]])</code></dt>
+<dd>
+<p>То же, что и выше, но опции по умолчанию включают в себя год, месяц, день</p>
+</dd>
+<dt><code>Date.prototype.toLocaleTimeString([locales [, options]])</code></dt>
+<dd>
+<p>То же, что и выше, но опции по умолчанию включают в себя часы, минуты, секунды</p>
+</dd>
+<dt><code>Number.prototype.toLocaleString([locales [, options]])</code></dt>
+<dd>
+<p>Форматирует число, используя опции <code>Intl.NumberFormat</code>.</p>
+</dd>
+</dl>
+<p>Все эти методы при запуске создают соответствующий объект <code>Intl.*</code> и передают ему опции, можно рассматривать их как укороченные варианты вызова.</p>
+<h2><a class="main__anchor" href="#старые-ie" name="старые-ie">Старые IE</a></h2><p>В IE10- рекомендуется использовать полифилл, например библиотеку <a href="https://github.com/andyearnshaw/Intl.js">https://github.com/andyearnshaw/Intl.js</a>.</p>
+</cut></div></meta></article></main></div></body></html>

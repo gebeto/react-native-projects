@@ -1,0 +1,165 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Порядок обработки событий" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>События могут возникать не только по очереди, но и «пачкой» по много сразу. Возможно и такое, что во время обработки одного события возникают другие, например пока выполнялся код для <code>onclick</code> – посетитель нажал кнопку на клавиатуре (событие <code>keydown</code>).</p>
+<p>Здесь мы разберём, как браузер обычно работает с одновременно возникающими событиями и какие есть исключения из общего правила.</p>
+<cut>
+<h2><a class="main__anchor" href="#главный-поток" name="главный-поток">Главный поток</a></h2><p>В каждом окне выполняется только один <em>главный</em> поток, который занимается выполнением JavaScript, отрисовкой и работой с DOM.</p>
+<p>Он выполняет команды последовательно, может делать только одно дело одновременно и блокируется при выводе модальных окон, таких как <code>alert</code>.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Дополнительные потоки тоже есть</span></div>
+<div class="important__content"><p>Есть и другие, служебные потоки, например, для сетевых коммуникаций.</p>
+<p>Поэтому скачивание файлов может продолжаться пока главный поток ждёт реакции на <code>alert</code>. Но управлять служебными потоками мы не можем.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Web Workers</span></div>
+<div class="important__content"><p>Существует спецификация <a href="http://www.w3.org/TR/workers/">Web Workers</a>, которая позволяет запускать дополнительные JavaScript-процессы(workers).</p>
+<p>Они могут обмениваться сообщениями с главным процессом, но у них свои переменные, и работают они также сами по себе.</p>
+<p>Такие дополнительные процессы не имеют доступа к DOM, поэтому они полезны, преимущественно, при вычислениях, чтобы загрузить несколько ядер/процессоров одновременно.</p>
+</div></div>
+<h2><a class="main__anchor" href="#очередь-событий" name="очередь-событий">Очередь событий</a></h2><p>Произошло одновременно несколько событий или во время работы одного случилось другое – как главному потоку обработать это?</p>
+<p>Если главный поток прямо сейчас занят, то он не может срочно выйти из середины одной функции и прыгнуть в другую. А потом третью. Отладка при этом могла бы превратиться в кошмар, потому что пришлось бы разбираться с совместным состоянием нескольких функций сразу.</p>
+<p>Поэтому используется альтернативный подход.</p>
+<p><strong>Когда происходит событие, оно попадает в очередь.</strong></p>
+<p>Внутри браузера непрерывно работает «главный внутренний цикл», который следит за состоянием очереди и обрабатывает события, запускает соответствующие обработчики и т.п.</p>
+<p><strong>Иногда события добавляются в очередь сразу пачкой.</strong></p>
+<p>Например, при клике на элементе генерируется несколько событий:</p>
+<ol>
+<li>Сначала <code>mousedown</code> – нажата кнопка мыши.</li>
+<li>Затем <code>mouseup</code> – кнопка мыши отпущена и, так как это было над одним элементом, то дополнительно генерируется <code>click</code> (два события сразу).</li>
+</ol>
+<p>В действии:</p>
+<div class="code-example" data-autorun="true" data-demo-height="150" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;textarea rows="8" cols="40" id="area"&gt;Кликни меня
+&lt;/textarea&gt;
+
+&lt;script&gt;
+  area.onmousedown = function(e) { this.value += "mousedown\n"; this.scrollTop = this.scrollHeight; };
+  area.onmouseup = function(e) { this.value += "mouseup\n"; this.scrollTop = this.scrollHeight; };
+  area.onclick = function(e) { this.value += "click\n"; this.scrollTop = this.scrollHeight; };
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-cox0d4" src="about:blank" style="height:150px"></iframe>
+</div>
+</div><p>Таким образом, при нажатии кнопки мыши в очередь попадёт событие <code>mousedown</code>, а при отпускании – сразу два события: <code>mouseup</code> и <code>click</code>. Браузер обработает их строго одно за другим: <code>mousedown</code> → <code>mouseup</code> → <code>click</code>.</p>
+<p>При этом каждое событие из очереди обрабатывается полностью отдельно от других.</p>
+<h2><a class="main__anchor" href="#вложенные-синхронные-события" name="вложенные-синхронные-события">Вложенные (синхронные) события</a></h2><p>Обычно возникающие события «становятся в очередь».</p>
+<p>Но в тех случаях, когда событие инициируется не посетителем, а кодом, то оно, как правило, обрабатывается синхронно, то есть прямо сейчас.</p>
+<p>Рассмотрим в качестве примера событие <code>onfocus</code>.</p>
+<h3><a class="main__anchor" href="#пример-событие-onfocus" name="пример-событие-onfocus">Пример: событие onfocus</a></h3><p>Когда посетитель фокусируется на элементе, возникает событие <code>onfocus</code>. Обычно оно происходит, когда посетитель кликает на поле ввода, например:</p>
+<div class="code-example" data-autorun="true" data-demo-height="80" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;p&gt;При фокусе на поле оно изменит значение.&lt;/p&gt;
+&lt;input type="text" onfocus="this.value = 'Фокус!'" value="Кликни меня"&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-4l00dp" src="about:blank" style="height:80px"></iframe>
+</div>
+</div><p>Но ту же фокусировку можно вызвать и явно, вызовом метода <code>elem.focus()</code>:</p>
+<div class="code-example" data-highlight-block="3-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="text" id="elem" onfocus="this.value = 'Фокус!'"&gt;
+
+&lt;script&gt;
+  // сфокусируется на input и вызовет обработчик onfocus
+  elem.focus();
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>В главе <a href="/focus-blur">Фокусировка: focus/blur</a> мы познакомимся с этим событием подробнее, а пока – нажмите на кнопку в примере ниже.</p>
+<p>При этом обработчик <code>onclick</code> вызовет метод <code>focus()</code> на текстовом поле <code>text</code>. Код обработчика <code>onfocus</code>, который при этом запустится, сработает синхронно, прямо сейчас, до завершения <code>onclick</code>.</p>
+<div class="code-example" data-autorun="true" data-demo-height="80" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="button" id="button" value="Нажми меня"&gt;
+&lt;input type="text" id="text" size="60"&gt;
+
+&lt;script&gt;
+
+  button.onclick = function() {
+    text.value += ' -&gt;в onclick ';
+
+    text.focus(); // вызов инициирует событие onfocus
+
+    text.value += ' из onclick-&gt; ';
+  };
+
+  text.onfocus = function() {
+    text.value += ' !focus! ';
+  };
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-ffmy79" src="about:blank" style="height:80px"></iframe>
+</div>
+</div><p>При клике на кнопке в примере выше будет видно, что управление вошло в <code>onclick</code>, затем перешло в <code>onfocus</code>, затем вышло из <code>onclick</code>.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Исключение в IE</span></div>
+<div class="important__content"><p>Так ведут себя все браузеры, кроме IE.</p>
+<p>В нём событие <code>onfocus</code> – всегда асинхронное, так что будет сначала полностью обработан клик, а потом – фокус. В остальных – фокус вызовется посередине клика. Попробуйте кликнуть в IE и в другом браузере, чтобы увидеть разницу.</p>
+</div></div>
+<h2><a class="main__anchor" href="#делаем-события-асинхронными-через-settimeout-0" name="делаем-события-асинхронными-через-settimeout-0">Делаем события асинхронными через setTimeout(…,0)</a></h2><p>А что, если мы хотим, чтобы <em>сначала</em> закончилась обработка <code>onclick</code>, а потом уже произошла обработка <code>onfocus</code> и связанные с ней действия?</p>
+<p>Можно добиться и этого.</p>
+<p>Один вариант – просто переместить строку <code>text.focus()</code> вниз кода обработчика <code>onclick</code>.</p>
+<p>Если это неудобно, можно запланировать <code>text.focus()</code> чуть позже через <code>setTimeout(..., 0)</code>, вот так</p>
+<div class="code-example" data-autorun="true" data-demo-height="80" data-highlight-block="7-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="button" id="button" value="Нажми меня"&gt;
+&lt;input type="text" id="text" size="60"&gt;
+
+&lt;script&gt;
+  button.onclick = function() {
+    text.value += ' -&gt;в onclick ';
+
+    setTimeout(function() {
+      text.focus(); // сработает после onclick
+    }, 0);
+
+    text.value += ' из onclick-&gt; ';
+  };
+
+  text.onfocus = function() {
+    text.value += ' !focus! ';
+  };
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-ec9asp" src="about:blank" style="height:80px"></iframe>
+</div>
+</div><p>Такой вызов обеспечит фокусировку через минимальный «тик» таймера, по стандарту равный 4 мс. Обычно такая задержка не играет роли, а необходимую асинхронность мы получили.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>JavaScript выполняется в едином потоке. Современные браузеры позволяют порождать подпроцессы <a href="http://www.w3.org/TR/workers/">Web Workers</a>, они выполняются параллельно и могут отправлять/принимать сообщения, но не имеют доступа к DOM.</li>
+<li>Обычно события становятся в очередь и обрабатываются в порядке поступления, асинхронно, независимо друг от друга.</li>
+<li>Синхронными являются вложенные события,  инициированные из кода.</li>
+<li>Чтобы сделать событие гарантированно асинхронным, используется вызов через <code>setTimeout(func, 0)</code>.</li>
+</ul>
+<p>Отложенный вызов через <code>setTimeout(func, 0)</code> используется не только в событиях, а вообще – всегда, когда мы хотим, чтобы некая функция <code>func</code> сработала после того, как текущий скрипт завершится.</p>
+</cut></div></meta></article></main></div></body></html>

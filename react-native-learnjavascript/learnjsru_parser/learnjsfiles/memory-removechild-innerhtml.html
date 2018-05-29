@@ -1,0 +1,139 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Очистка памяти при removeChild/innerHTML" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Управление памятью в случае с DOM работает по сути так же, как и с обычными JavaScript-объектами. Пока объект достижим – он остаётся в памяти.</p>
+<p>Но есть и особенности, поскольку DOM весь переплетён ссылками.</p>
+<cut>
+<h2><a class="main__anchor" href="#пример" name="пример">Пример</a></h2><p>Для примера рассмотрим следующий HTML:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;html&gt;
+
+&lt;body&gt;
+  &lt;div&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Список&lt;/li&gt;
+    &lt;/ul&gt;
+    Сосед
+  &lt;/div&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div><p>Его DOM (показаны только основные ссылки):</p>
+<figure><div class="image" style="width:314px">
+<div class="image__ratio" style="padding-top:98.08917197452229%"></div>
+<img alt="" class="image__image" height="308" src="article/memory-removechild-innerhtml/html.png" width="314">
+</img></div></figure><h2><a class="main__anchor" href="#удаление-removechild" name="удаление-removechild">Удаление removeChild</a></h2><p>Операция <code>removeChild</code> разрывает все связи удаляемым узлом и его родителем.</p>
+<p>Поэтому, если удалить <code>DIV</code> из <code>BODY</code>, то всё поддерево под <code>DIV</code> станет недостижимым и будет удалено.</p>
+<p>А что происходит, если на какой-то элемент внутри удаляемого поддерева есть ссылка?</p>
+<p>Например, <code>UL</code> сохранён в переменную <code>list</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var list = document.getElementsByTagName('UL')[0];
+document.body.removeChild(document.body.children[0]);</code></pre>
+</div>
+</div>
+</div><p>В этом случае, так как из этого <code>UL</code> можно по ссылкам добраться до любого другого места DOM, то получается, что все объекты по-прежнему достижимы и должны остаться в памяти:</p>
+<figure><div class="image" style="width:367px">
+<div class="image__ratio" style="padding-top:83.92370572207084%"></div>
+<img alt="" class="image__image" height="308" src="article/memory-removechild-innerhtml/html-list.png" width="367">
+</img></div></figure><p>То есть, DOM-объекты при использовании <code>removeChild</code> работают по той же логике, что и обычные объекты.</p>
+<h2><a class="main__anchor" href="#удаление-через-innerhtml" name="удаление-через-innerhtml">Удаление через innerHTML</a></h2><p>А вот удаление через очистку <code>elem.innerHTML="..."</code> браузеры интерпретируют по-разному.</p>
+<p>По идее, при присвоении <code>elem.innerHTML=html</code> из DOM должны удаляться предыдущие узлы и добавляться новые,  из указанного <code>html</code>. Но стандарт ничего не говорит о том, что делать с узлами после удаления. И тут разные браузеры имеют разное мнение.</p>
+<p>Посмотрим, что произойдёт с DOM-структурой при очистке <code>BODY</code>, если на какой-либо элемент есть ссылка.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var list = document.getElementsByTagName('UL')[0];
+document.body.innerHTML = "";</code></pre>
+</div>
+</div>
+</div><p>Обращаю внимание – связь разрывается только между <code>DIV</code> и <code>BODY</code>, т.е. на верхнем уровне, а <code>list</code> – это произвольный элемент.</p>
+<p>Чтобы увидеть, что останется в памяти, а что нет – запустим код:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div&gt;
+  &lt;ul&gt;
+    &lt;li&gt;Список&lt;/li&gt;
+  &lt;/ul&gt;
+  Сосед
+&lt;/div&gt;
+
+&lt;script&gt;
+  var list = document.getElementsByTagName('ul')[0];
+  document.body.innerHTML = ''; // удалили DIV
+
+  alert( list.parentNode ); // цела ли ссылка UL -&gt; DIV ?
+  alert( list.nextSibling ); // живы ли соседи UL ?
+  alert( list.children.length ); // живы ли потомки UL ?
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Как ни странно, браузеры ведут себя по-разному:</p>
+<table>
+<thead>
+<tr><th></th>
+<th><code>parentNode</code></th>
+<th><code>nextSibling</code></th>
+<th><code>children.length</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chrome/Safari/Opera</td>
+<td><code>null</code></td>
+<td><code>null</code></td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td>Firefox</td>
+<td>узел DOM</td>
+<td>узел DOM</td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td>IE 11-</td>
+<td><code>null</code></td>
+<td><code>null</code></td>
+<td><code>0</code></td>
+</tr>
+</tbody>
+</table>
+<p>Иными словами, браузеры ведут себя с различной степенью агрессивности по отношению к элементам.</p>
+<dl>
+<dt>Firefox</dt>
+<dd>Главный пацифист. Оставляет всё, на что есть ссылки, т.е. элемент, его родителя, соседей и детей, в точности как при <code>removeChild</code>.</dd>
+<dt>Chrome/Safari/Opera</dt>
+<dd>Считают, что раз мы задали ссылку на <code>UL</code>, то нам нужно только это поддерево, а остальные узлы (соседей, родителей) можно удалить.</dd>
+<dt>Internet Explorer</dt>
+<dd>Как ни странно, самый агрессивный. Удаляет вообще всё, кроме узла, на который есть ссылка. Это поведение одинаково для всех версий IE.</dd>
+</dl>
+<p>На иллюстрации ниже показано, какую часть DOM оставит каждый из браузеров:
+<img alt="" height="325" src="article/memory-removechild-innerhtml/html-innerhtml.png" width="415"/></p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Если на какой-то DOM-узел есть ссылка, то:</p>
+<ul>
+<li>
+<p>При использовании <code>removeChild</code> на родителе (или на этом узле, не важно) все узлы, достижимые из данного, остаются в памяти.</p>
+<p>То есть, фактически, в памяти может остаться большая часть дерева DOM. Это даёт наибольшую свободу в коде, но может привести к большим «утечкам памяти» из-за сохранения данных, которые реально не нужны.</p>
+</li>
+<li>
+<p>При удалении через <code>innerHTML</code> браузеры ведут себя с различной степенью агрессивности. Кросс-браузерно гарантировано одно: сам узел, на который есть ссылка, останется в памяти.</p>
+<p>Поэтому обращаться к соседям и детям узла, предок которого удалён через присвоение <code>innerHTML</code>, нельзя.</p>
+</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

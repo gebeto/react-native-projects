@@ -1,0 +1,278 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Преобразование типов для примитивов" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Система преобразования типов в JavaScript очень проста, но отличается от других языков. Поэтому она часто служит «камнем преткновения» для приходящих из других языков программистов.</p>
+<cut>
+<p>Всего есть три преобразования:</p>
+<ol>
+<li>Строковое преобразование.</li>
+<li>Числовое преобразование.</li>
+<li>Преобразование к логическому значению.</li>
+</ol>
+<p><strong>Эта глава описывает преобразование только примитивных значений, объекты разбираются далее.</strong></p>
+<h2><a class="main__anchor" href="#строковое-преобразование" name="строковое-преобразование">Строковое преобразование</a></h2><p>Строковое преобразование происходит, когда требуется представление чего-либо в виде строки. Например, его производит функция <code>alert</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var a = true;
+
+alert( a ); // "true"</code></pre>
+</div>
+</div>
+</div><p>Можно также осуществить преобразование явным вызовом <code>String(val)</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( String(null) === "null" ); // true</code></pre>
+</div>
+</div>
+</div><p>Как видно из примеров выше, преобразование происходит наиболее очевидным способом, «как есть»: <code>false</code> становится <code>"false"</code>, <code>null</code> – <code>"null"</code>, <code>undefined</code> – <code>"undefined"</code> и т.п.</p>
+<p>Также для явного преобразования применяется оператор <code>"+"</code>, у которого один из аргументов строка. В этом случае он приводит к строке и другой аргумент, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( true + "test" ); // "truetest"
+alert( "123" + undefined ); // "123undefined"</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#численное-преобразование" name="численное-преобразование">Численное преобразование</a></h2><p>Численное преобразование происходит в математических функциях и выражениях, а также при сравнении данных различных типов (кроме сравнений <code>===</code>, <code>!==</code>).</p>
+<p>Для преобразования к числу в явном виде можно вызвать <code>Number(val)</code>, либо, что короче, поставить перед выражением унарный плюс <code>"+"</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var a = +"123"; // 123
+var a = Number("123"); // 123, тот же эффект</code></pre>
+</div>
+</div>
+</div><table>
+<thead>
+<tr><th>Значение</th><th>Преобразуется в...</th></tr>
+</thead>
+<tbody>
+<tr><td><code>undefined</code></td><td><code>NaN</code></td></tr>
+<tr><td><code>null</code></td><td><code>0</code></td></tr>
+<tr><td><code>true / false</code></td><td><code>1 / 0</code></td></tr>
+<tr><td>Строка</td><td>Пробельные символы по краям обрезаются.<br>Далее, если остаётся пустая строка, то <code>0</code>, иначе из непустой строки "считывается" число, при ошибке результат <code>NaN</code>.</br></td></tr>
+</tbody>
+</table>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// после обрезания пробельных символов останется "123"
+alert( +"   \n  123   \n  \n" ); // 123</code></pre>
+</div>
+</div>
+</div><p>Ещё примеры:</p>
+<ul>
+<li>
+<p>Логические значения:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( +true ); // 1
+alert( +false ); // 0</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Сравнение разных типов – значит численное преобразование:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "\n0 " == 0 ); // true</code></pre>
+</div>
+</div>
+</div><p>При этом строка <code>"\n0"</code> преобразуется к числу, как указано выше: начальные и конечные пробелы обрезаются, получается  строка <code>"0"</code>, которая равна <code>0</code>.</p>
+</li>
+<li>
+<p>С логическими значениями:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "\n" == false );
+alert( "1" == true );</code></pre>
+</div>
+</div>
+</div><p>Здесь сравнение <code>"=="</code> снова приводит обе части к числу. В первой строке слева и справа получается <code>0</code>, во второй <code>1</code>.</p>
+</li>
+</ul>
+<h3><a class="main__anchor" href="#специальные-значения" name="специальные-значения">Специальные значения</a></h3><p>Посмотрим на поведение специальных значений более внимательно.</p>
+<p><strong>Интуитивно, значения <code>null/undefined</code> ассоциируются с нулём, но при преобразованиях ведут себя иначе.</strong></p>
+<p>Специальные значения преобразуются к числу так:</p>
+<table class="bordered">
+<tr><th>Значение</th><th>Преобразуется в...</th></tr>
+<tr><td><code>undefined</code></td><td><code>NaN</code></td></tr>
+<tr><td><code>null</code></td><td><code>0</code></td></tr>
+</table>
+<p>Это преобразование осуществляется при арифметических операциях и сравнениях <code>&gt; &gt;= &lt; &lt;=</code>, но не при проверке равенства <code>==</code>. Алгоритм проверки равенства для этих значений в спецификации прописан отдельно (пункт <a href="http://es5.github.com/x11.html#x11.9.3">11.9.3</a>). В нём считается, что <code>null</code> и <code>undefined</code> равны <code>"=="</code> между собой, но эти значения не равны никакому другому значению.</p>
+<p>Это ведёт к забавным последствиям.</p>
+<p>Например, <code>null</code> не подчиняется законам математики – он «больше либо равен нулю»: <code>null&gt;=0</code>, но не больше и не равен:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( null &gt;= 0 ); // true, т.к. null преобразуется к 0
+alert( null &gt; 0 ); // false (не больше), т.к. null преобразуется к 0
+alert( null == 0 ); // false (и не равен!), т.к. == рассматривает null особо.</code></pre>
+</div>
+</div>
+</div><p>Значение <code>undefined</code> вообще «несравнимо»:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( undefined &gt; 0 ); // false, т.к. undefined -&gt; NaN
+alert( undefined == 0 ); // false, т.к. это undefined (без преобразования)
+alert( undefined &lt; 0 ); // false, т.к. undefined -&gt; NaN</code></pre>
+</div>
+</div>
+</div><p><strong>Для более очевидной работы кода и во избежание ошибок лучше не давать специальным значениям участвовать в сравнениях <code>&gt; &gt;= &lt; &lt;=</code>.</strong></p>
+<p>Используйте в таких случаях переменные-числа или приводите к числу явно.</p>
+<h2><a class="main__anchor" href="#логическое-преобразование" name="логическое-преобразование">Логическое преобразование</a></h2><p>Преобразование к <code>true/false</code> происходит в логическом контексте, таком как <code>if(value)</code>, и при применении логических операторов.</p>
+<p>Все значения, которые интуитивно «пусты», становятся <code>false</code>. Их несколько: <code>0</code>, пустая строка, <code>null</code>, <code>undefined</code> и <code>NaN</code>.</p>
+<p>Остальное, в том числе и любые объекты – <code>true</code>.</p>
+<p>Полная таблица преобразований:</p>
+<table class="bordered">
+<tr><th>Значение</th><th>Преобразуется в...</th></tr>
+<tr><td><code>undefined</code>, <code>null</code></td><td><code>false</code></td></tr>
+<tr><td>Числа</td><td>Все <code>true</code>, кроме <code>0</code>, <code>NaN</code> -- <code>false</code>.</td></tr>
+<tr><td>Строки</td><td>Все <code>true</code>, кроме пустой строки <code>""</code> -- <code>false</code></td></tr>
+<tr><td>Объекты</td><td>Всегда <code>true</code></td></tr>
+</table>
+<p><strong>Для явного преобразования используется двойное логическое отрицание <code>!!value</code> или вызов <code>Boolean(value)</code>.</strong></p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Обратите внимание: строка <code>"0"</code> становится <code>true</code></span></div>
+<div class="important__content"><p>В отличие от многих языков программирования (например PHP), <code>"0"</code> в JavaScript является <code>true</code>, как и строка из пробелов:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( !!"0" ); // true
+alert( !!" " ); // любые непустые строки, даже из пробелов - true!</code></pre>
+</div>
+</div>
+</div></div></div>
+<p>Логическое преобразование интересно тем, как оно сочетается с численным.</p>
+<p><strong>Два значения могут быть равны, но одно из них в логическом контексте <code>true</code>, другое – <code>false</code></strong>.</p>
+<p>Например, равенство в следующем примере верно, так как происходит численное преобразование:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 0 == "\n0\n" ); // true</code></pre>
+</div>
+</div>
+</div><p>…А в логическом контексте левая часть даст <code>false</code>, правая – <code>true</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">if ("\n0\n") {
+  alert( "true, совсем не как 0!" );
+}</code></pre>
+</div>
+</div>
+</div><p>С точки зрения преобразования типов в JavaScript это совершенно нормально. При сравнении с помощью «==» – численное преобразование, а в <code>if</code> – логическое, только и всего.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>В JavaScript есть три преобразования:</p>
+<ol>
+<li>Строковое: <code>String(value)</code> – в строковом контексте или при сложении со строкой. Работает очевидным образом.</li>
+<li>Численное: <code>Number(value)</code> – в численном контексте, включая унарный плюс <code>+value</code>. Происходит при сравнении разных типов, кроме строгого равенства.</li>
+<li>Логическое: <code>Boolean(value)</code> – в логическом контексте, можно также сделать двойным НЕ: <code>!!value</code>.</li>
+</ol>
+<p>Точные таблицы преобразований даны выше в этой главе.</p>
+<p>Особым случаем является проверка равенства с <code>null</code> и <code>undefined</code>. Они равны друг другу, но не равны чему бы то ни было ещё, этот случай прописан особо в спецификации.</p>
+</cut></div></meta></article></main></div></body></html>

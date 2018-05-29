@@ -1,0 +1,228 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Свойство F.prototype и создание объектов через new" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>До этого момента мы говорили о наследовании объектов, объявленных через <code>{...}</code>.</p>
+<p>Но в реальных проектах объекты обычно создаются функцией-конструктором через <code>new</code>. Посмотрим, как указать прототип в этом случае.</p>
+<cut>
+<h2><a class="main__anchor" href="#свойство-f-prototype" name="свойство-f-prototype">Свойство F.prototype</a></h2><p>Самым очевидным решением является назначение <code>__proto__</code> в конструкторе.</p>
+<p>Например, если я хочу, чтобы у всех объектов, которые создаются <code>new Rabbit</code>, был прототип <code>animal</code>, я могу сделать так:</p>
+<div class="code-example" data-highlight-block="6-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var animal = {
+  eats: true
+};
+
+function Rabbit(name) {
+  this.name = name;
+  this.__proto__ = animal;
+}
+
+var rabbit = new Rabbit("Кроль");
+
+alert( rabbit.eats ); // true, из прототипа</code></pre>
+</div>
+</div>
+</div><p>Недостаток этого подхода – он не работает в IE10-.</p>
+<p>К счастью, в JavaScript с древнейших времён существует альтернативный, встроенный в язык и полностью кросс-браузерный способ.</p>
+<p><strong>Чтобы новым объектам автоматически ставить прототип, конструктору ставится свойство <code>prototype</code>.</strong></p>
+<p><strong>При создании объекта через <code>new</code>, в его прототип <code>__proto__</code> записывается ссылка из <code>prototype</code> функции-конструктора.</strong></p>
+<p>Например, код ниже полностью аналогичен предыдущему, но работает всегда и везде:</p>
+<div class="code-example" data-highlight-block="8-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var animal = {
+  eats: true
+};
+
+function Rabbit(name) {
+  this.name = name;
+}
+
+Rabbit.prototype = animal;
+
+var rabbit = new Rabbit("Кроль"); //  rabbit.__proto__ == animal
+
+alert( rabbit.eats ); // true</code></pre>
+</div>
+</div>
+</div><p>Установка <code>Rabbit.prototype = animal</code> буквально говорит интерпретатору следующее: <em>"При создании объекта через <code>new Rabbit</code> запиши ему <code>__proto__ = animal</code>".</em></p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Свойство <code>prototype</code> имеет смысл только у конструктора</span></div>
+<div class="important__content"><p>Свойство с именем <code>prototype</code> можно указать на любом объекте, но особый смысл оно имеет, лишь если назначено функции-конструктору.</p>
+<p>Само по себе, без вызова оператора <code>new</code>, оно вообще ничего не делает, его единственное назначение – указывать <code>__proto__</code> для новых объектов.</p>
+</div></div>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Значением <code>prototype</code> может быть только объект</span></div>
+<div class="important__content"><p>Технически, в это свойство можно записать что угодно.</p>
+<p>Однако, при работе <code>new</code>, свойство <code>prototype</code> будет использовано лишь в том случае, если это объект. Примитивное значение, такое как число или строка, будет проигнорировано.</p>
+</div></div>
+<h2><a class="main__anchor" href="#свойство-constructor" name="свойство-constructor">Свойство constructor</a></h2><p>У каждой функции по умолчанию уже есть свойство <code>prototype</code>.</p>
+<p>Оно содержит объект такого вида:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Rabbit() {}
+
+Rabbit.prototype = {
+  constructor: Rabbit
+};</code></pre>
+</div>
+</div>
+</div><p>В коде выше я создал <code>Rabbit.prototype</code> вручную, но ровно такой же – генерируется автоматически.</p>
+<p>Проверим:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Rabbit() {}
+
+// в Rabbit.prototype есть одно свойство: constructor
+alert( Object.getOwnPropertyNames(Rabbit.prototype) ); // constructor
+
+// оно равно Rabbit
+alert( Rabbit.prototype.constructor == Rabbit ); // true</code></pre>
+</div>
+</div>
+</div><p>Можно его использовать для создания объекта с тем же конструктором, что и данный:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Rabbit(name) {
+  this.name = name;
+  alert( name );
+}
+
+var rabbit = new Rabbit("Кроль");
+
+var rabbit2 = new rabbit.constructor("Крольчиха");</code></pre>
+</div>
+</div>
+</div><p>Эта возможность бывает полезна, когда, получив объект, мы не знаем в точности, какой у него был конструктор (например, сделан вне нашего кода), а нужно создать такой же.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Свойство <code>constructor</code> легко потерять</span></div>
+<div class="important__content"><p>JavaScript никак не использует свойство <code>constructor</code>. То есть, оно создаётся автоматически, а что с ним происходит дальше – это уже наша забота. В стандарте прописано только его создание.</p>
+<p>В частности, при перезаписи <code>Rabbit.prototype = { jumps: true }</code> свойства <code>constructor</code> больше не будет.</p>
+<p>Сам интерпретатор JavaScript его в служебных целях не требует, поэтому в работе объектов ничего не «сломается». Но если мы хотим, чтобы возможность получить конструктор, всё же, была, то можно при перезаписи гарантировать наличие <code>constructor</code> вручную:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">Rabbit.prototype = {
+  jumps: true,
+  constructor: Rabbit
+};</code></pre>
+</div>
+</div>
+</div><p>Либо можно поступить аккуратно и добавить свойства к встроенному <code>prototype</code> без его замены:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// сохранится встроенный constructor
+Rabbit.prototype.jumps = true</code></pre>
+</div>
+</div>
+</div></div></div>
+<h2><a class="main__anchor" href="#inherit" name="inherit">Эмуляция Object.create для IE8-</a></h2><p>Как мы только что видели, с конструкторами всё просто, назначить прототип можно кросс-браузерно при помощи <code>F.prototype</code>.</p>
+<p>Теперь небольшое «лирическое отступление» в область совместимости.</p>
+<p>Прямые методы работы с прототипом отсутствуют в старых IE, но один из них – <code>Object.create(proto)</code> можно эмулировать, как раз при помощи <code>prototype</code>. И он будет работать везде, даже в самых устаревших браузерах.</p>
+<p>Кросс-браузерный аналог – назовём его <code>inherit</code>, состоит буквально из нескольких строк:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function inherit(proto) {
+  function F() {}
+  F.prototype = proto;
+  var object = new F;
+  return object;
+}</code></pre>
+</div>
+</div>
+</div><p>Результат вызова <code>inherit(animal)</code> идентичен <code>Object.create(animal)</code>. Она создаёт новый пустой объект с прототипом <code>animal</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var animal = {
+  eats: true
+};
+
+var rabbit = inherit(animal);
+
+alert( rabbit.eats ); // true</code></pre>
+</div>
+</div>
+</div><p>Посмотрите внимательно на функцию <code>inherit</code> и вы, наверняка, сами поймёте, как она работает…</p>
+<p>Если где-то неясности, то её построчное описание:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function inherit(proto) {
+  function F() {}     // (1)
+  F.prototype = proto // (2)
+  var object = new F; // (3)
+  return object;      // (4)
+}</code></pre>
+</div>
+</div>
+</div><ol>
+<li>Создана новая функция <code>F</code>. Она ничего не делает с <code>this</code>, так что если вызвать <code>new F</code>, то получим пустой объект.</li>
+<li>Свойство <code>F.prototype</code> устанавливается в будущий прототип <code>proto</code></li>
+<li>Результатом вызова <code>new F</code> будет пустой объект с <code>__proto__</code> равным значению <code>F.prototype</code>.</li>
+<li>Мы получили пустой объект с заданным прототипом, как и хотели. Возвратим его.</li>
+</ol>
+<p>Для унификации можно запустить такой код, и метод <code>Object.create</code> станет кросс-браузерным:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">if (!Object.create) Object.create = inherit; /* определение inherit - выше */</code></pre>
+</div>
+</div>
+</div><p>В частности, аналогичным образом работает библиотека <a href="https://github.com/es-shims/es5-shim">es5-shim</a>, при подключении которой <code>Object.create</code> станет доступен для всех браузеров.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Для произвольной функции – назовём её <code>Person</code>, верно следующее:</p>
+<ul>
+<li>Прототип <code>__proto__</code> новых объектов, создаваемых через <code>new Person</code>, можно задавать при помощи свойства <code>Person.prototype</code>.</li>
+<li>Значением <code>Person.prototype</code> по умолчанию является объект с единственным свойством <code>constructor</code>, содержащим ссылку на <code>Person</code>. Его можно использовать, чтобы из самого объекта получить функцию, которая его создала. Однако, JavaScript никак не поддерживает корректность этого свойства, поэтому программист может его изменить или удалить.</li>
+<li>Современный метод <code>Object.create(proto)</code> можно эмулировать при помощи <code>prototype</code>, если хочется, чтобы он работал в IE8-.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

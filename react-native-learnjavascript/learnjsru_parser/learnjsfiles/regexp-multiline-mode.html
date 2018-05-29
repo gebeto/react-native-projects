@@ -1,0 +1,106 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Многострочный режим, флаг "m"' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Многострочный режим включается, если у регэкспа есть флаг <code class="pattern">/m</code>.</p>
+<cut>
+<p>В этом случае изменяется поведение <code class="pattern">^</code> и <code class="pattern">$</code>.</p>
+<p>В многострочном режиме якоря означают не только начало/конец текста, но и начало/конец строки.</p>
+<h2><a class="main__anchor" href="#начало-строки" name="начало-строки">Начало строки ^</a></h2><p>В примере ниже текст состоит из нескольких строк. Паттерн <code class="pattern">/^\d+/gm</code> берёт число с начала каждой строки:</p>
+<div class="code-example" data-highlight-block="4-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = '1е место: Винни\n' +
+  '2е место: Пятачок\n' +
+  '33е место: Слонопотам';
+
+alert( str.match(/^\d+/gm) ); // 1, 2, 33</code></pre>
+</div>
+</div>
+</div><p>Обратим внимание – без флага <code class="pattern">/m</code> было бы найдено только первое число:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = '1е место: Винни\n' +
+  '2е место: Пятачок\n' +
+  '33е место: Слонопотам';
+
+alert( str.match(/^\d+/g) ); // 1</code></pre>
+</div>
+</div>
+</div><p>Это потому что в обычном режиме каретка <code class="pattern">^</code> – это только начало текста, а в многострочном – начало любой строки.</p>
+<p>Движок регулярных выражений двигается по тексту, и как только видит начало строки, начинает искать там <code class="pattern">\d+</code>.</p>
+<h2><a class="main__anchor" href="#конец-строки" name="конец-строки">Конец строки $</a></h2><p>Символ доллара <code class="pattern">$</code> ведёт себя аналогично.</p>
+<p>Регулярное выражение <code class="pattern">[а-я]+$</code> в следующем примере находит последнее слово в каждой строке:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = '1е место: Винни\n' +
+  '2е место: Пятачок\n' +
+  '33е место: Слонопотам';
+
+alert( str.match(/[а-я]+$/gim) ); // Винни,Пятачок,Слонопотам</code></pre>
+</div>
+</div>
+</div><p>Без флага <code class="pattern">m</code> якорь <code class="pattern">$</code> обозначал бы конец всего текста, и было бы найдено только последнее слово.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Якорь <code>$</code> против <code>\n</code></span></div>
+<div class="important__content"><p>Для того, чтобы найти конец строки, можно использовать не только <code>$</code>, но и символ <code>\n</code>.</p>
+<p>Но, в отличие от <code>$</code>, символ <code>\n</code> во-первых берёт символ в результат, а во-вторых – не совпадает в конце текста (если, конечно, последний символ – не конец строки).</p>
+<p>Посмотрим, что будет с примером выше, если вместо <code class="pattern">[а-я]+$</code> использовать <code class="pattern">[а-я]+\n</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = '1е место: Винни\n' +
+  '2е место: Пятачок\n' +
+  '33е место: Слонопотам';
+
+alert( str.match(/[а-я]+\n/gim) );
+/*
+Винни
+,Пятачок
+*/</code></pre>
+</div>
+</div>
+</div><p>Всего два результата: <code class="match">Винни\n</code> (с символом перевода строки) и <code class="match">Пятачок\n</code>. Последнее слово «Слонопотам» здесь не даёт совпадения, так как после него нет перевода строки.</p>
+</div></div>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>В мультистрочном режиме:</p>
+<ul>
+<li>Символ <code>^</code> означает начало строки.</li>
+<li>Символ <code>$</code> означает конец строки.</li>
+</ul>
+<p>Оба символа являются проверками, они не добавляют ничего к результату. Про них также говорят, что «они имеют нулевую длину».</p>
+</cut></div></meta></article></main></div></body></html>

@@ -1,0 +1,202 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Мышь: клики, кнопка, координаты" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В этой главе мы глубже разберёмся со списком событий мыши, рассмотрим их общие  свойства, а также те события, которые связаны с кликом.</p>
+<cut>
+<h2><a class="main__anchor" href="#типы-событий-мыши" name="типы-событий-мыши">Типы событий мыши</a></h2><p>Условно можно разделить события на два типа: «простые» и «комплексные».</p>
+<h3><a class="main__anchor" href="#простые-события" name="простые-события">Простые события</a></h3><dl>
+<dt><code>mousedown</code></dt>
+<dd>Кнопка мыши нажата над элементом.</dd>
+<dt><code>mouseup</code></dt>
+<dd>Кнопка мыши отпущена над элементом.</dd>
+<dt><code>mouseover</code></dt>
+<dd>Мышь появилась над элементом.</dd>
+<dt><code>mouseout</code></dt>
+<dd>Мышь ушла с элемента.</dd>
+<dt><code>mousemove</code></dt>
+<dd>Каждое движение мыши над элементом генерирует это событие.</dd>
+</dl>
+<h3><a class="main__anchor" href="#комплексные-события" name="комплексные-события">Комплексные события</a></h3><dl>
+<dt><code>click</code></dt>
+<dd>Вызывается при клике мышью, то есть при <code>mousedown</code>, а затем <code>mouseup</code> на одном элементе</dd>
+<dt><code>contextmenu</code></dt>
+<dd>Вызывается при клике правой кнопкой мыши на элементе.</dd>
+<dt><code>dblclick</code></dt>
+<dd>Вызывается при двойном клике по элементу.</dd>
+</dl>
+<p>Комплексные можно составить из простых, поэтому в теории можно было бы обойтись вообще без них. Но они есть, и это хорошо, потому что с ними удобнее.</p>
+<h3><a class="main__anchor" href="#порядок-срабатывания-событий" name="порядок-срабатывания-событий">Порядок срабатывания событий</a></h3><p>Одно действие может вызывать несколько событий.</p>
+<p>Например, клик вызывает сначала <code>mousedown</code> при нажатии, а затем <code>mouseup</code> и <code>click</code> при отпускании кнопки.</p>
+<p>В тех случаях, когда одно действие генерирует несколько событий, их порядок фиксирован. То есть, обработчики вызовутся в порядке <code>mousedown</code> → <code>mouseup</code> → <code>click</code>.</p>
+<p>Кликните по кнопке ниже и вы увидите, какие при этом происходят события. Попробуйте также двойной клик.</p>
+<p>На тест-стенде ниже все мышиные события записываются, и если между событиями проходит больше 1 секунды, то они для удобства чтения отделяются линией. Также присутствуют свойства <code>which/button</code>, по которым можно определить кнопку мыши. Мы их рассмотрим далее.</p>
+<p><input onclick="return logMouse(event)" oncontextmenu="return logMouse(event)" ondblclick="return logMouse(event)" onmousedown="return logMouse(event)" onmouseup="return logMouse(event)" type="button" value="Кликни меня левой или правой кнопкой мыши"/> <input onclick="logClear('test')" type="button" value="Очистить"/> <form id="testform" name="testform"> <textarea style="font-size:12px;height:150px;width:360px;"></textarea></form></p>
+<p><strong>Каждое событие обрабатывается независимо.</strong></p>
+<p>Например, при клике события <code>mouseup + click</code> возникают одновременно, но обрабатываются последовательно. Сначала полностью завершается обработка <code>mouseup</code>, затем запускается <code>click</code>.</p>
+<h2><a class="main__anchor" href="#получение-информации-о-кнопке-which" name="получение-информации-о-кнопке-which">Получение информации о кнопке: which</a></h2><p>При обработке событий, связанных с кликами мыши, бывает важно знать, какая кнопка нажата.</p>
+<p><strong>Для получения кнопки мыши в объекте <code>event</code> есть свойство <code>which</code>.</strong></p>
+<p>На практике оно используется редко, т.к. обычно обработчик вешается либо  <code>onclick</code> – только на левую кнопку мыши, либо <code>oncontextmenu</code> – только на правую.</p>
+<p>Возможны следующие значения:</p>
+<ul>
+<li><code>event.which == 1</code> – левая кнопка</li>
+<li><code>event.which == 2</code> – средняя кнопка</li>
+<li><code>event.which == 3</code> – правая кнопка</li>
+</ul>
+<p>Это свойство не поддерживается IE8-, но его можно получить способом, описанным в конце главы.</p>
+<h2><a class="main__anchor" href="#правый-клик-oncontextmenu" name="правый-клик-oncontextmenu">Правый клик: oncontextmenu</a></h2><p>Это событие срабатывает при клике правой кнопкой мыши:</p>
+<div class="code-example" data-autorun="true" data-demo-height="80" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div&gt;Правый клик на этой кнопке выведет "Клик".&lt;/div&gt;
+&lt;button oncontextmenu="alert('Клик!');"&gt;Правый клик сюда&lt;/button&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-1naghg" src="about:blank" style="height:80px"></iframe>
+</div>
+</div><p>При клике на кнопку выше после обработчика <code>oncontextmenu</code> будет показано обычное контекстное меню, которое браузер всегда показывает при клике правой кнопкой. Это является его действием по умолчанию.</p>
+<p>Если мы не хотим, чтобы показывалось встроенное меню, например потому что показываем своё, специфичное для нашего приложения, то можно отменить действие по умолчанию.</p>
+<p>В примере ниже встроенное меню показано не будет:</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;button oncontextmenu="alert('Клик!');return false"&gt;Правый клик сюда&lt;/button&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-9dbukf" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><h2><a class="main__anchor" href="#модификаторы-shift-alt-ctrl-и-meta" name="модификаторы-shift-alt-ctrl-и-meta">Модификаторы shift, alt, ctrl и meta</a></h2><p>Во всех событиях мыши присутствует информация о нажатых клавишах-модификаторах.</p>
+<p>Соответствующие свойства:</p>
+<ul>
+<li><code>shiftKey</code></li>
+<li><code>altKey</code></li>
+<li><code>ctrlKey</code></li>
+<li><code>metaKey</code> (для Mac)</li>
+</ul>
+<p>Например, кнопка ниже сработает только на Alt+Shift+Клик:</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-highlight-block="4-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;button&gt;Alt+Shift+Кликни меня!&lt;/button&gt;
+
+&lt;script&gt;
+  document.body.children[0].onclick = function(e) {
+    if (!e.altKey || !e.shiftKey) return;
+    alert( 'Ура!' );
+  }
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-bbf7t0" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Внимание: на Mac вместо <code>Ctrl</code> используется <code>Cmd</code></span></div>
+<div class="important__content"><p>На компьютерах под управлением Windows и Linux есть специальные клавиши <kbd class="shortcut">Alt</kbd>, <kbd class="shortcut">Shift</kbd> и <kbd class="shortcut">Ctrl</kbd>. На Mac есть ещё одна специальная клавиша: <kbd class="shortcut">Cmd</kbd>, которой соответствует свойство <code>metaKey</code>.</p>
+<p>В большинстве случаев там, где под Windows/Linux используется <kbd class="shortcut">Ctrl</kbd>, на Mac используется <kbd class="shortcut">Cmd</kbd>. Там, где пользователь Windows нажимает <kbd class="shortcut">Ctrl<span class="shortcut__plus">+</span>Enter</kbd> или <kbd class="shortcut">Ctrl<span class="shortcut__plus">+</span>A</kbd>, пользователь Mac нажмёт <kbd class="shortcut">Cmd<span class="shortcut__plus">+</span>Enter</kbd> или <kbd class="shortcut">Cmd<span class="shortcut__plus">+</span>A</kbd>, и так далее, почти всегда <kbd class="shortcut">Cmd</kbd> вместо <kbd class="shortcut">Ctrl</kbd>.</p>
+<p>Поэтому, если мы хотим поддерживать сочетание <kbd class="shortcut">Ctrl</kbd>+click или другие подобные, то под Mac имеет смысл использовать <kbd class="shortcut">Cmd</kbd>+click. Пользователям Mac это будет гораздо комфортнее.</p>
+<p>Более того, даже если бы мы хотели бы заставить пользователей Mac использовать именно <kbd class="shortcut">Ctrl</kbd>+click – это было бы затруднительно. Дело в том, что обычный клик с зажатым <kbd class="shortcut">Ctrl</kbd> под Mac работает как <em>правый клик</em> и генерирует событие <code>oncontextmenu</code>, а вовсе не <code>onclick</code>, как под Windows/Linux.</p>
+<p>Решение – чтобы пользователи обоих операционных систем работали с комфортом, в паре с <code>ctrlKey</code> нужно обязательно использовать <code>metaKey</code>.</p>
+<p>В JS-коде это означает, что для удобства пользователей Mac нужно проверять <code>if (event.ctrlKey || event.metaKey)</code>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#координаты-в-окне-clientx-y" name="координаты-в-окне-clientx-y">Координаты в окне: clientX/Y</a></h2><p>Все мышиные события предоставляют текущие координаты курсора в двух видах: относительно окна и относительно документа.</p>
+<p>Пара свойств <code>clientX/clientY</code> содержит координаты курсора относительно текущего окна.</p>
+<p>При этом, например, если ваше окно размером 500x500, а мышь находится в центре, тогда и <code>clientX</code> и <code>clientY</code> будут равны 250.</p>
+<p>Можно как угодно прокручивать страницу, но если не двигать при этом мышь, то координаты курсора <code>clientX/clientY</code> не изменятся, потому что они считаются относительно окна, а не документа.</p>
+<p>Проведите мышью над полем ввода, чтобы увидеть <code>clientX/clientY</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input onmousemove="this.value = event.clientX+':'+event.clientY"&gt;</code></pre>
+</div>
+</div>
+</div><input onmousemove="this.value = event.clientX+':'+event.clientY">
+<p>В той же системе координат работает и метод <code>elem.getBoundingClientRect()</code>, возвращающий координаты элемента, а также <code>position:fixed</code>.</p>
+<h3><a class="main__anchor" href="#относительно-документа-pagex-y" name="относительно-документа-pagex-y">Относительно документа: pageX/Y</a></h3><p>Координаты курсора относительно документа находятся в свойствах <code>pageX/pageY</code>.</p>
+<p>Так как эти координаты – относительно левого-верхнего узла документа, а не окна, то они учитывают прокрутку. Если прокрутить страницу, а мышь не трогать, то координаты курсора <code>pageX/pageY</code> изменятся на величину прокрутки, они привязаны к конкретной точке в документе.</p>
+<p>В IE8- этих свойств нет, но можно получить их способом, описанным в конце главы.</p>
+<p>Проведите мышью над полем ввода, чтобы увидеть <code>pageX/pageY</code> (кроме IE8-):</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input onmousemove="this.value = event.pageX+':'+event.pageY"&gt;</code></pre>
+</div>
+</div>
+</div><input onmousemove="this.value = event.pageX+':'+event.pageY">
+<p>В той же системе координат работает <code>position:absolute</code>, если элемент позиционируется относительно документа.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Устарели: <code>x, y, layerX, layerY</code></span></div>
+<div class="important__content"><p>Некоторые браузеры поддерживают свойства  <code>event.x/y</code>, <code>event.layerX/layerY</code>.</p>
+<p>Эти свойства устарели, они нестандартные и не добавляют ничего к описанным выше. Использовать их не стоит.</p>
+</div></div>
+<h2><a class="main__anchor" href="#особенности-ie8" name="особенности-ie8">Особенности IE8-</a></h2><h3><a class="main__anchor" href="#двойной-клик" name="двойной-клик">Двойной клик</a></h3><p>Все браузеры, кроме IE8-, генерируют <code>dblclick</code> <em>в дополнение</em> к другим событиям.</p>
+<p>То есть, обычно:</p>
+<ul>
+<li><code>mousedown</code> (нажал)</li>
+<li><code>mouseup+click</code> (отжал)</li>
+<li><code>mousedown</code> (нажал)</li>
+<li><code>mouseup+click+dblclick</code> (отжал).</li>
+</ul>
+<p><strong>IE8- на втором клике не генерирует <code>mousedown</code> и <code>click</code>.</strong></p>
+<p>Получается:</p>
+<ul>
+<li><code>mousedown</code> (нажал)</li>
+<li><code>mouseup+click</code> (отжал)</li>
+<li>(нажал второй раз, без события)</li>
+<li><code>mouseup+dblclick</code> (отжал).</li>
+</ul>
+<p>Поэтому отловить двойной клик в IE8-, отслеживая только <code>click</code>, нельзя, ведь при втором нажатии его нет. Нужно именно событие <code>dblclick</code>.</p>
+<h3><a class="main__anchor" href="#свойство-which-button" name="свойство-which-button">Свойство which/button</a></h3><p>В старых IE8- не поддерживалось свойство <code>which</code>, а вместо него использовалось свойство <code>button</code>, которое является 3-х битным числом, в котором каждому биту соответствует кнопка мыши. Бит установлен в 1, только если соответствующая кнопка нажата.</p>
+<p>Чтобы его расшифровать – нужна <a href="/bitwise-operators">побитовая операция</a> <code>&amp;</code> («битовое И»):</p>
+<ul>
+<li><code>!!(button &amp; 1) == true</code> (1-й бит установлен), если нажата левая кнопка,</li>
+<li><code>!!(button &amp; 2) == true</code> (2-й бит установлен), если нажата правая кнопка,</li>
+<li><code>!!(button &amp; 4) == true</code> (3-й бит установлен), если нажата средняя кнопка.</li>
+</ul>
+<p>Что интересно, при этом мы можем узнать, были ли две кнопки нажаты одновременно, в то время как стандартный <code>which</code> такой возможности не даёт. Так что, в некотором смысле, свойство <code>button</code> – более мощное.</p>
+<p>Можно легко сделать функцию, которая будет ставить свойство <code>which</code> из <code>button</code>, если его нет:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function fixWhich(e) {
+  if (!e.which &amp;&amp; e.button) { // если which нет, но есть button... (IE8-)
+    if (e.button &amp; 1) e.which = 1; // левая кнопка
+    else if (e.button &amp; 4) e.which = 2; // средняя кнопка
+    else if (e.button &amp; 2) e.which = 3; // правая кнопка
+  }
+}</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#fixPageXY" name="fixPageXY">Свойства pageX/pageY</a></h3><p>В IE до версии 9 не поддерживаются свойства <code>pageX/pageY</code>, но их можно получить, прибавив к <code>clientX/clientY</code> величину прокрутки страницы.</p>
+<p>Более подробно о её вычислении вы можете прочитать в разделе <a href="/metrics-window#page-scroll">прокрутка страницы</a>.</p>
+<p>Мы же здесь приведем готовый вариант, который позволяет нам получить <code>pageX/pageY</code> для старых и совсем старых IE:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function fixPageXY(e) {
+  if (e.pageX == null &amp;&amp; e.clientX != null) { // если нет pageX..
+    var html = document.documentElement;
+    var body = document.body;
+
+    e.pageX = e.clientX + (html.scrollLeft || body &amp;&amp; body.scrollLeft || 0);
+    e.pageX -= html.clientLeft || 0;
+
+    e.pageY = e.clientY + (html.scrollTop || body &amp;&amp; body.scrollTop || 0);
+    e.pageY -= html.clientTop || 0;
+  }
+}</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>События мыши имеют следующие свойства:</p>
+<ul>
+<li>Кнопка мыши: <code>which</code> (для IE8-: нужно ставить из <code>button</code>)</li>
+<li>Элемент, вызвавший событие: <code>target</code></li>
+<li>Координаты, относительно окна: <code>clientX/clientY</code></li>
+<li>Координаты, относительно документа: <code>pageX/pageY</code> (для IE8-: нужно ставить по <code>clientX/Y</code> и прокрутке)</li>
+<li>Если зажата спец. клавиша, то стоит соответствующее свойство: <code>altKey</code>, <code>ctrlKey</code>, <code>shiftKey</code> или <code>metaKey</code> (Mac).</li>
+<li>Для поддержки <kbd class="shortcut">Ctrl</kbd>+<code>click</code> не забываем проверить <code>if (e.metaKey || e.ctrlKey)</code>, чтобы пользователи <code>Mac</code> тоже были довольны.</li>
+</ul>
+</input></input></cut></div></meta></article></main></div></body></html>

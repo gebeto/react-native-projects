@@ -1,0 +1,465 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Автоматические тесты при помощи chai и mocha" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В этой главе мы разберём основы автоматического тестирования. Оно будет применяться далее в задачах, и вообще, входит в «образовательный минимум» программиста.</p>
+<cut>
+<h2><a class="main__anchor" href="#зачем-нужны-тесты" name="зачем-нужны-тесты">Зачем нужны тесты?</a></h2><p>При написании функции мы обычно представляем, что она должна делать, какое значение на каких аргументах выдавать.</p>
+<p>В процессе разработки мы время от времени проверяем, правильно ли работает функция. Самый простой способ проверить – это запустить её, например в консоли, и посмотреть результат.</p>
+<p>Если что-то не так, поправить, опять запустить – посмотреть результат… И так «до победного конца».</p>
+<p>Но такие ручные запуски – очень несовершенное средство проверки.</p>
+<p><strong>Когда проверяешь работу кода вручную – легко его «недотестировать».</strong></p>
+<p>Например, пишем функцию <code>f</code>. Написали, тестируем с разными аргументами. Вызов функции <code>f(a)</code> работает, а вот <code>f(b)</code> не работает. Поправили код – стало работать <code>f(b)</code>, вроде закончили. Но при этом забыли заново протестировать <code>f(a)</code> – упс, вот и возможная ошибка в коде.</p>
+<p><strong>Автоматизированное тестирование – это когда тесты написаны отдельно от кода, и можно в любой момент запустить их и проверить все важные случаи использования.</strong></p>
+<h2><a class="main__anchor" href="#bdd-поведенческие-тесты-кода" name="bdd-поведенческие-тесты-кода">BDD – поведенческие тесты кода</a></h2><p>Мы рассмотрим методику тестирования, которая входит в <a href="http://en.wikipedia.org/wiki/Behavior-driven_development">BDD</a> – Behavior Driven Development. Подход BDD давно и с успехом используется во многих проектах.</p>
+<p>BDD – это не просто тесты. Это гораздо больше.</p>
+<p><strong>Тесты BDD – это три в одном: И тесты, И документация, И примеры использования.</strong></p>
+<p>Впрочем, хватит слов. Рассмотрим примеры.</p>
+<h2><a class="main__anchor" href="#разработка-pow-спецификация" name="разработка-pow-спецификация">Разработка pow: спецификация</a></h2><p>Допустим, мы хотим разработать функцию <code>pow(x, n)</code>, которая возводит <code>x</code> в целую степень <code>n</code>, для простоты <code>n≥0</code>.</p>
+<p>Ещё до разработки мы можем представить себе, что эта функция будет делать, и описать это по методике BDD.</p>
+<p>Это описание называется <em>спецификация</em> (или, как говорят в обиходе, «спека») и выглядит так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">describe("pow", function() {
+
+  it("возводит в n-ю степень", function() {
+    assert.equal(pow(2, 3), 8);
+  });
+
+});</code></pre>
+</div>
+</div>
+</div><p>У спецификации есть три основных строительных блока, которые вы видите в примере выше:</p>
+<dl>
+<dt><code>describe(название, function() { ... })</code></dt>
+<dd>
+<p>Задаёт, что именно мы описываем, используется для группировки «рабочих лошадок» – блоков <code>it</code>. В данном случае мы описываем функцию <code>pow</code>.</p>
+</dd>
+<dt><code>it(название, function() { ... })</code></dt>
+<dd>
+<p>В названии блока <code>it</code> <em>человеческим языком</em> описывается, что должна делать функция, далее следует <em>тест</em>, который проверяет это.</p>
+</dd>
+<dt><code>assert.equal(value1, value2)</code></dt>
+<dd>
+<p>Код внутри <code>it</code>, если реализация верна, должен выполняться без ошибок.</p>
+<p>Различные функции вида <code>assert.*</code> используются, чтобы проверить, делает ли <code>pow</code> то, что задумано. Пока что нас интересует только одна из них – <code>assert.equal</code>, она сравнивает свой первый аргумент со вторым и выдаёт ошибку в случае, когда они не равны. В данном случае она проверяет, что результат <code>pow(2, 3)</code> равен <code>8</code>.</p>
+<p>Есть и другие виды сравнений и проверок, которые мы увидим далее.</p>
+</dd>
+</dl>
+<h2><a class="main__anchor" href="#поток-разработки" name="поток-разработки">Поток разработки</a></h2><p>Как правило, поток разработки таков:</p>
+<ol>
+<li>Пишется спецификация, которая описывает самый базовый функционал.</li>
+<li>Делается начальная реализация.</li>
+<li>Для проверки соответствия спецификации мы задействуем фреймворк (в нашем случае <a href="http://mochajs.org/">Mocha</a>). Фреймворк запускает все тесты <code>it</code> и выводит ошибки, если они возникнут. При ошибках вносятся исправления.</li>
+<li>Спецификация расширяется, в неё добавляются возможности, которые пока, возможно, не поддерживаются реализацией.</li>
+<li>Идём на пункт 2, делаем реализацию. И так «до победного конца».</li>
+</ol>
+<p>Разработка ведётся <em>итеративно</em>: один проход за другим, пока спецификация и реализация не будут завершены.</p>
+<p>В нашем случае первый шаг уже завершён, начальная спецификация готова, хорошо бы приступить к реализации. Но перед этим проведём «нулевой» запуск спецификации, просто чтобы увидеть, что уже в таком виде, даже без реализации – тесты работают.</p>
+<h2><a class="main__anchor" href="#пример-в-действии" name="пример-в-действии">Пример в действии</a></h2><p>Для запуска тестов нужны соответствующие JavaScript-библиотеки.</p>
+<p>Мы будем использовать:</p>
+<ul>
+<li><a href="http://mochajs.org/">Mocha</a> – эта библиотека содержит общие функции для тестирования, включая <code>describe</code> и <code>it</code>.</li>
+<li><a href="http://chaijs.com">Chai</a> – библиотека поддерживает разнообразные функции для проверок. Есть разные «стили» проверки результатов, с которыми мы познакомимся позже, на текущий момент мы будем использовать лишь <code>assert.equal</code>.</li>
+<li><a href="http://sinonjs.org/">Sinon</a> – для эмуляции и хитрой подмены функций «заглушками», понадобится позднее.</li>
+</ul>
+<p>Эти библиотеки позволяют тестировать JS не только в браузере, но и на сервере Node.JS. Здесь мы рассмотрим браузерный вариант, серверный использует те же функции.</p>
+<p>Пример HTML-страницы для тестов:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+
+  &lt;!-- подключаем стили Mocha, для отображения результатов --&gt;
+  &lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mocha/2.1.0/mocha.css"&gt;
+  &lt;!-- подключаем библиотеку Mocha --&gt;
+  &lt;script src="https://cdnjs.cloudflare.com/ajax/libs/mocha/2.1.0/mocha.js"&gt;&lt;/script&gt;
+  &lt;!-- настраиваем Mocha: предстоит BDD-тестирование --&gt;
+  &lt;script&gt;
+    mocha.setup('bdd');
+  &lt;/script&gt;
+
+  &lt;!-- подключаем chai --&gt;
+  &lt;script src="https://cdnjs.cloudflare.com/ajax/libs/chai/2.0.0/chai.js"&gt;&lt;/script&gt;
+  &lt;!-- в chai есть много всего, выносим assert в глобальную область --&gt;
+  &lt;script&gt;
+    var assert = chai.assert;
+  &lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;script&gt;
+    function pow(x, n) {
+      /* код функции, пока что пусто */
+    }
+  &lt;/script&gt;
+
+  &lt;!-- в этом скрипте находятся спеки --&gt;
+  &lt;script src="test.js"&gt;&lt;/script&gt;
+
+  &lt;!-- в элементе с id="mocha" будут результаты тестов --&gt;
+  &lt;div id="mocha"&gt;&lt;/div&gt;
+
+  &lt;!-- запустить тесты! --&gt;
+  &lt;script&gt;
+    mocha.run();
+  &lt;/script&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</div><p>Эту страницу можно условно разделить на четыре части:</p>
+<ol>
+<li>Блок <code>&lt;head&gt;</code> – в нём мы подключаем библиотеки и стили для тестирования, нашего кода там нет.</li>
+<li>Блок <code>&lt;script&gt;</code> с реализацией спецификации, в нашем случае – с кодом для <code>pow</code>.</li>
+<li>Далее подключаются тесты, файл <code>test.js</code> содержит <code>describe("pow", ...)</code>, который был описан выше. Методы <code>describe</code> и <code>it</code> принадлежат библиотеке Mocha, так что важно, что она была подключена выше.</li>
+<li>Элемент <code>&lt;div id="mocha"&gt;</code> будет использоваться библиотекой Mocha для вывода результатов. Запуск тестов инициируется командой <code>mocha.run()</code>.</li>
+</ol>
+<p>Результат срабатывания:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="arvvm9bDa1dqokP0dcQy" href="http://plnkr.co/edit/arvvm9bDa1dqokP0dcQy?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/testing/pow-1/" style="height:250px"></iframe>
+</div><p>Пока что тесты не проходят, но это логично – вместо функции стоит «заглушка», пустой код.</p>
+<p>Пока что у нас одна функция и одна спецификация, но на будущее заметим, что если различных функций и тестов много –  это не проблема, можно их все подключить на одной странице. Конфликта не будет, так как каждый функционал имеет свой блок <code>describe("что тестируем"...)</code>. Сами же тесты обычно пишутся так, чтобы не влиять друг на друга, не делать лишних глобальных переменных.</p>
+<h2><a class="main__anchor" href="#начальная-реализация" name="начальная-реализация">Начальная реализация</a></h2><p>Пока что, как видно, тесты не проходят, ошибка сразу же. Давайте сделаем минимальную реализацию <code>pow</code>, которая бы работала нормально:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function pow() {
+  return 8; // :) мы - мошенники!
+}</code></pre>
+</div>
+</div>
+</div><p>О, вот теперь работает:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="XoOHkdkGGv07EWcX7Vda" href="http://plnkr.co/edit/XoOHkdkGGv07EWcX7Vda?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/testing/pow-min/" style="height:250px"></iframe>
+</div><h2><a class="main__anchor" href="#исправление-спецификации" name="исправление-спецификации">Исправление спецификации</a></h2><p>Функция, конечно, ещё не готова, но тесты проходят. Это ненадолго :)</p>
+<p>Здесь мы видим ситуацию, которая (и не обязательно при ленивом программисте!) бывает на практике – да, есть тесты, они проходят, но функция (увы!) работает неправильно.</p>
+<p><strong>С точки зрения BDD, ошибка при проходящих тестах –  вина спецификации.</strong></p>
+<p>В первую очередь не реализация исправляется, а уточняется спецификация, пишется падающий тест.</p>
+<p>Сейчас мы расширим спецификацию, добавив проверку на <code>pow(3, 4) = 81</code>.</p>
+<p>Здесь есть два варианта организации кода:</p>
+<ol>
+<li>
+<p>Первый вариант – добавить <code>assert</code> в тот же <code>it</code>:</p>
+<div class="code-example" data-highlight-block="4-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">describe("pow", function() {
+
+  it("возводит в n-ю степень", function() {
+    assert.equal(pow(2, 3), 8);
+    assert.equal(pow(3, 4), 81);
+  });
+
+});</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Второй вариант – сделать два теста:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">describe("pow", function() {
+
+  it("при возведении 2 в 3ю степень результат 8", function() {
+    assert.equal(pow(2, 3), 8);
+  });
+
+  it("при возведении 3 в 4ю степень равен 81", function() {
+    assert.equal(pow(3, 4), 81);
+  });
+
+});</code></pre>
+</div>
+</div>
+</div></li>
+</ol>
+<p>Их принципиальное различие в том, что если <code>assert</code> обнаруживает ошибку, то он тут же прекращает выполнение блока <code>it</code>. Поэтому в первом варианте, если вдруг первый <code>assert</code> «провалился», то про результат второго мы никогда не узнаем.</p>
+<p><strong>Таким образом, разделить эти тесты может быть полезно, чтобы мы получили больше информации о происходящем.</strong></p>
+<p>Кроме того, есть ещё одно правило, которое желательно соблюдать.</p>
+<p><strong>Один тест тестирует ровно одну вещь.</strong></p>
+<p>Если мы явно видим, что тест включает в себя совершенно независимые проверки – лучше разбить его на два более простых и наглядных.</p>
+<p>По этим причинам второй вариант здесь предпочтительнее.</p>
+<p>Результат:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="nZjSryoGepuunx7H3yxP" href="http://plnkr.co/edit/nZjSryoGepuunx7H3yxP?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/testing/pow-2/" style="height:250px"></iframe>
+</div><p>Как и следовало ожидать, второй тест не проходит. Ещё бы, ведь функция всё время возвращает <code>8</code>.</p>
+<h2><a class="main__anchor" href="#уточнение-реализации" name="уточнение-реализации">Уточнение реализации</a></h2><p>Придётся написать нечто более реальное, чтобы тесты проходили:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function pow(x, n) {
+  var result = 1;
+
+  for (var i = 0; i &lt; n; i++) {
+    result *= x;
+  }
+
+  return result;
+}</code></pre>
+</div>
+</div>
+</div><p>Чтобы быть уверенными, что функция работает верно, желательно протестировать её на большем количестве значений. Вместо того, чтобы писать блоки <code>it</code> вручную, мы можем сгенерировать тесты в цикле <code>for</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">describe("pow", function() {
+
+  function makeTest(x) {
+    var expected = x * x * x;
+    it("при возведении " + x + " в степень 3 результат: " + expected, function() {
+      assert.equal(pow(x, 3), expected);
+    });
+  }
+
+  for (var x = 1; x &lt;= 5; x++) {
+    makeTest(x);
+  }
+
+});</code></pre>
+</div>
+</div>
+</div><p>Результат:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="zhWMsl79W4vyplpcnAXo" href="http://plnkr.co/edit/zhWMsl79W4vyplpcnAXo?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/testing/pow-3/" style="height:250px"></iframe>
+</div><h2><a class="main__anchor" href="#вложенный-describe" name="вложенный-describe">Вложенный describe</a></h2><p>Функция <code>makeTest</code> и цикл <code>for</code>, очевидно, нужны друг другу, но не нужны для других тестов, которые мы добавим в дальнейшем. Они образуют единую группу, задача которой – проверить возведение в <code>n</code>-ю степень.</p>
+<p>Будет правильно выделить их, при помощи вложенного блока <code>describe</code>:</p>
+<div class="code-example" data-highlight-block="2-2,15-15" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">describe("pow", function() {
+
+  describe("возводит x в степень n", function() {
+
+    function makeTest(x) {
+      var expected = x * x * x;
+      it("при возведении " + x + " в степень 3 результат: " + expected, function() {
+        assert.equal(pow(x, 3), expected);
+      });
+    }
+
+    for (var x = 1; x &lt;= 5; x++) {
+      makeTest(x);
+    }
+
+  });
+
+  // ... дальнейшие тесты it и подблоки describe ...
+});</code></pre>
+</div>
+</div>
+</div><p>Вложенный <code>describe</code> объявит новую «подгруппу» тестов, блоки <code>it</code> которой запускаются так же, как и обычно, но выводятся с подзаголовком, вот так:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="22wB2Zw0pEblTOe3ekbg" href="http://plnkr.co/edit/22wB2Zw0pEblTOe3ekbg?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/testing/pow-4/" style="height:300px"></iframe>
+</div><p>В будущем мы сможем добавить другие тесты <code>it</code> и блоки <code>describe</code> со своими вспомогательными функциями.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">before/after и beforeEach/afterEach</span></div>
+<div class="important__content"><p>В каждом блоке <code>describe</code> можно также задать функции <code>before/after</code>, которые будут выполнены до/после запуска тестов, а также <code>beforeEach/afterEach</code>, которые выполняются до/после каждого <code>it</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">describe("Тест", function() {
+
+  before(function() { alert("Начало тестов"); });
+  after(function() { alert("Конец тестов"); });
+
+  beforeEach(function() { alert("Вход в тест"); });
+  afterEach(function() { alert("Выход из теста"); });
+
+  it('тест 1', function() { alert('1'); });
+  it('тест 2', function() { alert('2'); });
+
+});</code></pre>
+</div>
+</div>
+</div><p>Последовательность будет такой:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">Начало тестов
+Вход в тест
+1
+Выход из теста
+Вход в тест
+2
+Выход из теста
+Конец тестов</code></pre>
+</div>
+</div>
+</div><a class="edit" href="http://plnkr.co/edit/R9ZXCCC0nvmrSbfcLn8E?p=preview" target="_blank">Открыть пример с тестами в песочнице</a><p>Как правило, <code>beforeEach/afterEach</code> (<code>before/after</code>) используют, если необходимо произвести инициализацию, обнулить счётчики или сделать что-то ещё в таком духе между тестами (или их группами).</p>
+</div></div>
+<h2><a class="main__anchor" href="#расширение-спецификации" name="расширение-спецификации">Расширение спецификации</a></h2><p>Базовый функционал <code>pow</code> описан и реализован, первая итерация разработки завершена. Теперь расширим и уточним его.</p>
+<p>Как говорилось ранее, функция <code>pow(x, n)</code> предназначена для работы с целыми неотрицательными <code>n</code>.</p>
+<p>В JavaScript для ошибки вычислений служит специальное значение <code>NaN</code>, которое функция будет возвращать при некорректных <code>n</code>.</p>
+<p>Добавим это поведение в спецификацию:</p>
+<div class="code-example" data-highlight-block="5-5,9-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">describe("pow", function() {
+
+  // ...
+
+  it("при возведении в отрицательную степень результат NaN", function() {
+    assert(isNaN(pow(2, -1)));
+  });
+
+  it("при возведении в дробную степень результат NaN", function() {
+    assert(isNaN(pow(2, 1.5)));
+  });
+
+});</code></pre>
+</div>
+</div>
+</div><p>Результат с новыми тестами:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="TBnjPo7ZwODFpKwwpF1w" href="http://plnkr.co/edit/TBnjPo7ZwODFpKwwpF1w?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/testing/pow-nan/" style="height:450px"></iframe>
+</div><p>Конечно, новые тесты не проходят, так как наша реализация ещё не поддерживает их. Так и задумано: сначала написали заведомо не работающие тесты, а затем пишем реализацию под них.</p>
+<h2><a class="main__anchor" href="#другие-assert" name="другие-assert">Другие assert</a></h2><p>Обратим внимание, в спецификации выше использована проверка не <code>assert.equal</code>, как раньше, а <code>assert(выражение)</code>. Такая проверка выдаёт ошибку, если значение выражения при приведении к логическому типу не <code>true</code>.</p>
+<p>Она потребовалась, потому что сравнивать с <code>NaN</code> обычным способом нельзя: <code>NaN</code> не равно никакому значению, даже самому себе, поэтому <code>assert.equal(NaN, x)</code> не подойдёт.</p>
+<p>Кстати, мы и ранее могли бы использовать <code>assert(value1 == value2)</code> вместо <code>assert.equal(value1, value2)</code>. Оба этих <code>assert</code> проверяют одно и тоже.</p>
+<p>Однако, между этими вызовами есть отличие в деталях сообщения об ошибке.</p>
+<p>При «упавшем» <code>assert</code> в примере выше мы видим <code>"Unspecified AssertionError"</code>, то есть просто «что-то пошло не так», а при <code>assert.equal(value1, value2)</code> будут дополнительные подробности: <code>expected 8 to equal 81</code>.</p>
+<p><strong>Поэтому рекомендуется использовать именно ту проверку, которая максимально соответствует задаче.</strong></p>
+<p>Вот самые востребованные <code>assert</code>-проверки, встроенные в Chai:</p>
+<ul>
+<li><code>assert(value)</code> – проверяет что <code>value</code> является <code>true</code> в логическом контексте.</li>
+<li><code>assert.equal(value1, value2)</code> – проверяет равенство  <code>value1 == value2</code>.</li>
+<li><code>assert.strictEqual(value1, value2)</code> – проверяет строгое равенство <code>value1 === value2</code>.</li>
+<li><code>assert.notEqual</code>, <code>assert.notStrictEqual</code> – проверки, обратные двум предыдущим.</li>
+<li><code>assert.isTrue(value)</code> – проверяет, что <code>value === true</code></li>
+<li><code>assert.isFalse(value)</code> – проверяет, что <code>value === false</code></li>
+<li>…более полный список – в <a href="http://chaijs.com/api/assert/">документации</a></li>
+</ul>
+<p>В нашем случае хорошо бы использовать проверку <code>assert.isNaN</code>, и такой метод существует, но сейчас мы рассматриваем самый общий метод <code>assert(...)</code>. В этом случае для того, чтобы сделать сообщение об ошибке понятнее, желательно добавить к <code>assert</code> описание.</p>
+<p><strong>Все вызовы <code>assert</code> позволяют дополнительным последним аргументом указать строку с описанием ошибки, которое выводится, если <code>assert</code> не проходит.</strong></p>
+<p>Добавим описание ошибки в конец наших <code>assert'ов</code>:</p>
+<div class="code-example" data-highlight-block="5-5,9-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">describe("pow", function() {
+
+  // ...
+
+  it("при возведении в отрицательную степень результат NaN", function() {
+    assert(isNaN(pow(2, -1)), "pow(2, -1) не NaN");
+  });
+
+  it("при возведении в дробную степень результат NaN", function() {
+    assert(isNaN(pow(2, 1.5)), "pow(2, 1.5) не NaN");
+  });
+
+});</code></pre>
+</div>
+</div>
+</div><p>Теперь результат теста гораздо яснее говорит о том, что не так:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="K8GyH8444Hw7ulGjVAoP" href="http://plnkr.co/edit/K8GyH8444Hw7ulGjVAoP?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/testing/pow-nan-assert/" style="height:450px"></iframe>
+</div><p>В коде тестов выше можно было бы добавить описание и к <code>assert.equal</code>, указав в конце: <code>assert.equal(value1, value2, "описание")</code>, но с равенством обычно и так всё понятно, поэтому мы так делать не будем.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Итак, разработка завершена, мы получили полноценную спецификацию и код, который её реализует.</p>
+<p>Задачи выше позволяют дополнить её, и в результате может получиться что-то в таком духе:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">describe("pow", function() {
+
+  describe("возводит x в степень n", function() {
+
+    function makeTest(x) {
+      var expected = x * x * x;
+      it("при возведении " + x + " в степень 3 результат: " + expected, function() {
+        assert.equal(pow(x, 3), expected);
+      });
+    }
+
+    for (var x = 1; x &lt;= 5; x++) {
+      makeTest(x);
+    }
+
+  });
+
+  it("при возведении в отрицательную степень результат NaN", function() {
+    assert(isNaN(pow(2, -1)), "pow(2, -1) не NaN");
+  });
+
+  it("при возведении в дробную степень результат NaN", function() {
+    assert(isNaN(pow(2, 1.5)), "pow(2, -1.5) не NaN");
+  });
+
+  describe("любое число, кроме нуля, в степени 0 равно 1", function() {
+
+    function makeTest(x) {
+      it("при возведении " + x + " в степень 0 результат: 1", function() {
+        assert.equal(pow(x, 0), 1);
+      });
+    }
+
+    for (var x = -5; x &lt;= 5; x += 2) {
+      makeTest(x);
+    }
+
+  });
+
+  it("ноль в нулевой степени даёт NaN", function() {
+    assert(isNaN(pow(0, 0)), "0 в степени 0 не NaN");
+  });
+
+});</code></pre>
+</div>
+</div>
+</div><a class="edit" href="http://plnkr.co/edit/5jBwLikmnjWelIFkJ8Qc?p=preview" target="_blank">Открыть полный пример с реализацией в песочнице</a><p>Эту спецификацию можно использовать как:</p>
+<ol>
+<li><strong>Тесты</strong>, которые гарантируют правильность работы кода.</li>
+<li><strong>Документацию</strong> по функции, что она конкретно делает.</li>
+<li><strong>Примеры</strong> использования функции, которые демонстрируют её работу внутри <code>it</code>.</li>
+</ol>
+<p>Имея спецификацию, мы можем улучшать, менять, переписывать функцию и легко контролировать её работу, просматривая тесты.</p>
+<p>Особенно важно это в больших проектах.</p>
+<p>Бывает так, что изменение в одной части кода может повлечь за собой «падение» другой части, которая её использует. Так как всё-всё в большом проекте руками не перепроверишь, то такие ошибки имеют большой шанс остаться в продукте и вылезти позже, когда проект увидит посетитель или заказчик.</p>
+<p>Чтобы избежать таких проблем, бывает, что вообще стараются не трогать код, от которого много что зависит, даже если его ну очень нужно переписать. Жизнь пробивается тонкими росточками там, где должен цвести и пахнуть новый функционал.</p>
+<p><strong>Код, покрытый автотестами, являет собой полную противоположность этому!</strong></p>
+<p>Даже если какое-то изменение потенциально может порушить всё – его совершенно не страшно сделать. Ведь есть масса тестов, которые быстро и в автоматическом режиме проверят работу кода. И если что-то падает, то это можно будет легко локализовать и поправить.</p>
+<p><strong>Кроме того, код, покрытый тестами, имеет лучшую архитектуру.</strong></p>
+<p>Конечно, это естественное следствие того, что его легче менять и улучшать. Но не только.</p>
+<p>Чтобы написать тесты, нужно разбить код на функции так, чтобы для каждой функции было чётко понятно, что она получает на вход, что делает с этим и что возвращает. Это означает ясную и понятную структуру с самого начала.</p>
+<p>Конечно, в реальной жизни всё не так просто. Зачастую написать тест сложно. Или сложно поддерживать тесты, поскольку код активно меняется. Сами тесты тоже пишутся по-разному, при помощи разных инструментов.</p>
+<h2><a class="main__anchor" href="#что-дальше" name="что-дальше">Что дальше?</a></h2><p>В дальнейшем условия ряда задач будут уже содержать в себе тесты. На них вы познакомитесь с дополнительными примерами.</p>
+<p>Как правило, они будут вполне понятны, даже если немного выходят за пределы этой главы.</p>
+</cut></div></meta></article></main></div></body></html>

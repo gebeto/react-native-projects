@@ -1,0 +1,304 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Чёрная дыра бэктрекинга" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Некоторые регулярные выражения, с виду являясь простыми, могут выполняться оооочень долго, и даже «подвешивать» интерпретатор JavaScript.</p>
+<p>Рано или поздно, с этим сталкивается любой разработчик, потому что нечаянно создать такое регулярное выражение – легче лёгкого.</p>
+<p>Типична ситуация, когда регулярное выражение до поры до времени работает нормально, и вдруг на каком-то тексте как начнёт «подвешивать» интерпретатор и есть 100% процессора.</p>
+<p>Это может стать уязвимостью. Например, если JavaScript выполняется на сервере, то при разборе данных, присланных посетителем, он может зависнуть, если использует подобный регэксп. На клиенте тоже возможно подобное, при использовании регэкспа для подсветки синтаксиса.</p>
+<p>Такие уязвимости «убивали» почтовые сервера и системы обмена сообщениями и до появления JavaScript, и наверно будут «убивать» и после его исчезновения. Так что мы просто обязаны с ними разобраться.</p>
+<cut>
+<h2><a class="main__anchor" href="#пример" name="пример">Пример</a></h2><p>План изложения у нас будет таким:</p>
+<ol>
+<li>Сначала посмотрим на проблему в реальной ситуации.</li>
+<li>Потом упростим реальную ситуацию до «корней» и увидим, откуда она берётся.</li>
+</ol>
+<p>Рассмотрим, например, поиск по HTML.</p>
+<p>Мы хотим найти теги с атрибутами, то есть совпадения вида <code class="subject">&lt;a href="..." class=doc ...&gt;</code>.</p>
+<p>Самый простой способ это сделать – <code class="pattern">&lt;[^&gt;]*&gt;</code>. Но он же и не совсем корректный, так как тег может выглядеть так: <code class="subject">&lt;a test="&lt;&gt;" href="#"&gt;</code>. То есть, внутри «закавыченного» атрибута может быть символ <code>&gt;</code>. Простейший регэксп на нём остановится и найдёт <code class="match">&lt;a test="&lt;&gt;</code>.</p>
+<p>Соответствие:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">&lt;[^&gt;]*....&gt;
+&lt;a test="&lt;&gt;" href="#"&gt;</code></pre>
+</div>
+</div>
+</div><p>А нам нужен весь тег.</p>
+<p>Для того, чтобы правильно обрабатывать такие ситуации, нужно учесть их в регулярном выражении. Оно будет иметь вид <code class="pattern">&lt;тег (ключ=значение)*&gt;</code>.</p>
+<p>Если перевести на язык регэкспов, то: <code class="pattern">&lt;\w+(\s*\w+=(\w+|"[^"]*")\s*)*&gt;</code>:</p>
+<ol>
+<li><code class="pattern">&lt;\w+</code> – начало тега</li>
+<li><code class="pattern">(\s*\w+=(\w+|"[^"]*")\s*)*</code> – произвольное количество пар вида <code>слово=значение</code>, где «значение» может быть также словом <code class="pattern">\w+</code>, либо строкой в кавычках <code class="pattern">"[^"]*"</code>.</li>
+</ol>
+<p>Мы пока не учитываем все детали грамматики HTML, ведь строки возможны и в „одинарных“ кавычках, но на данный момент этого достаточно. Главное, что регулярное выражение получилось в меру простым и понятным.</p>
+<p>Испытаем полученный регэксп в действии:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var reg = /&lt;\w+(\s*\w+=(\w+|"[^"]*")\s*)*&gt;/g;
+
+var str='...&lt;a test="&lt;&gt;" href="#"&gt;... &lt;b&gt;...';
+
+alert( str.match(reg) ); // &lt;a test="&lt;&gt;" href="#"&gt;, &lt;b&gt;</code></pre>
+</div>
+</div>
+</div><p>Отлично, всё работает! Нашло как длинный тег <code class="match">&lt;a test="&lt;&gt;" href="#"&gt;</code>, так и одинокий <code class="match">&lt;b&gt;</code>.</p>
+<p>А теперь – демонстрация проблемы.</p>
+<p>Если запустить пример ниже, то он может подвесить браузер:</p>
+<div class="code-example" data-highlight-block="5-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var reg = /&lt;\w+(\s*\w+=(\w+|"[^"]*")\s*)*&gt;/g;
+
+var str = "&lt;tag a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  \
+a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b";
+
+// Этот поиск будет выполняться очень, очень долго
+alert( str.match(reg) );</code></pre>
+</div>
+</div>
+</div><p>Некоторые движки регулярных выражений могут в разумное время разобраться с таким поиском, но большинство – нет.</p>
+<p>В чём дело? Почему несложное регулярное выражение на такой небольшой строке «виснет» наглухо?</p>
+<p>Упростим ситуацию, удалив тег и возможность указывать строки в кавычках:</p>
+<div class="code-example" data-highlight-block="6-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// только атрибуты, разделённые пробелами
+var reg = /&lt;(\s*\w+=\w+\s*)*&gt;/g;
+
+var str = "&lt;a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  \
+a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b";
+
+// Этот поиск будет выполняться очень, очень долго
+alert( str.match(reg) );</code></pre>
+</div>
+</div>
+</div><p>То же самое.</p>
+<p>На этом мы закончим с демонстрацией «практического примера» и перейдём к разбору происходящего.</p>
+<h2><a class="main__anchor" href="#бектрекинг" name="бектрекинг">Бектрекинг</a></h2><p>В качестве ещё более простого регулярного выражения, рассмотрим <code class="pattern">(\d+)*$</code>.</p>
+<p>В большинстве движков регэкспов, например в Chrome или IE, этот поиск выполняется очень долго (осторожно, может «подвесить» браузер):</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( '12345678901234567890123456789123456789z'.match(/(\d+)*$/) );</code></pre>
+</div>
+</div>
+</div><p>В чём же дело, что не так с регэкспом?</p>
+<p>Внимательный читатель, посмотрев на него, наверняка удивится, ведь он «какой-то странный». Квантификатор <code class="pattern">*</code> здесь выглядит лишним.</p>
+<p>Если хочется найти число, то с тем же успехом можно искать <code class="pattern">\d+$</code>.</p>
+<p>Да, этот регэксп носит искусственный характер, но, разобравшись с ним, мы поймём и практический пример, данный выше. Причина их медленной работы одинакова.</p>
+<p>В целом, с регэкспом «всё так», синтаксис вполне допустимый. Проблема в том, как выполняется поиск по нему.</p>
+<p>Посмотрим, что происходит при поиске в строке <code class="subject">123456789z</code>:</p>
+<ol>
+<li>
+<p>Первым делом, движок регэкспов пытается найти <code class="pattern">\d+</code>. Плюс <code class="pattern">+</code> является жадным по умолчанию, так что он хватает все цифры, какие может:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">\d+.......
+(123456789)z</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Затем движок пытается применить звёздочку вокруг скобок <code class="pattern">(\d+)*</code>, но больше цифр нет, так что звёздочка не даёт повторений.</p>
+<p>Затем в шаблоне идёт символ конца строки <code class="pattern">$</code>, а в тексте – символ <code class="subject">z</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">           X
+\d+........$
+(123456789)z</code></pre>
+</div>
+</div>
+</div><p>Соответствия нет.</p>
+</li>
+<li>
+<p>Так как соответствие не найдено, то «жадный» плюс <code class="pattern">+</code> отступает на один символ (бэктрекинг).</p>
+<p>Теперь <code>\d+</code> – это все цифры, за исключением последней:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">\d+.......
+(12345678)9z</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>После бэктрекинга, <code class="pattern">\d+</code> содержит всё число, кроме последней цифры. Движок снова пытается найти совпадение, уже с новой позиции (<code>9</code>).</p>
+<p>Звёздочка <code class="pattern">(\d+)*</code> теперь может быть применена – она даёт число <code class="match">9</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">\d+.......\d+
+(12345678)(9)z</code></pre>
+</div>
+</div>
+</div><p>Движок пытается найти <code>$</code>, но это ему не удаётся – на его пути опять <code>z</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">             X
+\d+.......\d+
+(12345678)(9)z</code></pre>
+</div>
+</div>
+</div><p>Так как совпадения нет, то поисковой движок отступает назад ещё раз.</p>
+</li>
+<li>
+<p>Теперь первое число <code class="pattern">\d+</code> будет содержать 7 цифр, а остаток строки <code class="subject">89</code> становится вторым <code class="pattern">\d+</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">             X
+\d+......\d+
+(1234567)(89)z</code></pre>
+</div>
+</div>
+</div><p>Увы, всё ещё нет соответствия для <code class="pattern">$</code>.</p>
+<p>Поисковой движок снова должен отступить назад. При этом последний жадный квантификатор отпускает символ. В данном случае это означает, что укорачивается второй <code class="pattern">\d+</code>, до одного символа <code class="subject">8</code>, и звёздочка забирает следующий <code class="subject">9</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">               X
+\d+......\d+\d+
+(1234567)(8)(9)z</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>…И снова неудача. Второе и третье <code class="pattern">\d+</code> отступили по-максимуму, так что сокращается снова первое число, до <code class="subject">123456</code>, а звёздочка берёт оставшееся:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">             X
+\d+.......\d+
+(123456)(789)z</code></pre>
+</div>
+</div>
+</div><p>Снова нет совпадения. Процесс повторяется, последний жадный квантификатор <code class="pattern">+</code> отпускает один символ (<code>9</code>):</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">               X
+\d+.....\d+ \d+
+(123456)(78)(9)z</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>…И так далее.</p>
+</li>
+</ol>
+<p>Получается, что движок регулярных выражений перебирает все комбинации из <code>123456789</code> и их подпоследовательности. А таких комбинаций очень много.</p>
+<p>На этом месте умный читатель может воскликнуть: «Во всём виноват бэктрекинг? Давайте включим ленивый режим – и не будет никакого бэктрекинга!»</p>
+<p>Что ж, заменим <code class="pattern">\d+</code> на <code class="pattern">\d+?</code> и посмотрим (аккуратно, может подвесить браузер):</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( '12345678901234567890123456789123456789z'.match(/(\d+?)*$/) );</code></pre>
+</div>
+</div>
+</div><p>Не помогло!</p>
+<p><strong>Ленивые регулярные выражения делают то же самое, но в обратном порядке.</strong></p>
+<p>Просто подумайте о том, как будет в этом случае работать поисковой движок.</p>
+<p>Некоторые движки регулярных выражений содержат хитрые проверки и конечные автоматы, которые позволяют избежать бесконечного перебора или кардинально ускорить его, но не все движки и не всегда.</p>
+<p>Возвращаясь к примеру выше – при поиске <code class="pattern">&lt;(\s*\w+=\w+\s*)*&gt;</code> в строке <code class="subject">&lt;a=b a=b a=b a=b</code> происходит то же самое.</p>
+<p>Поиск успешно начинается, выбирается некая комбинация из <code class="pattern">\s*\w+=\w+\s*</code>, которая, так как в конце нет <code>&gt;</code>, оказывается не подходящей. Движок честно отступает, пробует другую комбинацию – и так далее.</p>
+<h2><a class="main__anchor" href="#что-делать" name="что-делать">Что делать?</a></h2><p>Проблема – в сверхмноговариантном переборе.</p>
+<p>Движок регулярных выражений перебирает кучу возможных вариантов скобок там, где это не нужно.</p>
+<p>Например, в регэкспе <code class="pattern">(\d+)*$</code> нам (людям) очевидно, что в <code class="pattern">(\d+)</code> откатываться не нужно. От того, что вместо одного <code class="pattern">\d+</code> у нас два независимых <code class="pattern">\d+\d+</code>, ничего не изменится.</p>
+<p>Без разницы:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">\d+........
+(123456789)z
+
+\d+...\d+....
+(1234)(56789)z</code></pre>
+</div>
+</div>
+</div><p>Если вернуться к более реальному примеру <code class="pattern">&lt;(\s*\w+=\w+\s*)*&gt;</code> то
+сам алгоритм поиска, который у нас в голове, предусматривает, что мы «просто» ищем тег, а потом пары <code>атрибут=значение</code> (сколько получится).</p>
+<p>Никакого «отката» здесь не нужно.</p>
+<p>В современных регулярных выражениях для решения этой проблемы придумали «possessive» (сверхжадные? неоткатные? точный перевод пока не устоялся) квантификаторы, которые вообще не используют бэктрегинг.</p>
+<p>То есть, они даже проще, чем «жадные» – берут максимальное количество символов и всё. Поиск продолжается дальше. При несовпадении никакого возврата не происходит.</p>
+<p>Это, с одной стороны, уменьшает количество возможных результатов, но, с другой стороны, в ряде случаев очевидно, что возврат (уменьшение количество повторений квантификатора) результата не даст. А только потратит время, что как раз и доставляет проблемы. Как раз такие ситуации и описаны выше.</p>
+<p>Есть и другое средство – «атомарные скобочные группы», которые запрещают перебор внутри скобок, по сути позволяя добиваться того же, что и сверхжадные квантификаторы,</p>
+<p>К сожалению, в JavaScript они не поддерживаются.</p>
+<p>Однако, можно получить подобный эффект при помощи предпросмотра. Подробное описание соответствия с учётом синтаксиса сверхжадных квантификаторов и атомарных групп есть в статьях <a href="http://instanceof.me/post/52245507631/regex-emulate-atomic-grouping-with-lookahead">Regex: Emulate Atomic Grouping (and Possessive Quantifiers) with LookAhead</a> и <a href="http://blog.stevenlevithan.com/archives/mimic-atomic-groups">Mimicking Atomic Groups</a>, здесь же мы останемся в рамках синтаксиса JavaScript.</p>
+<p>Взятие максимального количества повторений <code>a+</code> без отката выглядит так: <code class="pattern">(?=(a+))\1</code>.</p>
+<p>То есть, иными словами, предпросмотр <code class="pattern">?=</code> ищет максимальное количество повторений <code class="pattern">a+</code>, доступных с текущей позиции. А затем они «берутся в результат» обратной ссылкой <code class="pattern">\1</code>. Дальнейший поиск – после найденных повторений.</p>
+<p>Откат в этой логике в принципе не предусмотрен, поскольку предпросмотр «откатываться» не умеет. То есть, если предпросмотр нашёл 5 штук <code class="pattern">a+</code>, и в результате поиск не удался, то он не будет откатываться на 4 повторения. Эта возможность в предпросмотре отсутствует, а в данном случае она как раз и не нужна.</p>
+<p>Исправим регэксп для поиска тега с атрибутами <code class="pattern">&lt;\w+(\s*\w+=(\w+|"[^"]*")\s*)*&gt;</code>, описанный в начале главы. Используем предпросмотр, чтобы запретить откат на меньшее количество пар <code>атрибут=значение</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// регэксп для пары атрибут=значение
+var attr = /(\s*\w+=(\w+|"[^"]*")\s*)/
+
+// используем его внутри регэкспа для тега
+var reg = new RegExp('&lt;\\w+(?=(' + attr.source + '*))\\1&gt;', 'g');
+
+var good = '...&lt;a test="&lt;&gt;" href="#"&gt;... &lt;b&gt;...';
+
+var bad = "&lt;tag a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b\
+  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b  a=b";
+
+alert( good.match(reg) ); // &lt;a test="&lt;&gt;" href="#"&gt;, &lt;b&gt;
+alert( bad.match(reg) ); // null (нет результатов, быстро)</code></pre>
+</div>
+</div>
+</div><p>Отлично, всё работает! Нашло как длинный тег <code class="match">&lt;a test="&lt;&gt;" href="#"&gt;</code>, так и одинокий <code class="match">&lt;b&gt;</code>.</p>
+</cut></div></meta></article></main></div></body></html>

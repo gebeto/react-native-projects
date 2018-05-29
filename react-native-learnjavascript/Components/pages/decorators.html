@@ -1,0 +1,195 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Функции-обёртки, декораторы" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>JavaScript предоставляет удивительно гибкие возможности по работе с функциями: их можно передавать, в них можно записывать данные как в объекты, у них есть свои встроенные методы…</p>
+<p>Конечно, этим нужно уметь пользоваться. В этой главе, чтобы более глубоко понимать работу с функциями, мы рассмотрим создание функций-обёрток или, иначе говоря, «декораторов».</p>
+<cut>
+<p><a href="http://en.wikipedia.org/wiki/Decorator_pattern">Декоратор</a> – приём программирования, который позволяет взять существующую функцию и изменить/расширить ее поведение.</p>
+<p><em>Декоратор</em> получает функцию и возвращает обертку, которая делает что-то своё «вокруг» вызова основной функции.</p>
+<h2><a class="main__anchor" href="#bind-привязка-контекста" name="bind-привязка-контекста">bind – привязка контекста</a></h2><p>Один простой декоратор вы уже видели ранее – это функция <a href="/bind">bind</a>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function bind(func, context) {
+  return function() {
+    return func.apply(context, arguments);
+  };
+}</code></pre>
+</div>
+</div>
+</div><p>Вызов <code>bind(func, context)</code> возвращает обёртку, которая ставит <code>this</code> и передаёт основную работу функции <code>func</code>.</p>
+<h2><a class="main__anchor" href="#декоратор-таймер" name="декоратор-таймер">Декоратор-таймер</a></h2><p>Создадим более сложный декоратор, замеряющий время выполнения функции.</p>
+<p>Он будет называться <code>timingDecorator</code> и получать функцию вместе с «названием таймера», а возвращать – функцию-обёртку, которая измеряет время и прибавляет его в специальный объект <code>timer</code> по свойству-названию.</p>
+<p>Использование:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f(x) {} // любая функция
+
+var timers = {}; // объект для таймеров
+
+// отдекорировали
+f = timingDecorator(f, "myFunc");
+
+// запускаем
+f(1);
+f(2);
+f(3); // функция работает как раньше, но время подсчитывается
+
+alert( timers.myFunc ); // общее время выполнения всех вызовов f</code></pre>
+</div>
+</div>
+</div><p>При помощи декоратора <code>timingDecorator</code> мы сможем взять произвольную функцию и одним движением руки прикрутить к ней измеритель времени.</p>
+<p>Его реализация:</p>
+<div class="code-example" data-highlight-block="21-22,29-30" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var timers = {};
+
+// прибавит время выполнения f к таймеру timers[timer]
+function timingDecorator(f, timer) {
+  return function() {
+    var start = performance.now();
+
+    var result = f.apply(this, arguments); // (*)
+
+    if (!timers[timer]) timers[timer] = 0;
+    timers[timer] += performance.now() - start;
+
+    return result;
+  }
+}
+
+// функция может быть произвольной, например такой:
+var fibonacci = function f(n) {
+  return (n &gt; 2) ? f(n - 1) + f(n - 2) : 1;
+}
+
+// использование: завернём fibonacci в декоратор
+fibonacci = timingDecorator(fibonacci, "fibo");
+
+// неоднократные вызовы...
+alert( fibonacci(10) ); // 55
+alert( fibonacci(20) ); // 6765
+// ...
+
+// в любой момент можно получить общее количество времени на вызовы
+alert( timers.fibo + 'мс' );</code></pre>
+</div>
+</div>
+</div><p>Обратим внимание на строку <code>(*)</code> внутри декоратора, которая и осуществляет передачу вызова:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var result = f.apply(this, arguments); // (*)</code></pre>
+</div>
+</div>
+</div><p>Этот приём называется «форвардинг вызова» (от англ. forwarding): текущий контекст и аргументы через <code>apply</code> передаются в функцию <code>f</code>, так что изнутри <code>f</code> всё выглядит так, как была вызвана она напрямую, а не декоратор.</p>
+<h2><a class="main__anchor" href="#декоратор-для-проверки-типа" name="декоратор-для-проверки-типа">Декоратор для проверки типа</a></h2><p>В JavaScript, как правило, пренебрегают проверками типа. В функцию, которая должна получать число, может быть передана строка, булево значение или даже объект.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sum(a, b) {
+  return a + b;
+}
+
+// передадим в функцию для сложения чисел нечисловые значения
+alert( sum(true, { name: "Вася", age: 35 }) ); // true[Object object]</code></pre>
+</div>
+</div>
+</div><p>Функция «как-то» отработала, но в реальной жизни передача в <code>sum</code> подобных значений, скорее всего, будет следствием программной ошибки. Всё-таки <code>sum</code> предназначена для суммирования чисел, а не объектов.</p>
+<p>Многие языки программирования позволяют прямо в объявлении функции указать, какие типы данных имеют параметры. И это удобно, поскольку повышает надёжность кода.</p>
+<p>В JavaScript же проверку типов приходится делать дополнительным кодом в начале функции, который во-первых обычно  лень писать, а во-вторых он увеличивает общий объем текста, тем самым ухудшая читаемость.</p>
+<p><strong>Декораторы способны упростить рутинные, повторяющиеся задачи, вынести их из кода функции.</strong></p>
+<p>Например, создадим декоратор, который принимает функцию и массив, который описывает для какого аргумента какую проверку типа применять:</p>
+<div class="code-example" data-highlight-block="23-24,29-31" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// вспомогательная функция для проверки на число
+function checkNumber(value) {
+  return typeof value == 'number';
+}
+
+// декоратор, проверяющий типы для f
+// второй аргумент checks - массив с функциями для проверки
+function typeCheck(f, checks) {
+  return function() {
+    for (var i = 0; i &lt; arguments.length; i++) {
+      if (!checks[i](arguments[i])) {
+        alert( "Некорректный тип аргумента номер " + i );
+        return;
+      }
+    }
+    return f.apply(this, arguments);
+  }
+}
+
+function sum(a, b) {
+  return a + b;
+}
+
+// обернём декоратор для проверки
+sum = typeCheck(sum, [checkNumber, checkNumber]); // оба аргумента - числа
+
+// пользуемся функцией как обычно
+alert( sum(1, 2) ); // 3, все хорошо
+
+// а вот так - будет ошибка
+sum(true, null); // некорректный аргумент номер 0
+sum(1, ["array", "in", "sum?!?"]); // некорректный аргумент номер 1</code></pre>
+</div>
+</div>
+</div><p>Конечно, этот декоратор можно ещё расширять, улучшать, дописывать проверки, но… Вы уже поняли принцип, не правда ли?</p>
+<p><strong>Один раз пишем декоратор и дальше просто применяем этот функционал везде, где нужно.</strong></p>
+<h2><a class="main__anchor" href="#декоратор-проверки-доступа" name="декоратор-проверки-доступа">Декоратор проверки доступа</a></h2><p>И наконец посмотрим ещё один, последний пример.</p>
+<p>Предположим, у нас есть функция <code>isAdmin()</code>, которая возвращает <code>true</code>, если у посетителя есть права администратора.</p>
+<p>Можно создать декоратор <code>checkPermissionDecorator</code>, который добавляет в любую функцию проверку прав:</p>
+<p>Например, создадим декоратор <code>checkPermissionDecorator(f)</code>. Он будет возвращать обертку, которая передает вызов <code>f</code> в том случае, если у посетителя достаточно прав:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function checkPermissionDecorator(f) {
+  return function() {
+    if (isAdmin()) {
+      return f.apply(this, arguments);
+    }
+    alert( 'Недостаточно прав' );
+  }
+}</code></pre>
+</div>
+</div>
+</div><p>Использование декоратора:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function save() { ... }
+
+save = checkPermissionDecorator(save);
+// Теперь вызов функции save() проверяет права</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Декоратор – это обёртка над функцией, которая модифицирует её поведение. При этом основную работу по-прежнему выполняет функция.</p>
+<p><strong>Декораторы можно не только повторно использовать, но и комбинировать!</strong></p>
+<p>Это кардинально повышает их выразительную силу. Декораторы можно рассматривать как своего рода «фичи» или возможности, которые можно «нацепить» на любую функцию. Можно один, а можно несколько.</p>
+<p>Скажем, используя декораторы, описанные выше, можно добавить к функции возможности по проверке типов данных, замеру времени и проверке доступа буквально одной строкой, не залезая при этом в её код, то есть (!) не увеличивая его сложность.</p>
+<p>Предлагаю вашему вниманию задачи, которые помогут выяснить, насколько вы разобрались в декораторах. Далее в учебнике мы ещё встретимся с ними.</p>
+</cut></div></meta></article></main></div></body></html>

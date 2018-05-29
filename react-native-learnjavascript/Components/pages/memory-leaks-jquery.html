@@ -1,0 +1,120 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Утечки памяти при использовании jQuery" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В jQuery для хранения обработчиков событий и других вспомогательных данных, связанных с DOM-элементами, используется внутренний объект, который в jQuery 1 доступен через <a href="http://api.jquery.com/jQuery.data/">$.data</a>.</p>
+<p>В jQuery 2 доступ к нему закрыт через замыкание, он стал локальной переменной внутри jQuery с именем <code>data_priv</code>, но в остальном всё работает точно так, как описано, и с теми же последствиями.</p>
+<h2><a class="main__anchor" href="#data" name="data">$.data</a></h2><p>Встроенная функция <code>$.data</code> позволяет хранить и привязывать произвольные значения к DOM-узлам.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// присвоить
+$(document).data('prop', { anything: "любой объект" })
+
+// прочитать
+alert( $(document).data('prop').anything ) // любой объект</code></pre>
+</div>
+</div>
+</div><p>Реализована она хитрым образом. Данные не хранятся в самом элементе, а во внутреннем объекте jQuery.</p>
+<p>jQuery-вызов <code>elem.data(prop, val)</code> делает следующее:</p>
+<ol>
+<li>
+<p>Элемент получает уникальный идентификатор, если у него такого еще нет:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">elem[jQuery.expando] = id = ++jQuery.uuid; // средствами jQuery</code></pre>
+</div>
+</div>
+</div></li>
+</ol>
+<p><code>jQuery.expando</code> – это случайная строка, сгенерированная jQuery один раз при входе на страницу. Уникальное свойство, чтобы ничего важного не перезаписать.</p>
+<ol start="2">
+<li>
+<p>…А сами данные сохраняются в специальном объекте <code>jQuery.cache</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">jQuery.cache[id]['prop'] = { anything: "любой объект" };</code></pre>
+</div>
+</div>
+</div></li>
+</ol>
+<p>Когда данные считываются из элемента:</p>
+<ol>
+<li>Уникальный идентификатор элемента извлекается из <code>id = elem[ jQuery.expando]</code>.</li>
+<li>Данные считываются из <code>jQuery.cache[id]</code>.</li>
+</ol>
+<p>Смысл этого API в том, что DOM-элемент никогда не ссылается на JavaScript объект напрямую. Задействуется идентификатор, а сами данные хранятся в <code>jQuery.cache</code>. Утечек в IE не будет.</p>
+<p>К тому же все данные известны библиотеке, так что можно клонировать с ними и т.п.</p>
+<p>Как побочный эффект – возникает утечка памяти, если элемент удален из DOM без дополнительной очистки.</p>
+<h2><a class="main__anchor" href="#примеры-утечек-в-jquery" name="примеры-утечек-в-jquery">Примеры утечек в jQuery</a></h2><p>Следующая функция <code>leak</code> создает jQuery-утечку во всех браузерах:</p>
+<div class="code-example" data-highlight-block="7-12" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"&gt;&lt;/script&gt;
+
+&lt;div id="data"&gt;&lt;/div&gt;
+
+&lt;script&gt;
+  function leak() {
+
+    $('&lt;div/&gt;')
+      .html(new Array(1000).join('text'))
+      .click(function() {})
+      .appendTo('#data');
+
+    document.getElementById('data').innerHTML = ''; // (*)
+
+  }
+
+  var interval = setInterval(leak, 10)
+&lt;/script&gt;
+
+Утечка идёт...
+
+&lt;input type="button" onclick="clearInterval(interval)" value="stop" /&gt;</code></pre>
+</div>
+</div>
+</div><p>Утечка происходит потому, что обработчик события в jQuery хранится в данных элемента. В строке <code>(*)</code> элемент удален очисткой родительского <code>innerHTML</code>, но в <code>jQuery.cache</code> данные остались.</p>
+<p>Более того, система обработки событий в jQuery устроена так, что вместе с обработчиком в данных хранится и ссылка на элемент, так что в итоге оба – и обработчик и элемент – остаются в памяти вместе со всем замыканием!</p>
+<p>Ещё более простой пример утечки:</p>
+<p>Этот код также создает утечку:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function leak() {
+  $('&lt;div/&gt;')
+    .click(function() {})
+}</code></pre>
+</div>
+</div>
+</div><p>…То есть, мы создаём элемент, вешаем на него обработчик… И всё.</p>
+<p>Такой код ведёт к утечке памяти как раз потому, что элемент <code>&lt;div&gt;</code> создан, но нигде не размещен :). После выполнения функции ссылка на него теряется. Но обработчик события <code>click</code> уже сохранил данные в <code>jQuery.cache</code>, которые застревают там навсегда.</p>
+<h2><a class="main__anchor" href="#используем-jquery-без-утечек" name="используем-jquery-без-утечек">Используем jQuery без утечек</a></h2><p>Чтобы избежать утечек, описанных выше, для удаления элементов используйте функции jQuery API, а не чистый JavaScript.</p>
+<p>Методы <a href="http://api.jquery.com/remove/">remove()</a>, <a href="http://api.jquery.com/empty">empty()</a> и <a href="http://api.jquery.com/html">html()</a> проверяют дочерние элементы на наличие данных и очищают их. Это несколько замедляет процедуру удаления, но зато освобождается память.</p>
+<p>К счастью обнаружить такие утечки легко. Проверьте размер <code>$.cache</code>. Если  он большой и растет, то изучите кэш, посмотрите, какие записи остаются и почему.</p>
+<h2><a class="main__anchor" href="#улучшение-производительности-jquery" name="улучшение-производительности-jquery">Улучшение производительности jQuery</a></h2><p>У способа организации внутренних данных, применённого в jQuery, есть важный побочный эффект.</p>
+<p>Функции, удаляющие элементы, также должны удалить и связанные с ними внутренние данные. Для этого нужно для каждого удаляемого элемента проверить – а нет ли чего во внутреннем хранилище? И, если есть – удалить.</p>
+<p>Представим, что у нас есть большая таблица <code>&lt;table&gt;</code>, и мы хотим обновить её содержимое на новое. Вызов <code>$('table').html(новые данные)</code> перед вставкой новых данных аккуратно удалит старые: пробежит по всем ячейкам и проверит внутреннее хранилище.</p>
+<p>Если это большая таблица, то обработчики, скорее всего, стоят не на ячейках, а на самом элементе <code>&lt;table&gt;</code>, то есть используется делегирование. А, значит, тратить время на проверку всех подэлементов ни к чему.</p>
+<p>Но jQuery-то об этом не знает!</p>
+<p>Чтобы «грязно» удалить элемент, без чистки, мы можем сделать это через «обычные» DOM-вызовы или воспользоваться методом <a href="http://api.jquery.com/detach">detach()</a>. Его официальное назначение – в том, чтобы убрать элемент из DOM, но сохранить возможность для вставки (и, соответственно, оставить на нём все данные). А неофициальное – быстро убрать элемент из DOM, без чистки.</p>
+<p>Возможен и промежуточный вариант: никто не мешает сделать  <code>elem.detach()</code> и поместить вызов <code>elem.remove()</code> в <code>setTimeout</code>. В результате очистка будет происходить асинхронно и незаметно.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Утечки памяти при использовании jQuery возможны, если через DOM-методы удалять элементы, к которым привязаны данные или обработчики.</li>
+<li>Чтобы утечки не было, достаточно убедиться, что элемент удаляется при помощи методов jQuery.</li>
+<li>Побочный эффект – при удалении элементов jQuery должна проверить наличие данных для них. Это сильно замедляет процесс удаления большого поддерева DOM.</li>
+<li>Если мы знаем, что обработчиков и данных нет – гораздо быстрее удалять элементы при помощи вызова <code>detach</code> или обычного DOM.</li>
+</ul>
+</div></meta></article></main></div></body></html>

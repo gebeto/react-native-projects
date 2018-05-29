@@ -1,0 +1,215 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Пользовательские элементы: Custom Elements" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Платформа «веб-компоненты» включает в себя несколько стандартов <a href="http://www.w3.org/standards/techs/components#w3c_all">Web Components</a>, которые находятся в разработке.</p>
+<p>Начнём мы со стандарта <a href="http://www.w3.org/TR/custom-elements/">Custom Elements</a>, который позволяет создавать свои типы элементов.</p>
+<cut>
+<h2><a class="main__anchor" href="#зачем-custom-elements" name="зачем-custom-elements">Зачем Custom Elements?</a></h2><p>Критично настроенный читатель скажет: «Зачем ещё стандарт для своих типов элементов? Я могу создать любой элемент и прямо сейчас! В любом из современных браузеров можно писать любой HTML, используя свои теги: <code>&lt;mytag&gt;</code>. Или создавать элементы из JavaScript при помощи <code>document.createElement('mytag')</code>.»</p>
+<p>Однако, по умолчанию элемент с нестандартным названием (например <code>&lt;mytag&gt;</code>) воспринимается браузером, как нечто неопределённо-непонятное. Ему соответствует класс <a href="http://www.w3.org/TR/html5/dom.html#htmlunknownelement">HTMLUnknownElement</a>, и у него нет каких-либо особых методов.</p>
+<p><strong>Стандарт Custom Elements позволяет описывать для новых элементов свои свойства, методы, объявлять свой DOM, подобие конструктора и многое другое.</strong></p>
+<p>Давайте посмотрим это на примерах.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Для примеров рекомендуется Chrome</span></div>
+<div class="important__content"><p>Так как спецификация не окончательна, то для запуска примеров рекомендуется использовать Google Chrome, лучше – последнюю сборку <a href="https://www.google.ru/chrome/browser/canary.html">Chrome Canary</a>, в которой, как правило, отражены последние изменения.</p>
+</div></div>
+<h2><a class="main__anchor" href="#новый-элемент" name="новый-элемент">Новый элемент</a></h2><p>Для описания нового элемента используется вызов <code>document.registerElement(имя, { prototype: прототип })</code>.</p>
+<p>Здесь:</p>
+<ul>
+<li><code>имя</code> – имя нового тега, например <code>"mega-select"</code>. Оно обязано содержать дефис <code>"-"</code>. Спецификация требует дефис, чтобы избежать в будущем конфликтов со стандартными элементами HTML. Нельзя создать элемент <code>timer</code> или <code>myTimer</code> – будет ошибка.</li>
+<li><code>прототип</code> – объект-прототип для нового элемента, он должен наследовать от <code>HTMLElement</code>, чтобы у элемента были стандартные свойства и методы.</li>
+</ul>
+<p>Вот, к примеру, новый элемент <code>&lt;my-timer&gt;</code>:</p>
+<div class="code-example" data-highlight-block="1-1,7-7,13-13,17-17" data-highlight-inline="3:38-53" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script&gt;
+  // прототип с методами для нового элемента
+  var MyTimerProto = Object.create(HTMLElement.prototype);
+  MyTimerProto.tick = function() { // свой метод tick
+    this.innerHTML++;
+  };
+
+  // регистрируем новый элемент в браузере
+  document.registerElement("my-timer", {
+    prototype: MyTimerProto
+  });
+&lt;/script&gt;
+
+&lt;!-- теперь используем новый элемент --&gt;
+&lt;my-timer id="timer"&gt;0&lt;/my-timer&gt;
+
+&lt;script&gt;
+  // вызовем метод tick() на элементе
+  setInterval(function() {
+    timer.tick();
+  }, 1000);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Использовать новый элемент в HTML можно и до его объявления через <code>registerElement</code>.</p>
+<p>Для этого в браузере предусмотрен специальный режим «обновления» существующих элементов.</p>
+<p>Если браузер видит элемент с неизвестным именем, в котором есть дефис <code>-</code> (такие элементы называются «unresolved»), то:</p>
+<ul>
+<li>Он ставит такому элементу специальный CSS-псевдокласс <code>:unresolved</code>, для того, чтобы через CSS можно было показать, что он ещё «не подгрузился».</li>
+<li>При вызове <code>registerElement</code> такие элементы автоматически обновятся до нужного класса.</li>
+</ul>
+<p>В примере ниже регистрация элемента происходит через 2 секунды после его появления в разметке:</p>
+<div class="code-example" data-highlight-block="1-1,14-14,23-23" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  /* стиль для :unresolved элемента (до регистрации) */
+  hello-world:unresolved {
+    color: white;
+  }
+
+  hello-world {
+    transition: color 3s;
+  }
+&lt;/style&gt;
+
+&lt;hello-world id="hello"&gt;Hello, world!&lt;/hello-world&gt;
+
+&lt;script&gt;
+  // регистрация произойдёт через 2 сек
+  setTimeout(function() {
+    document.registerElement("hello-world", {
+      prototype: {
+        __proto__: HTMLElement.prototype,
+        sayHi: function() { alert('Привет!'); }
+      }
+    });
+
+    // у нового типа элементов есть метод sayHi
+    hello.sayHi();
+  }, 2000);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Можно создавать такие элементы и в JavaScript – обычным вызовом <code>createElement</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var timer = document.createElement('my-timer');</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#расширение-встроенных-элементов" name="расширение-встроенных-элементов">Расширение встроенных элементов</a></h2><p>Выше мы видели пример создания элемента на основе базового <code>HTMLElement</code>. Но можно расширить и другие, более конкретные HTML-элементы.</p>
+<p>Для расширения встроенных элементов у <code>registerElement</code> предусмотрен параметр <code>extends</code>, в котором можно задать, какой тег мы расширяем.</p>
+<p>Например, кнопку:</p>
+<div class="code-example" data-highlight-block="8-8" data-highlight-inline="1:35-62,12:8-21" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script&gt;
+  var MyTimerProto = Object.create(HTMLButtonElement.prototype);
+  MyTimerProto.tick = function() {
+    this.innerHTML++;
+  };
+
+  document.registerElement("my-timer", {
+    prototype: MyTimerProto,
+    extends: 'button'
+  });
+&lt;/script&gt;
+
+&lt;button is="my-timer" id="timer"&gt;0&lt;/button&gt;
+
+&lt;script&gt;
+  setInterval(function() {
+    timer.tick();
+  }, 1000);
+
+  timer.onclick = function() {
+    alert("Текущее значение: " + this.innerHTML);
+  };
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Важные детали:</p>
+<dl>
+<dt>Прототип теперь наследует не от <code>HTMLElement</code>, а от <code>HTMLButtonElement</code></dt>
+<dd>Чтобы расширить элемент, нужно унаследовать прототип от его класса.</dd>
+<dt>В HTML указывается при помощи атрибута <code>is="..."</code></dt>
+<dd>Это принципиальное отличие разметки от обычного объявления без <code>extends</code>. Теперь <code>&lt;my-timer&gt;</code> работать не будет, нужно использовать исходный тег и <code>is</code>.</dd>
+<dt>Работают методы, стили и события кнопки.</dt>
+<dd>При клике на кнопку её не отличишь от встроенной. И всё же, это новый элемент, со своими методами, в данном случае <code>tick</code>.</dd>
+</dl>
+<p>При создании нового элемента в JS, если используется <code>extends</code>, необходимо указать и исходный тег в том числе:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var timer = document.createElement("button", "my-timer");</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#жизненный-цикл" name="жизненный-цикл">Жизненный цикл</a></h2><p>В прототипе своего элемента мы можем задать специальные методы, которые будут вызываться при создании, добавлении и удалении элемента из DOM:</p>
+<table>
+<tr><td><code>createdCallback</code></td><td>Элемент создан</td></tr>
+<tr><td><code>attachedCallback</code></td><td>Элемент добавлен в документ</td></tr>
+<tr><td><code>detachedCallback</code></td><td>Элемент удалён из документа</td></tr>
+<tr><td><code>attributeChangedCallback(name, prevValue, newValue)</code></td><td>Атрибут добавлен, изменён или удалён</td></tr>
+</table>
+<p>Как вы, наверняка, заметили, <code>createdCallback</code> является подобием конструктора. Он вызывается только при создании элемента, поэтому всю дополнительную инициализацию имеет смысл описывать в нём.</p>
+<p>Давайте используем <code>createdCallback</code>, чтобы инициализировать таймер, а <code>attachedCallback</code> – чтобы автоматически запускать таймер при вставке в документ:</p>
+<div class="code-example" data-highlight-block="8-10,12-14" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script&gt;
+  var MyTimerProto = Object.create(HTMLElement.prototype);
+
+  MyTimerProto.tick = function() {
+    this.timer++;
+    this.innerHTML = this.timer;
+  };
+
+  MyTimerProto.createdCallback = function() {
+    this.timer = 0;
+  };
+
+  MyTimerProto.attachedCallback = function() {
+    setInterval(this.tick.bind(this), 1000);
+  };
+
+  document.registerElement("my-timer", {
+    prototype: MyTimerProto
+  });
+&lt;/script&gt;
+
+&lt;my-timer id="timer"&gt;0&lt;/my-timer&gt;</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Мы рассмотрели, как создавать свои DOM-элементы при помощи стандарта <a href="http://www.w3.org/TR/custom-elements/">Custom Elements</a>.</p>
+<p>Далее мы перейдём к изучению дополнительных возможностей по работе с DOM.</p>
+</cut></div></meta></article></main></div></body></html>

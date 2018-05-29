@@ -1,0 +1,246 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Мультивставка: insertAdjacentHTML и DocumentFragment" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Обычные методы вставки работают с одним узлом. Но есть и способы вставлять множество узлов одновременно.</p>
+<cut>
+<h2><a class="main__anchor" href="#оптимизация-вставки-в-документ" name="оптимизация-вставки-в-документ">Оптимизация вставки в документ</a></h2><p>Рассмотрим задачу: сгенерировать список <code>UL/LI</code>.</p>
+<p>Есть две возможных последовательности:</p>
+<ol>
+<li>
+<p>Сначала вставить <code>UL</code> в документ, а потом добавить к нему <code>LI</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var ul = document.createElement('ul');
+document.body.appendChild(ul); // сначала в документ
+for (...) ul.appendChild(li); // потом узлы</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Полностью создать список «вне DOM», а потом – вставить в документ:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var ul = document.createElement('ul');
+for(...) ul.appendChild(li);   // сначала вставить узлы
+document.body.appendChild(ul); // затем в документ</code></pre>
+</div>
+</div>
+</div></li>
+</ol>
+<p>Как ни странно, между этими последовательностями есть разница. В большинстве браузеров, второй вариант – быстрее.</p>
+<p>Почему же? Иногда говорят: «потому что браузер перерисовывает каждый раз при добавлении элемента». Это не так. Дело вовсе не в перерисовке.</p>
+<p>Браузер достаточно «умён», чтобы ничего не перерисовывать понапрасну. В большинстве случаев процессы перерисовки и сопутствующие вычисления будут отложены до окончания работы скрипта, и на тот момент уже совершенно без разницы, в какой последовательности были изменены узлы.</p>
+<p><strong>Тем не менее, при вставке узла происходят разные внутренние события и обновления внутренних структур данных, скрытые от наших глаз.</strong></p>
+<p>Что именно происходит – зависит от конкретной, внутренней браузерной реализации DOM, но это отнимает время. Конечно, браузеры развиваются и стараются свести лишние действия к минимуму.</p>
+<h3><a class="main__anchor" href="#insert-bench-tbody" name="insert-bench-tbody">Бенчмарк</a></h3><p>Чтобы легко проверить текущее состояние дел – вот два бенчмарка.</p>
+<p>Оба они создают таблицу 20x20, наполняя <code>TBODY</code> элементами <code>TR/TD</code>.</p>
+<p>При этом первый вставляет все в документ тут же, второй – задерживает вставку <code>TBODY</code> в документ до конца процесса.</p>
+<p>Кликните, чтобы запустить.</p>
+<p><input onclick="alert(bench(appendFirst,50))" type="button" value="TBODY сразу в DOM"/> <input onclick="alert(bench(appendLast,50))" type="button" value="Отложенная вставка TBODY в DOM"/></p>
+<table id="bench-table"></table>
+<p>Код для тестов находится в файле <a href="/article/multi-insert/insert-bench.js">insert-bench.js</a>.</p>
+<h2><a class="main__anchor" href="#добавление-множества-узлов" name="добавление-множества-узлов">Добавление множества узлов</a></h2><p>Продолжим работать со вставкой узлов.</p>
+<p>Рассмотрим случай, когда в документе <em>уже есть</em> большой список <code>UL</code>. И тут понадобилось срочно добавить еще 20 элементов <code>LI</code>.</p>
+<p>Как это сделать?</p>
+<p>Если новые элементы пришли в виде строки, то можно попробовать добавить их так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">ul.innerHTML += "&lt;li&gt;1&lt;/li&gt;&lt;li&gt;2&lt;/li&gt;...";</code></pre>
+</div>
+</div>
+</div><p>Но операцию <code>ul.innerHTML += "..."</code> можно по-другому переписать как <code>ul.innerHTML = ul.innerHTML + "..."</code>. Иначе говоря, она <em>не прибавляет, а заменяет</em> всё содержимое списка на дополненную строку. Это и нехорошо с точки зрения производительности, но и будут побочные эффекты. В частности, все внешние ресурсы (картинки) внутри перезаписываемого <code>innerHTML</code> будут загружены заново. Если в каких-то переменных были ссылки на элементы списка – они станут неверны, так как содержимое полностью заменяется. В общем, так лучше не делать.</p>
+<p>А если нужно вставить в середину списка? Здесь <code>innerHTML</code> вообще не поможет.</p>
+<p>Можно, конечно, вставить строку во временный DOM-элемент и перенести оттуда элементы, но есть и гораздо лучший вариант: метод <code>insertAdjacentHTML</code>!</p>
+<h2><a class="main__anchor" href="#insertadjacent" name="insertadjacent">insertAdjacent*</a></h2><p>Метод <a href="https://developer.mozilla.org/en/DOM/element.insertAdjacentHTML">insertAdjacentHTML</a> позволяет вставлять произвольный HTML в любое место документа, в том числе <em>и между узлами</em>!</p>
+<p>Он поддерживается всеми браузерами, кроме Firefox меньше версии 8, ну а там его можно эмулировать.</p>
+<p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">elem.insertAdjacentHTML(where, html);</code></pre>
+</div>
+</div>
+</div><dl>
+<dt><code>html</code></dt>
+<dd>Строка HTML, которую нужно вставить</dd>
+</dl>
+<p><code>where</code>
+:Куда по отношению к <code>elem</code> вставлять строку. Всего четыре варианта:</p>
+<pre><code>1. `beforeBegin` -- перед `elem`.
+2. `afterBegin` -- внутрь `elem`, в самое начало.
+3. `beforeEnd` -- внутрь `elem`, в конец.
+4. `afterEnd` -- после `elem`.
+</code></pre>
+<figure><div class="image" style="width:448px">
+<div class="image__ratio" style="padding-top:20.089285714285715%"></div>
+<img alt="" class="image__image" height="90" src="article/multi-insert/insertAdjacentHTML.png" width="448">
+</img></div></figure><p>Например, вставим пропущенные элементы списка <em>перед</em> <code>&lt;li&gt;5&lt;/li&gt;</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;ul&gt;
+  &lt;li&gt;1&lt;/li&gt;
+  &lt;li&gt;2&lt;/li&gt;
+  &lt;li&gt;5&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script&gt;
+  var ul = document.body.children[0];
+  var li5 = ul.children[2];
+
+  li5.insertAdjacentHTML("beforeBegin", "&lt;li&gt;3&lt;/li&gt;&lt;li&gt;4&lt;/li&gt;");
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Единственный недостаток этого метода – он не работает в Firefox до версии 8. Но его можно легко добавить, используя <a href="/article/multi-insert/insertAdjacentFF.js">полифилл insertAdjacentHTML для Firefox</a>.</p>
+<p>У этого метода есть «близнецы-братья», которые поддерживаются везде, кроме Firefox, но в него они добавляются тем же полифиллом:</p>
+<ul>
+<li><a href="http://help.dottoro.com/ljbreokf.php">elem.insertAdjacentElement(where, newElem)</a> – вставляет в произвольное место не строку HTML, а элемент <code>newElem</code>.</li>
+<li><a href="http://help.dottoro.com/ljrsluxu.php">elem.insertAdjacentText(where, text)</a> – создаёт текстовый узел из строки <code>text</code> и вставляет его в указанное место относительно <code>elem</code>.</li>
+</ul>
+<p>Синтаксис этих методов, за исключением последнего параметра, полностью совпадает с <code>insertAdjacentHTML</code>. Вместе они образуют «универсальный швейцарский нож» для вставки чего угодно куда угодно.</p>
+<h2><a class="main__anchor" href="#documentfragment" name="documentfragment">DocumentFragment</a></h2><div class="important important_warn">
+<div class="important__header"><span class="important__type">Важно для старых браузеров</span></div>
+<div class="important__content"><p>Оптимизация, о которой здесь идёт речь, важна в первую очередь для старых браузеров, включая IE9-. В современных браузерах эффект от нее, как правило, небольшой, а иногда может быть и отрицательным.</p>
+</div></div>
+<p>До этого мы говорили о вставке строки в DOM. А что делать в случае, когда надо в существующий <code>UL</code> вставить много <em>DOM-элементов</em>?</p>
+<p>Можно вставлять их один за другим, вызовом <code>insertBefore/appendChild</code>, но при этом получится много операций с большим живым документом.</p>
+<p><strong>Вставить пачку узлов единовременно поможет <code>DocumentFragment</code>. Это особенный <em>кросс-браузерный</em> DOM-объект, который похож на обычный DOM-узел, но им не является.</strong></p>
+<p>Синтаксис для его создания:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var fragment = document.createDocumentFragment();</code></pre>
+</div>
+</div>
+</div><p>В него можно добавлять другие узлы.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">fragment.appendChild(node);</code></pre>
+</div>
+</div>
+</div><p>Его можно клонировать:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">fragment.cloneNode(true); // клонирование с подэлементами</code></pre>
+</div>
+</div>
+</div><p><strong>У <code>DocumentFragment</code> нет обычных свойств DOM-узлов, таких как <code>innerHTML</code>, <code>tagName</code> и т.п. Это не узел.</strong></p>
+<p>Его «Фишка» заключается в том, что когда <code>DocumentFragment</code> вставляется в DOM – то он исчезает, а вместо него вставляются его дети. Это свойство является уникальной особенностью <code>DocumentFragment</code>.</p>
+<p>Например, если добавить в него много <code>LI</code>, и потом вызвать <code>ul.appendChild(fragment)</code>, то фрагмент растворится, и в DOM вставятся именно <code>LI</code>, причём в том же порядке, в котором были во фрагменте.</p>
+<p>Псевдокод:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// хотим вставить в список UL много LI
+
+// делаем вспомогательный DocumentFragment
+var fragment = document.createDocumentFragment();
+
+for (цикл по li) {
+  fragment.appendChild(list[i]); // вставить каждый LI в DocumentFragment
+}
+
+ul.appendChild(fragment); // вместо фрагмента вставятся элементы списка</code></pre>
+</div>
+</div>
+</div><p>В современных браузерах эффект от такой оптимизации может быть различным, а на небольших документах иногда и отрицательным.</p>
+<p>Понять текущее положение вещей вы можете, запустив следующий <a href="http://plnkr.co/edit/K0Kcmk2Ax3ZvVQmweal1?p=preview">небольшой бенчмарк</a>.</p>
+<h2><a class="main__anchor" href="#append-prepend-before-after-replacewith" name="append-prepend-before-after-replacewith">append/prepend, before/after, replaceWith</a></h2><p>Сравнительно недавно в <a href="https://dom.spec.whatwg.org/">стандарте</a> появились методы, которые позволяют вставить что угодно и куда угодно.</p>
+<p>Синтаксис:</p>
+<ul>
+<li><code>node.append(...nodes)</code> – вставляет <code>nodes</code> в конец <code>node</code>,</li>
+<li><code>node.prepend(...nodes)</code> – вставляет <code>nodes</code> в начало <code>node</code>,</li>
+<li><code>node.after(...nodes)</code> – вставляет <code>nodes</code> после узла <code>node</code>,</li>
+<li><code>node.before(...nodes)</code> – вставляет <code>nodes</code> перед узлом <code>node</code>,</li>
+<li><code>node.replaceWith(...nodes)</code> – вставляет <code>nodes</code> вместо <code>node</code>.</li>
+</ul>
+<p>Эти методы ничего не возвращают.</p>
+<p>Во всех этих методах <code>nodes</code> – DOM-узлы или строки, в любом сочетании и количестве. Причём строки вставляются именно как текстовые узлы, в отличие от <code>insertAdjacentHTML</code>.</p>
+<p>Пример (с полифиллом):</p>
+<div class="code-example" data-autorun="true" data-demo-height="80" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;script src="https://cdn.polyfill.io/v1/polyfill.js?features=Element.prototype.append,Element.prototype.after"&gt;&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+  &lt;script&gt;
+    // добавим элемент в конец &lt;body&gt;
+    var p = document.createElement('p');
+    document.body.append(p);
+
+    var em = document.createElement('em');
+    em.append('Мир!');
+
+    // вставить в параграф текстовый и обычный узлы
+    p.append("Привет, ", em);
+
+    // добавить элемент после &lt;p&gt;
+    p.after(document.createElement('hr'))
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-f5hxwx" src="about:blank" style="height:80px"></iframe>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>
+<p>Манипуляции, меняющие структуру DOM (вставка, удаление элементов), как правило, быстрее с отдельным маленьким узлом, чем с большим DOM, который находится в документе.</p>
+<p>Конкретная разница зависит от внутренней реализации DOM в браузере.</p>
+</li>
+<li>
+<p>Семейство методов для вставки HTML/элемента/текста в произвольное место документа:</p>
+<ul>
+<li><code>elem.insertAdjacentHTML(where, html)</code></li>
+<li><code>elem.insertAdjacentElement(where, node)</code></li>
+<li><code>elem.insertAdjacentText(where, text)</code></li>
+</ul>
+<p>Два последних метода не поддерживаются в Firefox, на момент написания текста, но есть небольшой полифилл  <a href="/article/multi-insert/insertAdjacentFF.js">insertAdjacentFF.js</a>, который добавляет их. Конечно, он нужен только для Firefox.</p>
+</li>
+<li>
+<p><code>DocumentFragment</code> позволяет минимизировать количество вставок в большой живой DOM. Эта оптимизация особо эффективна в старых браузерах, в новых эффект от неё меньше или наоборот отрицательный.</p>
+<p>Элементы сначала вставляются в него, а потом – он вставляется в DOM. При вставке <code>DocumentFragment</code> «растворяется», и вместо него вставляются содержащиеся в нём узлы.</p>
+<p><code>DocumentFragment</code>, в отличие от <code>insertAdjacent*</code>, работает с коллекцией DOM-узлов.</p>
+</li>
+<li>
+<p>Современные методы, работают с любым количеством узлов и текста, желателен полифилл:</p>
+<ul>
+<li><code>append/prepend</code> – вставка в конец/начало.</li>
+<li><code>before/after</code> – вставка после/перед.</li>
+<li><code>replaceWith</code> – замена.</li>
+</ul>
+</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

@@ -1,0 +1,207 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Современный DOM: полифиллы" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В старых IE, особенно в IE8 и ниже, ряд стандартных DOM-свойств не поддерживаются или поддерживаются плохо.</p>
+<p>Если говорить о современных браузерах, то они тоже не все идут «в ногу», всегда какие-то современные возможности реализуются сначала в одном, потом в другом.</p>
+<p>Но это не значит, что нужно ориентироваться на самый старый браузер из поддерживаемых!</p>
+<p>Для того, чтобы не думать об устаревших браузерах, а писать современный код, который при этом работает везде, используют полифиллы.</p>
+<cut>
+<h2><a class="main__anchor" href="#полифиллы" name="полифиллы">Полифиллы</a></h2><p>«Полифилл» (англ. polyfill) – это библиотека, которая добавляет в старые браузеры поддержку возможностей, которые в современных браузерах являются встроенными.</p>
+<p>Один полифилл мы уже видели, когда изучали собственно JavaScript – это библиотека <a href="https://github.com/es-shims/es5-shim">ES5 shim</a>. Если её подключить, то в IE8- начинают работать многие возможности ES5. Работает она через модификацию стандартных объектов и их прототипов. Это типично для полифиллов.</p>
+<p>В работе с DOM несовместимостей гораздо больше, как и способов их обхода.</p>
+<h2><a class="main__anchor" href="#что-делает-полифилл" name="что-делает-полифилл">Что делает полифилл?</a></h2><p>Для примера добавим в DOM поддержку свойства <code>firstElementChild</code>, если её нет. Здесь речь, конечно, об IE8, в других браузерах оно и так поддерживается, но пример типовой.</p>
+<p>Вот код для такого полифилла:</p>
+<div class="code-example" data-highlight-block="0-0,2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">if (document.documentElement.firstElementChild === undefined) { // (1)
+
+  Object.defineProperty(Element.prototype, 'firstElementChild', { // (2)
+    get: function() {
+      var el = this.firstChild;
+      do {
+        if (el.nodeType === 1) {
+          return el;
+        }
+        el = el.nextSibling;
+      } while (el);
+
+      return null;
+    }
+  });
+}</code></pre>
+</div>
+</div>
+</div><p>Если этот код запустить, то <code>firstElementChild</code> появится у всех элементов в IE8.</p>
+<p>Общий вид этого полифилла довольно типичен. Обычно полифилл состоит из двух частей:</p>
+<ol>
+<li>Проверка, есть ли встроенная возможность.</li>
+<li>Эмуляция, если её нет.</li>
+</ol>
+<h2><a class="main__anchor" href="#проверка-встроенного-свойства" name="проверка-встроенного-свойства">Проверка встроенного свойства</a></h2><p>Для проверки встроенной поддержки <code>firstElementChild</code> мы можем просто обратиться к <code>document.documentElement.firstElementChild</code>.</p>
+<p>Если DOM-свойство <code>firstElementChild</code> поддерживается, то его значение не может быть <code>undefined</code>. Если детей нет  – свойство равно <code>null</code>, но не <code>undefined</code>.</p>
+<p>Сравним:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( document.head.previousSibling ); // null, поддержка есть
+alert( document.head.blabla ); // undefined, поддержки нет</code></pre>
+</div>
+</div>
+</div><p>За счёт этого работает проверка в первой строке полифилла.</p>
+<p><strong>Важная тонкость – элемент, который мы тестируем, должен <em>по стандарту</em> поддерживать такое свойство.</strong></p>
+<p>Попытаемся, к примеру, проверить «поддержку» свойства <code>value</code>. У <code>input</code> оно есть, у <code>div</code> такого свойства нет:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var div = document.createElement('div');
+var input = document.createElement('input');
+
+alert( input.value ); // пустая строка, поддержка есть
+alert( div.value ); // undefined, поддержки нет</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">Поддержка значений свойств</span></div>
+<div class="important__content"><p>Если мы хотим проверить поддержку не свойства целиком, а некоторых его значений, то ситуация сложнее.</p>
+<p>Например, нам интересно, поддерживает ли браузер <code>&lt;input type="range"&gt;</code>. То есть, понятно, что свойство <code>type</code> у <code>input</code>, в целом, поддерживается, а вот конкретный тип <code>&lt;input&gt;</code>?</p>
+<p>Для этого можно создать <code>&lt;input&gt;</code> с таким <code>type</code> и посмотреть, подействовал ли он.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="radio"&gt;
+&lt;input type="no-such-type"&gt;
+
+&lt;script&gt;
+  alert( document.body.children[0].type ); // radio, поддерживается
+  alert( document.body.children[1].type ); // text, не поддерживается
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><ol>
+<li>Первый <code>input</code> имеет <code>type="radio"</code>. Этот тип точно поддерживается, поэтому <code>input.type</code> имеет значение <code>"radio"</code>, как и указано.</li>
+<li>Второй <code>input</code> имеет <code>type="no-such-type"</code>. В качестве типа, для примера, специально указано заведомо неподдерживаемое значение. При этом <code>input.type</code> равен <code>"text"</code>, таково значение по умолчанию. Мы можем прочитать его и увидеть, что поддержки нет.</li>
+</ol>
+<p>Эта проверка работает, так как хоть в HTML-атрибут <code>type</code> и можно присвоить любую строку, но DOM-свойство <code>type</code> <a href="http://www.w3.org/TR/html-markup/input.html">по стандарту</a> хранит реальный тип <code>input'а</code>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#добавляем-поддержку-свойства" name="добавляем-поддержку-свойства">Добавляем поддержку свойства</a></h2><p>Если мы осуществили проверку и видим, что встроенной поддержки нет – полифилл должен её добавить.</p>
+<p>Для этого вспомним, что DOM элементы описываются соответствующими JS-классами.</p>
+<p>Например:</p>
+<ul>
+<li><code>&lt;li&gt;</code> – <a href="http://www.w3.org/TR/html5/grouping-content.html#the-li-element">HTMLLiElement</a></li>
+<li><code>&lt;a&gt;</code> – <a href="http://www.w3.org/TR/html5/text-level-semantics.html#the-a-element">HTMLAnchorElement</a></li>
+<li><code>&lt;body&gt;</code> – <a href="http://www.w3.org/TR/html5/sections.html#the-body-element">HTMLBodyElement</a></li>
+</ul>
+<p>Они наследуют, как мы видели ранее, от <a href="http://www.w3.org/TR/html5/dom.html#htmlelement">HTMLElement</a>, который является общим родительским классом для HTML-элементов.</p>
+<p>А <code>HTMLElement</code>, в свою очередь, наследует от <a href="http://www.w3.org/TR/dom/#interface-element">Element</a>, который является общим родителем не только для HTML, но и для других DOM-структур, например для XML и SVG.</p>
+<p><strong>Для добавления нужной возможности берётся правильный класс и модифицируется его <code>prototype</code>.</strong></p>
+<p>Например, можно добавить всем элементам в прототип функцию:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">Element.prototype.sayHi = function() {
+  alert( "Привет от " + this );
+}
+
+document.body.sayHi(); // Привет от [object HTMLBodyElement]</code></pre>
+</div>
+</div>
+</div><p>Сложнее – добавить свойство, но это тоже возможно, через <code>Object.defineProperty</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">Object.defineProperty(Element.prototype, 'lowerTag', {
+  get: function() {
+    return this.tagName.toLowerCase();
+  }
+});
+
+alert( document.body.lowerTag ); // body</code></pre>
+</div>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Геттер-сеттер и IE8</span></div>
+<div class="important__content"><p>В IE8 современные методы для работы со свойствами, такие как <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty">Object.defineProperty</a>, <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor">Object.getOwnPropertyDescriptor</a> и другие не поддерживаются для произвольных объектов, но отлично работают для DOM-элементов.</p>
+<p>Чем полифиллы и пользуются, «добавляя» в IE8 многие из современных методов DOM.</p>
+</div></div>
+<h2><a class="main__anchor" href="#какова-поддержка-свойства" name="какова-поддержка-свойства">Какова поддержка свойства?</a></h2><p>А нужен ли вообще полифилл? Какие браузеры поддерживают интересное нам свойство или метод?</p>
+<p>Зачастую такая информация есть в справочнике MDN, например для метода <code>remove()</code>: <a href="https://developer.mozilla.org/en-US/docs/Web/API/ChildNode.remove">https://developer.mozilla.org/en-US/docs/Web/API/ChildNode.remove</a> – табличка совместимости внизу.</p>
+<p>Также бывает полезен сервис <a href="http://caniuse.com">http://caniuse.com</a>, например для <code>elem.matches(css)</code>: <a href="http://caniuse.com/#feat=matchesselector">http://caniuse.com/#feat=matchesselector</a>.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Если вы поддерживаете устаревшие браузеры – и здесь речь идёт не только про старые IE, другие браузеры тоже обновляются не у всех мгновенно – не обязательно ограничивать себя в использовании современных возможностей.</p>
+<p>Многие из них легко полифиллятся добавлением на страницу соответствующих библиотек.</p>
+<p>Для поиска полифилла обычно достаточно ввести в поисковике <code>"polyfill"</code>, и нужное свойство либо метод. Как правило, полифиллы идут в виде коллекций скриптов.</p>
+<p><strong>Полифиллы хороши тем, что мы просто подключаем их и используем везде современный DOM/JS, а когда старые браузеры окончательно отомрут – просто выкинем полифилл, без изменения кода.</strong></p>
+<p>Типичная схема работы полифилла DOM-свойства или метода:</p>
+<ul>
+<li>Создаётся элемент, который его, в теории, должен поддерживать.</li>
+<li>Соответствующее свойство сравнивается с <code>undefined</code>.</li>
+<li>Если его нет – модифицируется прототип, обычно это <code>Element.prototype</code> – в него дописываются новые геттеры и функции.</li>
+</ul>
+<p>Другие полифиллы сделать сложнее. Например, полифилл, который хочет добавить в браузер поддержку элементов вида <code>&lt;input type="range"&gt;</code>, может найти все такие элементы на странице и обработать их, меняя внешний вид и работу через JavaScript. Это возможно. Но если уже существующему <code>&lt;input&gt;</code> поменять <code>type</code> на <code>range</code> – полифилл не «подхватит» его автоматически.</p>
+<p>Описанная ситуация нормальна. Не всегда полифилл обеспечивает идеальную поддержку наравне с родными свойствами. Но если мы не собираемся так делать, то подобный полифилл вполне подойдёт.</p>
+<p>Один из лучших сервисов для полифиллов: <a href="http://polyfill.io">polyfill.io</a>. Он даёт возможность вставлять на свою страницу скрипт с запросом к сервису, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script src="/cdn.polyfill.io/v1/polyfill.js?features=es6"&gt;&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>При запросе сервис анализирует заголовки, понимает, какая версия какого браузера к нему обратилась и возвращает скрипт-полифилл, добавляющий в браузер возможности, которых там нет. В параметре <code>features</code> можно указать, какие именно возможности нужны, в примере выше это функции стандарта ES6. Подробнее – см. <a href="http://polyfill.webservices.ft.com/v1/docs/examples">примеры</a> и <a href="http://polyfill.webservices.ft.com/v1/docs/features/">список возможностей</a>.</p>
+<p>Также есть и другие коллекции, как правило, полифиллы организованы в виде коллекции, из которой можно как выбрать отдельные свойства и функции, так и подключить всё вместе, пачкой.</p>
+<p>Примеры полифиллов:</p>
+<ul>
+<li><a href="https://github.com/jonathantneal/polyfill">https://github.com/jonathantneal/polyfill</a> – ES5 вместе с DOM</li>
+<li><a href="https://github.com/termi/ES5-DOM-SHIM">https://github.com/termi/ES5-DOM-SHIM</a> – ES5 вместе с DOM</li>
+<li><a href="https://github.com/inexorabletash/polyfill">https://github.com/inexorabletash/polyfill</a> – ES5+ вместе с DOM</li>
+</ul>
+<p>Более мелкие библиотеки, а также коллекции ссылок на них:</p>
+<ul>
+<li><a href="http://compatibility.shwups-cms.ch/en/polyfills/">http://compatibility.shwups-cms.ch/en/polyfills/</a></li>
+<li><a href="http://html5please.com/#polyfill">http://html5please.com/#polyfill</a></li>
+<li><a href="https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-browser-Polyfills">https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-browser-Polyfills</a></li>
+</ul>
+<p>Конечно, можно собрать и свою библиотеку полифиллов самостоятельно из различных коллекций, которые перечислены выше, а при необходимости и написать самому. В этой части учебника мы изучим ещё много методов работы с DOM, которые в этом помогут.</p>
+</cut></div></meta></article></main></div></body></html>

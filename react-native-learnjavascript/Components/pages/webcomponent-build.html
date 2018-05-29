@@ -1,0 +1,421 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Веб-компонент в сборе" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В этой главе мы посмотрим на итоговый пример веб-компонента, включающий в себя описанные ранее технологии: Custom Elements, Shadow DOM, CSS Scoping и, конечно же, Imports.</p>
+<cut>
+<h2><a class="main__anchor" href="#компонент-ui-message" name="компонент-ui-message">Компонент ui-message</a></h2><p>Компонент <code>ui-message</code> будет описан в отдельном файле <code>ui-message.html</code>.</p>
+<p>Его использование будет выглядеть следующим образом:</p>
+<div class="code-example" data-highlight-block="9-9,11-11" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;link rel="import" id="link" href="ui-message.html"&gt;
+
+&lt;style&gt;
+  ui-message {
+    width: 80%;
+    margin: auto;
+  }
+&lt;/style&gt;
+
+&lt;ui-message class="info"&gt;Доброе утро, страна!&lt;/ui-message&gt;
+
+&lt;ui-message class="warning"&gt;Внимание-внимание! Говорит информбюро!&lt;/ui-message&gt;</code></pre>
+</div>
+</div>
+</div><p>Этот код ничем не отличается от использования обычного элемента, поэтому перейдём дальше, к содержимому <code>ui-message.html</code></p>
+<h2><a class="main__anchor" href="#шаблон-для-ui-message" name="шаблон-для-ui-message">Шаблон для ui-message</a></h2><p>Файл <code>ui-message.html</code> можно начать с шаблона:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;template id="tmpl"&gt;
+  &lt;style&gt;
+    .content {
+      min-height: 20px;
+      padding: 19px;
+      margin-bottom: 20px;
+      background-color: #f5f5f5;
+      border: 1px solid #e3e3e3;
+      border-radius: 4px;
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
+    }
+
+    :host {
+      display: block;
+    }
+
+    :host(.info) .content {
+      color: green;
+    }
+
+    :host(.warning) .content {
+      color: red;
+    }
+  &lt;/style&gt;
+  &lt;div class="content"&gt;
+    &lt;content&gt;&lt;/content&gt;
+  &lt;/div&gt;
+&lt;/template&gt;</code></pre>
+</div>
+</div>
+</div><p>Этот шаблон рисует <code>&lt;div class="content"&gt;</code> и заполняет его содержимым элемента-хозяина.</p>
+<p>Важные детали:</p>
+<ul>
+<li>
+<p>Самое важное правило здесь <code>:host { display:block }</code>.</p>
+<p>Оно обязательно! . Это правило задаёт, что корень DOM-дерева будет иметь <code>display:block</code>. По умолчанию <code>:host</code> не создаёт CSS-блок, а это значит, что ни ширину ни отступы указать не получится.</p>
+</li>
+<li>
+<p>Последующие правила <code>:host(.info) .content</code> и <code>:host(.warning) .content</code> стилизуют содержимое в зависимости от того, какой на хозяине класс.</p>
+</li>
+</ul>
+<h2><a class="main__anchor" href="#скрипт-для-ui-message" name="скрипт-для-ui-message">Скрипт для ui-message</a></h2><p>В файле <code>ui-message.html</code> мы создадим новый элемент <code>&lt;ui-message&gt;</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// (1) получить шаблон
+var localDocument = document.currentScript.ownerDocument;
+var tmpl = localDocument.getElementById('tmpl');
+
+// (2) создать элемент
+var MessageProto = Object.create(HTMLElement.prototype);
+
+MessageProto.createdCallback = function() {
+  var root = this.createShadowRoot();
+  root.appendChild(tmpl.content.cloneNode(true));
+};
+
+// (3) зарегистрировать в DOM
+document.registerElement('ui-message', {
+  prototype: MessageProto
+});</code></pre>
+</div>
+</div>
+</div><p>Все компоненты этого кода мы подробно разбирали ранее:</p>
+<ol>
+<li>Получаем шаблон из текущего документа, то есть из самого импорта.</li>
+<li>Описываем элемент. Он довольно прост – при создании записывает в свой <code>Shadow DOM</code> шаблон. При этом содержимое исходного элемента будет показано в <code>&lt;content&gt;</code>, но делать правила на сам <code>content</code> бессмысленно – они не сработают. Нужно либо перейти внутрь <code>&lt;content&gt;</code> при помощи <code>::content</code>-селектора, либо указать для внешнего элемента <code>.content</code>, что в данном случае и сделано.</li>
+<li>С момента регистрации все уже существующие элементы <code>&lt;ui-message&gt;</code> будут превращены в описанные здесь. И будущие, конечно, тоже.</li>
+</ol>
+<p>Компонент в действии:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">index.html</div><div class="code-tabs__switch">ui-message.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/webcomponent-build/message/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/YNioUljpUDez5igIUVO8?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/webcomponent-build/message/"></iframe></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;link rel="import" id="link" href="ui-message.html"&gt;
+  &lt;style&gt;
+    ui-message {
+      width: 80%;
+      margin: auto;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;ui-message class="info"&gt;Доброе утро, страна!&lt;/ui-message&gt;
+
+  &lt;ui-message class="warning"&gt;Внимание-внимание! Говорит информбюро!&lt;/ui-message&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;body&gt;
+
+  &lt;template id="tmpl"&gt;
+    &lt;style&gt;
+      .content {
+        min-height: 20px;
+        padding: 19px;
+        margin-bottom: 20px;
+        background-color: #f5f5f5;
+        border: 1px solid #e3e3e3;
+        border-radius: 4px;
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
+      }
+
+      :host {
+        display: block;
+      }
+
+      :host(.info) .content {
+        color: green;
+      }
+
+      :host(.warning) .content {
+        color: red;
+      }
+    &lt;/style&gt;
+    &lt;div class="content"&gt;
+      &lt;content&gt;&lt;/content&gt;
+    &lt;/div&gt;
+  &lt;/template&gt;
+
+  &lt;script&gt;
+    ! function() {
+      var localDocument = document.currentScript.ownerDocument;
+      var tmpl = localDocument.getElementById('tmpl');
+
+      var MessageProto = Object.create(HTMLElement.prototype);
+
+      MessageProto.createdCallback = function() {
+        var root = this.createShadowRoot();
+        root.appendChild(tmpl.content.cloneNode(true));
+      };
+
+      document.registerElement('ui-message', {
+        prototype: MessageProto
+      });
+    }();
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><h2><a class="main__anchor" href="#компонент-ui-slider-с-jquery" name="компонент-ui-slider-с-jquery">Компонент ui-slider с jQuery</a></h2><p>Компонент может использовать и внешние библиотеки.</p>
+<p>Для примера создадим слайдер с использованием библиотеки <a href="http://jqueryui.com">jQuery UI</a>.</p>
+<p>Компонент <code>ui-slider</code> будет показывать слайдер с минимальным и максимальным значением из атрибутов <code>min/max</code> и генерировать событие <code>slide</code> при его перемещении.</p>
+<p>Использование:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;link rel="import" id="link" href="ui-slider.html"&gt;
+
+&lt;ui-slider min="0" max="1000" id="elem"&gt;&lt;/ui-slider&gt;
+
+&lt;script&gt;
+  elem.addEventListener("slide", function(e) {
+    value.innerHTML = e.detail.value;
+  });
+&lt;/script&gt;
+
+&lt;div id="value"&gt;0&lt;/div&gt;</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#файл-компонента-ui-slider" name="файл-компонента-ui-slider">Файл компонента ui-slider</a></h2><p>Файл <code>ui-slider.html</code>, задающий компонент, мы разберём по частям.</p>
+<h3><a class="main__anchor" href="#заголовок" name="заголовок">Заголовок</a></h3><p>В начале подключим jQuery и jQuery UI.</p>
+<p>Мы импортируем в слайдер <code>jquery.html</code>, который содержит теги <code>&lt;script&gt;</code> вместо того, чтобы явным образом прописывать загрузку скриптов:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;head&gt;
+  &lt;link rel="import" href="jquery.html"&gt;
+&lt;/head&gt;</code></pre>
+</div>
+</div>
+</div><p>Это сделано для того, чтобы другие компоненты, которым тоже могут понадобится эти библиотеки, также могли импортировать <code>jquery.html</code>. При повторном импорте ничего не произойдёт, скрипты не будут подгружены и исполнены два раза.</p>
+<p>То есть, это средство оптимизации.</p>
+<p>Содержимое <code>jquery.html</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"&gt;&lt;/script&gt;
+&lt;script src="https://code.jquery.com/ui/1.11.4/jquery-ui.js"&gt;&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#шаблон" name="шаблон">Шаблон</a></h3><p>Шаблон будет помещён в Shadow DOM. В нём должны быть стили и элементы, необходимые слайдеру.</p>
+<p>Конкретно для слайдера из разметки достаточно одного элемента <code>&lt;div id="slider"&gt;&lt;/div&gt;</code>, который затем будет обработан jQuery UI.</p>
+<p>Кроме того, в шаблоне должны быть стили:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;template id="tmpl"&gt;
+  &lt;style&gt;
+    @import url(https://code.jquery.com/ui/1.11.4/themes/ui-lightness/jquery-ui.css);
+    :host {
+      display: block;
+    }
+  &lt;/style&gt;
+  &lt;div id="slider"&gt;&lt;/div&gt;
+&lt;/template&gt;</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#скрипт" name="скрипт">Скрипт</a></h3><p>Скрипт для нового элемента похож на тот, что делали раньше, но теперь он использует jQuery UI для создания слайдера внутри своего Shadow DOM.</p>
+<p>Для его понимания желательно знать jQuery, хотя в коде ниже я намеренно свёл использование этой библиотеки к минимуму.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var localDocument = document.currentScript.ownerDocument;
+var tmpl = localDocument.getElementById('tmpl');
+
+var SliderProto = Object.create(HTMLElement.prototype);
+
+SliderProto.createdCallback = function() {
+  // (1) инициализировать Shadow DOM, получить из него #slider
+  var root = this.createShadowRoot();
+  root.appendChild(tmpl.content.cloneNode(true));
+
+  this.$slider = $(root.getElementById('slider'));
+
+  var self = this;
+
+  // (2) инициализировать слайдер, пробросить параметры
+  this.$slider.slider({
+    min: this.getAttribute('min') || 0,
+    max: this.getAttribute('max') || 100,
+    value: this.getAttribute('value') || 0,
+    slide: function() {
+      // (3) пробросить событие
+      var event = new CustomEvent("slide", {
+        detail: {
+          value: self.$slider.slider("option", "value")
+        },
+        bubbles: true
+      });
+      self.dispatchEvent(event);
+    }
+  });
+};
+
+document.registerElement('ui-slider', {
+  prototype: SliderProto
+});</code></pre>
+</div>
+</div>
+</div><p>Функция <code>createdCallback</code> по шагам:</p>
+<ol>
+<li>Создаём Shadow DOM, элемент <code>#slider</code> получаем из него, он не в основном документе.</li>
+<li>Используя jQuery UI, слайдер создаётся вызовом <a href="http://jqueryui.com/slider/">jQuery UI методом slider</a>, который имеет вид <code>$elem.slider({...параметры...});</code>. Параметры получаем из атрибутов <code>&lt;ui-slider&gt;</code> (он же <code>this</code>) и отдаём библиотеке. Она делает всю работу.</li>
+<li>Параметр <code>slide</code> задаёт функцию-коллбэк, которая вызывается при передвижении слайдера и будет генерировать DOM-событие на элементе, на которое можно будет поставить обработчик при помощи <code>addEventListener</code>. В его деталях мы указываем новое значение слайдера.</li>
+</ol>
+<p>Полный код с примером:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">index.html</div><div class="code-tabs__switch">jquery.html</div><div class="code-tabs__switch">ui-slider.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/webcomponent-build/ui-slider/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/wNowlAOGoSpPJi2hha2A?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:300px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/webcomponent-build/ui-slider/"></iframe></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;link rel="import" id="link" href="ui-slider.html"&gt;
+  &lt;style&gt;
+    ui-slider {
+      width: 300px;
+      margin: 10px;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;ui-slider min="0" max="1000" id="elem"&gt;&lt;/ui-slider&gt;
+
+  &lt;script&gt;
+    elem.addEventListener("slide", function(e) {
+      value.innerHTML = e.detail.value; // = this.value
+    });
+  &lt;/script&gt;
+
+  &lt;div id="value"&gt;0&lt;/div&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"&gt;&lt;/script&gt;
+&lt;script src="https://code.jquery.com/ui/1.11.4/jquery-ui.js"&gt;&lt;/script&gt;</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;link rel="import" href="jquery.html"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;template id="tmpl"&gt;
+    &lt;style&gt;
+      @import url(https://code.jquery.com/ui/1.11.4/themes/ui-lightness/jquery-ui.css);
+      :host {
+        display: block;
+      }
+    &lt;/style&gt;
+    &lt;div id="slider"&gt;&lt;/div&gt;
+  &lt;/template&gt;
+
+  &lt;script&gt;
+    ! function() {
+      var localDocument = document.currentScript.ownerDocument;
+      var tmpl = localDocument.getElementById('tmpl');
+
+      var SliderProto = Object.create(HTMLElement.prototype);
+
+      SliderProto.createdCallback = function() {
+        var root = this.createShadowRoot();
+        root.appendChild(tmpl.content.cloneNode(true));
+
+        this.$slider = $(root.getElementById('slider'));
+
+        var self = this;
+
+        this.$slider.slider({
+          min: +this.getAttribute('min') || 0,
+          max: +this.getAttribute('max') || 100,
+          value: this.getAttribute('value') || 0,
+          slide: function() {
+            var event = new CustomEvent("slide", {
+              detail: {
+                value: self.$slider.slider("option", "value")
+              },
+              bubbles: true
+            });
+            self.dispatchEvent(event);
+          }
+        });
+      };
+
+
+      document.registerElement('ui-slider', {
+        prototype: SliderProto
+      });
+    }();
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>Его можно далее улучшать, например добавить геттер и сеттер для значения <code>value</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">Object.defineProperty(SliderProto, 'value', {
+  get: function() {
+    return this.$slider.slider("option", "value");
+  },
+  set: function(value) {
+    this.$slider.slider('option', 'value', value);
+  }
+});</code></pre>
+</div>
+</div>
+</div><p>Если добавить этот код, то к значению <code>&lt;ui-slider&gt;</code> можно будет обращаться как <code>elem.value</code>, аналогично всяким встроенным <code>&lt;input&gt;</code>.</p>
+<h2><a class="main__anchor" href="#проблема-с-jquery" name="проблема-с-jquery">Проблема с jQuery</a></h2><p>Попробуйте пример выше. Он не совсем работает. Слайдер прокручивается первый раз, но второй раз он как-то странно «прыгает».</p>
+<p>Чтобы понять, почему это происходит, я заглянул в исходники jQuery UI и, после отладки происходящего, натолкнулся на проблемный код.</p>
+<p>Он был в методе <a href="http://api.jquery.com/offset/">offset</a>, который предназначен для того, чтобы определять координаты элемента. Этот метод не срабатывал, поскольку в нём есть проверка, которая выглядит примерно так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var box = {
+  top: 0,
+  left: 0
+};
+...
+// Make sure it's not a disconnected DOM node
+if(!jQuery.contains(elem.ownerDocument, elem)) {
+  return box;
+}</code></pre>
+</div>
+</div>
+</div><p>То есть, jQuery проверяет, находится ли элемент <code>elem</code> внутри своего документа <code>elem.ownerDocument</code>. Если нет – то считается, что элемент вне DOM, и его размеры равны нулю.</p>
+<p>Если копнуть чуть глубже, то <code>jQuery.contains</code> в современных браузерах сводится к обычному вызову <a href="https://developer.mozilla.org/en-US/docs/Web/API/Node/contains">contains</a>.</p>
+<p>Парадокс с Shadow DOM заключается в том, что вызов <code>elem.ownerDocument.contains(elem)</code> вернёт <code>false</code>!</p>
+<p>Получилось, что элемент не в документе и одновременно он имеет размеры. Такого разработчики jQuery не предусмотрели.</p>
+<p>Можно, конечно, побежать исправлять jQuery, но давайте подумаем, может быть так оно и должно быть?</p>
+<p>С точки зрения здравого смысла, Shadow DOM является частью текущего документа. Это соответствует и духу <a href="http://w3c.github.io/webcomponents/spec/shadow/">текущей спецификации</a>, где shadow tree рассматривается в контексте document tree.</p>
+<p>Поэтому на самом деле <code>document.contains(elem)</code> следовало бы возвращать <code>true</code>.</p>
+<p>Почему же <code>false</code>? Причина проста – описанный в <a href="http://www.w3.org/TR/dom/#dom-node-contains">другом стандарте</a> механизм работы <code>contains</code> по сути состоит в проходе вверх от <code>elem</code> по цепочке <code>parentNode</code>, пока либо встретим искомый элемент, тогда ответ <code>true</code>, а иначе <code>false</code>. В случае с Shadow DOM этот путь закончится на корне Shadow DOM-дерева, оно ведь не является потомком хозяина.</p>
+<p><strong>Метод <code>contains</code> описан стандартом без учёта Shadow DOM, поэтому возвратил неверный результат <code>false</code>.</strong></p>
+<p>Это один из тех небольших, но важных нюансов, которые показывают, что стандарты всё ещё в разработке.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>С использованием современных технологий можно делать компоненты. Но это, всё же, дело будущего. Все стандарты находятся в процессе доработки, готовятся новые.</li>
+<li>Можно использовать произвольную библиотеку, такую как jQuery, и работать с Shadow DOM с её использованием. Но возможны проблемки. Выше была продемонстрирована одна из них, могут быть и другие.</li>
+</ul>
+<p>Пока веб-компоненты ещё не являются законченными стандартами, можно попробовать <a href="http://www.polymer-project.org">Polymer</a> – это самый известный из полифиллов на тему веб-компонент.</p>
+<p>Он старается их эмулировать по возможности кросс-браузерно, но пока что это довольно-таки сложно, в частности, необходима дополнительная разметка.</p>
+</cut></div></meta></article></main></div></body></html>

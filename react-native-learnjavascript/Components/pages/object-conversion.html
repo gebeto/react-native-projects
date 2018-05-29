@@ -1,0 +1,358 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Преобразование объектов: toString и valueOf" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Ранее, в главе <a href="/types-conversion">Преобразование типов для примитивов</a> мы рассматривали преобразование типов для примитивов. Теперь добавим в нашу картину мира объекты.</p>
+<p>Бывают операции, при которых объект должен быть преобразован в примитив.</p>
+<cut>
+<p>Например:</p>
+<ul>
+<li>Строковое преобразование – если объект выводится через <code>alert(obj)</code>.</li>
+<li>Численное преобразование – при арифметических операциях, сравнении с примитивом.</li>
+<li>Логическое преобразование – при <code>if(obj)</code> и других логических операциях.</li>
+</ul>
+<p>Рассмотрим эти преобразования по очереди.</p>
+<h2><a class="main__anchor" href="#логическое-преобразование" name="логическое-преобразование">Логическое преобразование</a></h2><p>Проще всего – с логическим преобразованием.</p>
+<p><strong>Любой объект в логическом контексте – <code>true</code>, даже если это пустой массив <code>[]</code> или объект <code>{}</code>.</strong></p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">if ({} &amp;&amp; []) {
+  alert( "Все объекты - true!" ); // alert сработает
+}</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#строковое-преобразование" name="строковое-преобразование">Строковое преобразование</a></h2><p>Строковое преобразование проще всего увидеть, если вывести объект при помощи <code>alert</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  firstName: 'Василий'
+};
+
+alert( user ); // [object Object]</code></pre>
+</div>
+</div>
+</div><p>Как видно, содержимое объекта не вывелось. Это потому, что стандартным строковым представлением пользовательского объекта является строка <code>"[object Object]"</code>.</p>
+<p>Такой вывод объекта не содержит интересной информации. Поэтому имеет смысл его поменять на что-то более полезное.</p>
+<p><strong>Если в объекте присутствует метод <code>toString</code>, который возвращает примитив, то он используется для преобразования.</strong></p>
+<div class="code-example" data-highlight-inline="4:2-11" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+
+  firstName: 'Василий',
+
+  toString: function() {
+    return 'Пользователь ' + this.firstName;
+  }
+};
+
+alert( user );  // Пользователь Василий</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">Результатом <code>toString</code> может быть любой примитив</span></div>
+<div class="important__content"><p>Метод <code>toString</code> не обязан возвращать именно строку.</p>
+<p>Его результат может быть любого примитивного типа. Например, это может быть число, как в примере ниже:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var obj = {
+  toString: function() {
+    return 123;
+  }
+};
+
+alert( obj ); // 123</code></pre>
+</div>
+</div>
+</div><p>Поэтому мы и называем его здесь <em>«строковое преобразование»</em>, а не «преобразование к строке».</p>
+</div></div>
+<p>Все объекты, включая встроенные, имеют свои реализации метода <code>toString</code>, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( [1, 2] ); // toString для массивов выводит список элементов "1,2"
+alert( new Date ); // toString для дат выводит дату в виде строки
+alert( function() {} ); // toString для функции выводит её код</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#численное-преобразование" name="численное-преобразование">Численное преобразование</a></h2><p>Для численного преобразования объекта используется метод <code>valueOf</code>, а если его нет – то <code>toString</code>:</p>
+<div class="code-example" data-highlight-inline="7:25-41,9:24-38,11:25-42" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var room = {
+  number: 777,
+
+  valueOf: function() { return this.number; },
+  toString: function() { return this.number; }
+};
+
+alert( +room );  // 777, вызвался valueOf
+
+delete room.valueOf; // valueOf удалён
+
+alert( +room );  // 777, вызвался toString</code></pre>
+</div>
+</div>
+</div><p>Метод <code>valueOf</code> обязан возвращать примитивное значение, иначе его результат будет проигнорирован. При этом – не обязательно числовое.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">У большинства объектов нет <code>valueOf</code></span></div>
+<div class="important__content"><p>У большинства встроенных объектов такого <code>valueOf</code> нет, поэтому численное и строковое преобразования для них работают одинаково.</p>
+<p>Исключением является объект <code>Date</code>, который поддерживает оба типа преобразований:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( new Date() ); // toString: Дата в виде читаемой строки
+alert( +new Date() ); // valueOf: кол-во миллисекунд, прошедших с 01.01.1970</code></pre>
+</div>
+</div>
+</div></div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Детали спецификации</span></div>
+<div class="important__content"><p>Если посмотреть в стандарт, то в пункте <a href="http://es5.github.com/x15.2.html#x15.2.4.4">15.2.4.4</a> говорится о том, что <code>valueOf</code> есть у любых объектов. Но он ничего не делает, просто возвращает сам объект (не-примитивное значение!), а потому игнорируется.</p>
+</div></div>
+<h2><a class="main__anchor" href="#две-стадии-преобразования" name="две-стадии-преобразования">Две стадии преобразования</a></h2><p>Итак, объект преобразован в примитив при помощи <code>toString</code> или <code>valueOf</code>.</p>
+<p>Но на этом преобразования не обязательно заканчиваются. Вполне возможно, что в процессе вычислений этот примитив будет преобразован во что-то другое.</p>
+<p>Например, рассмотрим применение к объекту операции <code>==</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var obj = {
+  valueOf: function() {
+    return 1;
+  }
+};
+
+alert( obj == true ); // true</code></pre>
+</div>
+</div>
+</div><p>Объект <code>obj</code> был сначала преобразован в примитив, используя численное преобразование, получилось <code>1 == true</code>.</p>
+<p>Далее, так как значения всё ещё разных типов, применяются правила преобразования примитивов, результат: <code>true</code>.</p>
+<p>То же самое – при сложении с объектом при помощи <code>+</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var obj = {
+  valueOf: function() {
+    return 1;
+  }
+};
+
+alert( obj + "test" ); // 1test</code></pre>
+</div>
+</div>
+</div><p>Или вот, для разности объектов:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var a = {
+  valueOf: function() {
+    return "1";
+  }
+};
+var b = {
+  valueOf: function() {
+    return "2";
+  }
+};
+
+alert( a + b ); // "12"
+alert( a - b ); // "1" - "2" = -1</code></pre>
+</div>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Исключение: <code>Date</code></span></div>
+<div class="important__content"><p>Объект <code>Date</code>, по историческим причинам, является исключением.</p>
+<p>Бинарный оператор плюс <code>+</code> обычно использует числовое преобразование и метод <code>valueOf</code>. Как мы уже знаем, если  подходящего <code>valueOf</code> нет (а его нет у большинства объектов), то используется <code>toString</code>, так что в итоге преобразование происходит к строке. Но если есть <code>valueOf</code>, то используется <code>valueOf</code>. Выше в примере как раз <code>a + b</code> это демонстрируют.</p>
+<p>У объектов <code>Date</code> есть и <code>valueOf</code> – возвращает количество миллисекунд, и <code>toString</code> – возвращает строку с датой.</p>
+<p>…Но оператор <code>+</code> для <code>Date</code> использует именно <code>toString</code> (хотя должен бы <code>valueOf</code>).</p>
+<p>Это и есть исключение:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// бинарный плюс для даты toString, для остальных объектов valueOf
+alert( new Date + "" ); // "строка даты"</code></pre>
+</div>
+</div>
+</div><p>Других подобных исключений нет.</p>
+</div></div>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Как испугать Java-разработчика</span></div>
+<div class="important__content"><p>В языке Java (это не JavaScript, другой язык, здесь приведён для примера) логические значения можно создавать, используя синтаксис <code>new Boolean(true/false)</code>, например <code>new Boolean(true)</code>.</p>
+<p>В JavaScript тоже есть подобная возможность, которая возвращает «объектную обёртку» для логического значения.</p>
+<p>Эта возможность давно существует лишь для совместимости, она и не используется на практике, поскольку приводит к странным результатам. Некоторые из них могут сильно удивить человека, не привыкшего к JavaScript, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var value = new Boolean(false);
+if (value) {
+  alert( true ); // сработает!
+}</code></pre>
+</div>
+</div>
+</div><p>Почему запустился <code>alert</code>? Ведь в <code>if</code> находится <code>false</code>… Проверим:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var value = new Boolean(false);
+
+alert( value ); // выводит false, все ок..
+
+if (value) {
+  alert( true ); // ..но тогда почему выполняется alert в if ?!?
+}</code></pre>
+</div>
+</div>
+</div><p>Дело в том, что <code>new Boolean</code> – это не примитивное значение, а объект. Поэтому в логическом контексте он преобразуется к <code>true</code>, в результате работает первый пример.</p>
+<p>А второй пример вызывает <code>alert</code>, который преобразует объект к строке, и он становится <code>"false"</code>.</p>
+<p><strong>В JavaScript вызовы <code>new Boolean/String/Number</code> не используются, а используются простые вызовы соответствующих функций, они преобразуют значение в примитив нужного типа, например <code>Boolean(val) === !!val</code>.</strong></p>
+</div></div>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>В логическом контексте объект – всегда <code>true</code>.</li>
+<li>При строковом преобразовании объекта используется его метод <code>toString</code>. Он должен возвращать примитивное значение, причём не обязательно именно строку.</li>
+<li>Для численного преобразования используется метод <code>valueOf</code>, который также может возвратить любое примитивное значение. У большинства объектов <code>valueOf</code> не работает (возвращает сам объект и потому игнорируется), при этом для численного преобразования используется <code>toString</code>.</li>
+</ul>
+<p>Полный алгоритм преобразований есть в спецификации ECMAScript, смотрите пункты <a href="http://es5.github.com/x11.html#x11.8.5">11.8.5</a>, <a href="http://es5.github.com/x11.html#x11.9.3">11.9.3</a>, а также <a href="http://es5.github.com/x9.html#x9.1">9.1</a> и <a href="http://es5.github.com/x9.html#x9.3">9.3</a>.</p>
+<p>Заметим, для полноты картины, что некоторые тесты знаний в интернет предлагают вопросы типа:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">{}[0]  // чему равно?
+{} + {} // а так?</code></pre>
+</div>
+</div>
+</div><p>Если вы запустите эти выражения в консоли, то результат может показаться странным. Подвох здесь в том, что если фигурные скобки <code>{...}</code> идут не в выражении, а в основном потоке кода, то JavaScript считает, что это не объект, а «блок кода» (как <code>if</code>, <code>for</code>, но без оператора, просто группировка команд вместе, используется редко).</p>
+<p>Вот блок кода с командой:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">{
+  alert("Блок")
+}</code></pre>
+</div>
+</div>
+</div><p>А если команду изъять, то будет пустой блок <code>{}</code>, который ничего не делает. Два примера выше как раз содержат пустой блок в начале, который ничего не делает. Иначе говоря:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">{}[0]   // то же что и: [0]
+{} + {} // то же что и: + {}</code></pre>
+</div>
+</div>
+</div><p>То есть, такие вопросы – не на преобразование типов, а на понимание, что если <code>{ ... }</code> находится вне выражений, то это не объект, а блок.</p>
+</cut></div></meta></article></main></div></body></html>

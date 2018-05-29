@@ -1,0 +1,222 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="COMET с XMLHttpRequest: длинные опросы" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В этой главе мы рассмотрим способ организации COMET, то есть непрерывного получения данных с сервера, который очень прост и подходит в 90% реальных случаев.</p>
+<cut>
+<h2><a class="main__anchor" href="#частые-опросы" name="частые-опросы">Частые опросы</a></h2><p>Первое решение, которое приходит в голову для непрерывного получения событий с сервера – это «частые опросы» (polling), т.е периодические запросы на сервер: «эй, я тут, изменилось ли что-нибудь?». Например, раз в 10 секунд.</p>
+<p>В ответ сервер во-первых помечает у себя, что клиент онлайн, а во-вторых посылает сообщение, в котором в специальном формате содержится весь пакет событий, накопившихся к данному моменту.</p>
+<p>При этом, однако, возможна задержка между появлением и получением данных, как раз в размере этих 10 секунд между запросами.</p>
+<p>Другой минус – лишний входящий трафик на сервер. При каждом запросе браузер передает множество заголовков и в ответ получает, кроме данных, также заголовки. Для некоторых приложений трафик заголовков может в 10 и более раз превосходить трафик реальных данных.</p>
+<div class="balance"><div class="balance__minuses">
+<div class="balance__content">
+<div class="balance__title">Недостатки</div><ul class="balance__list"><li>Задержки между событием и уведомлением.</li>
+<li>Лишний трафик и запросы на сервер.</li>
+</ul></div></div><div class="balance__pluses">
+<div class="balance__content">
+<div class="balance__title">Достоинства</div><ul class="balance__list"><li>Простота реализации.</li>
+</ul></div></div></div><p>Причём, простота реализации тут достаточно условная. Клиентская часть – довольно проста, а вот сервер получает сразу большой поток запросов.</p>
+<p>Даже если клиент ушёл пить чай – его браузер каждые 10 секунд будет «долбить» сервер запросами. Готов ли сервер к такому?</p>
+<h2><a class="main__anchor" href="#длинные-опросы" name="длинные-опросы">Длинные опросы</a></h2><p>Длинные опросы – отличная альтернатива частым опросам. Они также удобны в реализации, и при этом сообщения доставляются без задержек.</p>
+<p>Схема:</p>
+<ol>
+<li>Отправляется запрос на сервер.</li>
+<li>Соединение не закрывается сервером, пока не появится сообщение.</li>
+<li>Когда сообщение появилось – сервер отвечает на запрос, пересылая данные.</li>
+<li>Браузер тут же делает новый запрос.</li>
+</ol>
+<p>Ситуация, когда браузер отправил запрос и держит соединение с сервером, ожидая ответа, является стандартной и прерывается только доставкой сообщений.</p>
+<p>Схема коммуникации:</p>
+<figure><div class="image" style="width:500px">
+<div class="image__ratio" style="padding-top:46.2%"></div>
+<img alt="" class="image__image" height="231" src="article/xhr-longpoll/longpoll.png" width="500">
+</img></div></figure><p>При этом если соединение рвётся само, например, из-за ошибки в сети, то браузер тут же отсылает новый запрос.</p>
+<p>Примерный код клиентской части:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function subscribe(url) {
+  var xhr = new XMLHttpRequest();
+
+  xhr.onreadystatechange = function() {
+    if (this.readyState != 4) return;
+
+    if (this.status == 200) {
+      onMessage(this.responseText);
+    } else {
+      onError(this);
+    }
+
+    subscribe(url);
+  }
+  xhr.open("GET", url, true);
+  xhr.send();
+}</code></pre>
+</div>
+</div>
+</div><p>Функция <code>subscribe</code> делает запрос, при ответе обрабатывает результат, и тут же запускает процесс по новой.</p>
+<p>Сервер, конечно же, должен уметь работать с большим количеством таких «ожидающих» соединений.</p>
+<h2><a class="main__anchor" href="#демо-чат" name="демо-чат">Демо: чат</a></h2><p>Демо:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">browser.js</div><div class="code-tabs__switch">server.js</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/xhr-longpoll/longpoll/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_download" href="/tutorial/zipview/longpoll.zip?plunkId=uuk4JrwhtN7ESxy6Vy9v" target="_blank"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:500px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/xhr-longpoll/longpoll/"></iframe></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>// Посылка запросов -- обычными XHR POST
+function PublishForm(form, url) {
+
+  function sendMessage(message) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", url, true);
+    // просто отсылаю сообщение "как есть" без кодировки
+    // если бы было много данных, то нужно было бы отослать JSON из объекта с ними
+    // или закодировать их как-то иначе
+    xhr.send(message);
+  }
+
+  form.onsubmit = function() {
+    var message = form.message.value;
+    if (message) {
+      form.message.value = '';
+      sendMessage(message);
+    }
+    return false;
+  };
+}
+
+// Получение сообщений, COMET
+function SubscribePane(elem, url) {
+
+  function showMessage(message) {
+    var messageElem = document.createElement('div');
+    messageElem.appendChild(document.createTextNode(message));
+    elem.appendChild(messageElem);
+  }
+
+  function subscribe() {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (this.readyState != 4) return;
+
+      console.log(this);
+      if (this.status == 200) {
+        showMessage(this.responseText);
+        subscribe();
+        return;
+      }
+
+      if (this.status != 404) { // 404 может означать, что сервер перезагружается
+        showMessage(this.statusText); // показать ошибку
+      }
+
+      setTimeout(subscribe, 1000); // попробовать ещё раз через 1 сек
+    }
+    xhr.open("GET", url, true);
+    xhr.send();
+  }
+
+  subscribe();
+
+}</code></pre></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>var http = require('http');
+var url = require('url');
+var querystring = require('querystring');
+var static = require('node-static');
+
+var fileServer = new static.Server('.');
+
+var subscribers = {};
+
+function onSubscribe(req, res) {
+  var id = Math.random();
+
+  res.setHeader('Content-Type', 'text/plain;charset=utf-8');
+  res.setHeader("Cache-Control", "no-cache, must-revalidate");
+
+  subscribers[id] = res;
+  //console.log("новый клиент " + id + ", клиентов:" + Object.keys(subscribers).length);
+
+  req.on('close', function() {
+    delete subscribers[id];
+    //console.log("клиент "+id+" отсоединился, клиентов:" + Object.keys(subscribers).length);
+  });
+
+}
+
+function publish(message) {
+
+  //console.log("есть сообщение, клиентов:" + Object.keys(subscribers).length);
+
+  for (var id in subscribers) {
+    //console.log("отсылаю сообщение " + id);
+    var res = subscribers[id];
+    res.end(message);
+  }
+
+  subscribers = {};
+}
+
+function accept(req, res) {
+  var urlParsed = url.parse(req.url, true);
+
+  // новый клиент хочет получать сообщения
+  if (urlParsed.pathname == '/subscribe') {
+    onSubscribe(req, res); // собственно, подписка
+    return;
+  }
+
+  // отправка сообщения
+  if (urlParsed.pathname == '/publish' &amp;&amp; req.method == 'POST') {
+    // принять POST-запрос
+    req.setEncoding('utf8');
+    var message = '';
+    req.on('data', function(chunk) {
+      message += chunk;
+    }).on('end', function() {
+      publish(message); // собственно, отправка
+      res.end("ok");
+    });
+
+    return;
+  }
+
+  // всё остальное -- статика
+  fileServer.serve(req, res);
+
+}
+
+
+// -----------------------------------
+
+if (!module.parent) {
+  http.createServer(accept).listen(8080);
+  console.log('Сервер запущен на порту 8080');
+} else {
+  exports.accept = accept;
+}</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;script src="browser.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  Несколько человек при заходе на эту страницу будут получать сообщения друг друга.
+
+  &lt;form name="publish"&gt;
+    &lt;input type="text" name="message" /&gt;
+    &lt;input type="submit" value="Отправить" /&gt;
+  &lt;/form&gt;
+
+  &lt;div id="subscribe"&gt;
+  &lt;/div&gt;
+
+  &lt;script&gt;
+    new PublishForm(document.forms.publish, 'publish');
+    // random url to fix https://code.google.com/p/chromium/issues/detail?id=46104
+    new SubscribePane(document.getElementById('subscribe'), 'subscribe?random=' + Math.random());
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><h2><a class="main__anchor" href="#область-применения" name="область-применения">Область применения</a></h2><p>Длинные опросы отлично работают в тех случаях, когда сообщения приходят редко.</p>
+<p>При большом количестве частых сообщений график приёма-отправки, приведённый выше, превращается в «пилу». Каждое сообщение – это новый запрос, дополнительный трафик заголовков.</p>
+<p>В этих случаях используются другие способы получения данных, подразумевающие непрерывное соединение с сервером. Мы рассмотрим их в следующих главах.</p>
+</cut></div></meta></article></main></div></body></html>

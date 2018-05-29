@@ -1,0 +1,29 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="IE HTTP Analyzer" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Под Windows есть как минимум два весьма основных инструмента для отладки на уровне HTTP.</p>
+<p>Один из них – Fiddler. Другой – IE HTTP Analyzer, который представляет собой «другой угол зрения» на задачу.</p>
+<cut>
+<h2><a class="main__anchor" href="#возможности" name="возможности">Возможности</a></h2><p>IE HTTP Analyzer – платный, и имеет две ипостаси.</p>
+<p>Первая – это обычная программа, запущенная в отдельном окне. При нажатии на кнопку «Play» – начинает перехват HTTP для всех браузеров, включая Firefox.</p>
+<figure><div class="image" style="width:625px">
+<div class="image__ratio" style="padding-top:56.48%"></div>
+<img alt="" class="image__image" height="353" src="article/ie-http-analyzer/ie-http-analyzer.gif" width="625">
+</img></div></figure><p>Вторая – наподобие Firebug, раскрывающаяся полоса внизу браузера Internet Explorer. Это – плагин, вызывается из панели или меню браузера.</p>
+<figure><div class="image" style="width:643px">
+<div class="image__ratio" style="padding-top:98.75583203732504%"></div>
+<img alt="" class="image__image" height="635" src="article/ie-http-analyzer/ie-http-analyzer-2.gif" width="643">
+</img></div></figure><p>Существуют другие программы похожего вида, но, перебрав несколько, я остановился на этой, как самой удобной.</p>
+<p>Основные возможности сводятся к удобной отладке HTTP-запросов, да и кнопочки на скриншотах выше достаточно очевидны.</p>
+<h2><a class="main__anchor" href="#просмотр-и-создание-http-запросов" name="просмотр-и-создание-http-запросов">Просмотр и создание HTTP-запросов.</a></h2><p>Этим сейчас никого не удивишь, если бы не одно БОЛЬШОЕ НО.</p>
+<p>Программа дает возможность удобно просматривать потоковые запросы.</p>
+<p>Т.е, например,  отлаживаете Вы чат. А он держит непрерывный iframe, через который сервер передает данные. Программы типа Fiddler будут честно ждать конца запроса, чтобы показать Вам его, а IE HTTP Analyzer не менее честно будет сбрасывать поток пред Ваши светлы очи.</p>
+<p>Запросы могут поступать все новые и новые, но в панели инспектора есть кнопка <img alt="" height="21" src="article/ie-http-analyzer/ie-http-analyzer-3.gif" width="28">, которая управляет автопереходом к следующему запросу. При анализе потока она должна быть выключена.</img></p>
+<p>Эта «потоковость» IE Http Analyzer- один из важных его плюсов.</p>
+<h2><a class="main__anchor" href="#конструирование-фильтров" name="конструирование-фильтров">Конструирование фильтров</a></h2><p>В отличие от правил на языке JScript.NET, которые используются для фильтрации в Fiddler, здесь фильтры на интересующие Вас запросы можно конструировать из стандартных компонент, объединяя их условиями ИЛИ/И.</p>
+<h2><a class="main__anchor" href="#дополнительные-возможности" name="дополнительные-возможности">Дополнительные возможности</a></h2><p>Очистка куков и кеша браузера. Проверено, работает.</p>
+<p>Программа платная.</p>
+<p>Живет на <a href="http://www.ieinspector.com/httpanalyzer/">http://www.ieinspector.com/httpanalyzer/</a>.</p>
+</cut></div></meta></article></main></div></body></html>

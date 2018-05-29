@@ -1,0 +1,651 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Мышь: Drag'n'Drop более глубоко" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В <a href="/drag-and-drop">предыдущей статье</a> мы рассмотрели основы Drag’n’Drop. Здесь мы разберём дополнительные «тонкие места» и приёмы реализации, которые возникают на практике.</p>
+<p>Почти все javascript-библиотеки реализуют Drag’n’Drop так, как написано (хотя бывает что и менее эффективно).</p>
+<p>Зная, что и как, вы сможете легко написать свой код переноса или поправить, адаптировать существующую библиотеку под себя.</p>
+<p>Этот материал не строго обязателен для изучения, он специфичен именно для Drag’n’Drop.</p>
+<cut>
+<h2><a class="main__anchor" href="#документ" name="документ">Документ</a></h2><p>Как пример задачи – возьмём документ с иконками браузера («объекты переноса»), которые можно переносить в компьютер («цель переноса»):</p>
+<ul>
+<li>Элементы, которые можно переносить (иконки браузеров), помечены классом <code>draggable</code>.</li>
+<li>Элементы, на которые можно положить (компьютер), имеют класс <code>droppable</code>.</li>
+</ul>
+<div class="code-example" data-highlight-inline="0:29-38,1:30-39,2:25-34,3:28-37,4:29-38,8:31-40" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;img src="chrome.png" class="draggable"&gt;
+&lt;img src="firefox.png" class="draggable"&gt;
+&lt;img src="ie.png" class="draggable"&gt;
+&lt;img src="opera.png" class="draggable"&gt;
+&lt;img src="safari.png" class="draggable"&gt;
+
+&lt;p&gt;Браузер переносить сюда:&lt;/p&gt;
+
+&lt;img src="computer.gif" class="droppable"&gt;</code></pre>
+</div>
+</div>
+</div><p>Работающий пример с переносом:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/drag-and-drop-objects/dragDemo/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="3wuuIDG36XzhkZ2mcrZW" href="http://plnkr.co/edit/3wuuIDG36XzhkZ2mcrZW?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/drag-and-drop-objects/dragDemo/" style="height:280px"></iframe>
+</div><p>Далее мы рассмотрим, как делается фреймворк для таких переносов, а в перспективе – и для более сложных.</p>
+<p>Требования:</p>
+<ul>
+<li>Поддержка большого количества элементов без «тормозов».</li>
+<li>Продвинутые возможности по анимации переноса.</li>
+<li>Удобная обработка успешного и неудачного переноса.</li>
+</ul>
+<h2><a class="main__anchor" href="#начало-переноса" name="начало-переноса">Начало переноса</a></h2><p>Чтобы начать перенос элемента, мы должны отловить нажатие левой кнопки мыши на нём. Для этого используем событие <code>mousedown</code>… И, конечно, делегирование.</p>
+<p>Переносимых элементов может быть много. В нашем документе-примере это всего лишь несколько иконок, но если мы хотим переносить элементы списка или дерева, то их может быть 100 штук и более.</p>
+<p>Поэтому повесим обработчик <code>mousedown</code> на контейнер, который содержит переносимые элементы, и будем определять нужный элемент поиском ближайшего <code>draggable</code> вверх по иерархии от <code>event.target</code>.</p>
+<p>В качестве контейнера здесь будем брать <code>document</code>, хотя это может быть и любой элемент.</p>
+<p>Найденный <code>draggable</code>-элемент сохраним в свойстве <code>dragObject.elem</code> и начнём двигать.</p>
+<p>Код обработчика <code>mousedown</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var dragObject = {};
+
+document.onmousedown = function(e) {
+
+  if (e.which != 1) { // если клик правой кнопкой мыши
+    return; // то он не запускает перенос
+  }
+
+  var elem = e.target.closest('.draggable');
+
+  if (!elem) return; // не нашли, клик вне draggable-объекта
+
+  // запомнить переносимый объект
+  dragObject.elem = elem;
+
+  // запомнить координаты, с которых начат перенос объекта
+  dragObject.downX = e.pageX;
+  dragObject.downY = e.pageY;
+}</code></pre>
+</div>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Не начинаем перенос по <code>mousedown</code></span></div>
+<div class="important__content"><p>Ранее мы по <code>mousedown</code> начинали перенос.</p>
+<p>Но на самом деле нажатие на элемент вовсе не означает, что его собираются куда-то двигать. Возможно, на нём просто кликают.</p>
+<p>Это важное различие. Снимать элемент со своего места и куда-то двигать нужно только при переносе.</p>
+<p>Чтобы отличить перенос от клика, в том числе – от клика, который сопровождается нечаянным перемещением на пару пикселей (рука дрогнула), мы будем запоминать в <code>dragObject</code>, какой элемент (<code>elem</code>) и где (<code>downX/downY</code>) был зажат, а начало переноса будем инициировать из <code>mousemove</code>, если он передвинут хотя бы на несколько пикселей.</p>
+</div></div>
+<h2><a class="main__anchor" href="#перенос-элемента" name="перенос-элемента">Перенос элемента</a></h2><p>Первой задачей обработчика <code>mousemove</code> является инициировать начало переноса, если элемент передвинули в зажатом состоянии.</p>
+<p>Ну а второй задачей – отображать его перенос при каждом передвижении мыши.</p>
+<p>Схематично, обработчик будет иметь такой вид:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">document.onmousemove = function(e) {
+  if (!dragObject.elem) return; // элемент не зажат
+
+  if (!dragObject.avatar) { // элемент нажат, но пока не начали его двигать
+    ...начать перенос, присвоить dragObject.avatar = переносимый элемент
+  }
+
+  ...отобразить перенос элемента...
+}</code></pre>
+</div>
+</div>
+</div><p>Здесь мы видим новое свойство <code>dragObject.avatar</code>. При начале переноса «аватар» делается из элемента и сохраняется в свойство <code>dragObject.avatar</code>.</p>
+<p><strong>«Аватар» – это DOM-элемент, который перемещается по экрану.</strong></p>
+<p>Почему бы не перемещать по экрану сам <code>draggable</code>-элемент? Зачем, вообще, нужен аватар?</p>
+<p>Дело в том, что иногда сам элемент передвигать неудобно, например потому, что он слишком большой. А удобно создать некоторое визуальное представление элемента, и его уже переносить. Аватар дает такую возможность.</p>
+<p>А в простейшем случае аватаром можно будет сделать сам элемент, и это не повлечёт дополнительных расходов.</p>
+<h3><a class="main__anchor" href="#визуальное-перемещение-аватара" name="визуальное-перемещение-аватара">Визуальное перемещение аватара</a></h3><p>Для того, чтобы отобразить перенос аватара, достаточно поставить ему <code>position: absolute</code> и менять координаты <code>left/top</code>.</p>
+<p>Для использования абсолютных координат относительно документа, аватар должен быть прямым потомком <code>BODY</code>.</p>
+<p>Следующий код готовит аватар к переносу:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// в начале переноса:
+if (avatar.parentNode != document.body) {
+  document.body.appendChild(avatar); // переместить в BODY, если надо
+}
+avatar.style.zIndex = 9999; // сделать, чтобы элемент был над другими
+avatar.style.position = 'absolute';</code></pre>
+</div>
+</div>
+</div><p>… А затем его можно двигать:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// при каждом движении мыши
+
+avatar.style.left = новая координата + 'px';
+avatar.style.top = новая координата + 'px';</code></pre>
+</div>
+</div>
+</div><p>Как вычислять новые координаты <code>left/top</code> при переносе?</p>
+<p>Чтобы элемент сохранял свою позицию под курсором, необходимо при нажатии запомнить его изначальный сдвиг относительно курсора, и сохранять его при переносе.</p>
+<figure><div class="image" style="width:135px">
+<div class="image__ratio" style="padding-top:100%"></div>
+<img alt="" class="image__image" height="135" src="article/drag-and-drop-objects/shiftx.png" width="135">
+</img></div></figure><p>Этот сдвиг по горизонтали обозначен <code>shiftX</code> на рисунке выше. Аналогично, есть <code>shiftY</code>. Они вычисляются как расстояние между курсором и левой/верхней границей элемента при <code>mousedown</code>. Детали вычислений описаны в главе <a href="/drag-and-drop">Мышь: Drag'n'Drop</a>.</p>
+<p>Таким образом, при <code>mousemove</code> мы будем назначать элементу координаты курсора с учетом сдвига <code>shiftX/shiftY</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">avatar.style.left = e.pageX - shiftX + 'px';
+avatar.style.top = e.pageY - shiftY + 'px';</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#полный-код-mousemove" name="полный-код-mousemove">Полный код mousemove</a></h2><p>Код <code>mousemove</code>, решающий задачу начала переноса и позиционирования аватара:</p>
+<div class="code-example" data-highlight-inline="12:4-39,24:4-16" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">document.onmousemove = function(e) {
+  if (!dragObject.elem) return; // элемент не зажат
+
+  if ( !dragObject.avatar ) { // если перенос не начат...
+
+    // посчитать дистанцию, на которую переместился курсор мыши
+    var moveX = e.pageX - dragObject.downX;
+    var moveY = e.pageY - dragObject.downY;
+    if ( Math.abs(moveX) &lt; 3 &amp;&amp; Math.abs(moveY) &lt; 3 ) {
+      return; // ничего не делать, мышь не передвинулась достаточно далеко
+    }
+
+    dragObject.avatar = createAvatar(e); // захватить элемент
+    if (!dragObject.avatar) {
+      dragObject = {}; // аватар создать не удалось, отмена переноса
+      return; // возможно, нельзя захватить за эту часть элемента
+    }
+
+    // аватар создан успешно
+    // создать вспомогательные свойства shiftX/shiftY
+    var coords = getCoords(dragObject.avatar);
+    dragObject.shiftX = dragObject.downX - coords.left;
+    dragObject.shiftY = dragObject.downY - coords.top;
+
+    startDrag(e); // отобразить начало переноса
+  }
+
+  // отобразить перенос объекта при каждом движении мыши
+  dragObject.avatar.style.left = e.pageX - dragObject.shiftX + 'px';
+  dragObject.avatar.style.top = e.pageY - dragObject.shiftY + 'px';
+
+  return false;
+}</code></pre>
+</div>
+</div>
+</div><p>Здесь используются две функции для начала переноса: <code>createAvatar(e)</code> и <code>startDrag(e)</code>.</p>
+<p>Функция <code>createAvatar(e)</code> создает аватар. В нашем случае в качестве аватара берется сам <code>draggable</code> элемент. После создания аватара в него записывается функция <code>avatar.rollback</code>, которая задает поведение при отмене переноса.</p>
+<p>Как правило, отмена переноса влечет за собой разрушение аватара, если это был клон, или возвращение его на прежнее место, если это сам элемент.</p>
+<p>В нашем случае для отмены переноса нужно запомнить старую позицию элемента и его родителя.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function createAvatar(e) {
+
+  // запомнить старые свойства, чтобы вернуться к ним при отмене переноса
+  var avatar = dragObject.elem;
+  var old = {
+    parent: avatar.parentNode,
+    nextSibling: avatar.nextSibling,
+    position: avatar.position || '',
+    left: avatar.left || '',
+    top: avatar.top || '',
+    zIndex: avatar.zIndex || ''
+  };
+
+  // функция для отмены переноса
+  avatar.rollback = function() {
+    old.parent.insertBefore(avatar, old.nextSibling);
+    avatar.style.position = old.position;
+    avatar.style.left = old.left;
+    avatar.style.top = old.top;
+    avatar.style.zIndex = old.zIndex
+  };
+
+  return avatar;
+}</code></pre>
+</div>
+</div>
+</div><p>Функция <code>startDrag(e)</code>, которую вызывает <code>mousemove</code>, если видит, что элемент в «зажатом» состоянии перенесли достаточно далеко, инициирует начало переноса и позиционирует аватар на странице:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function startDrag(e) {
+  var avatar = dragObject.avatar;
+
+  document.body.appendChild(avatar);
+  avatar.style.zIndex = 9999;
+  avatar.style.position = 'absolute';
+}</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#окончание-переноса" name="окончание-переноса">Окончание переноса</a></h2><p>Окончание переноса происходит по событию <code>mouseup</code>.</p>
+<p>Его обработчик можно поставить на аватаре, т.к. аватар всегда под курсором и <code>mouseup</code> происходит на нем. Но для универсальности и большей гибкости (вдруг мы захотим перемещать аватар <em>рядом</em> с курсором?) поставим его, как и остальные, на <code>document</code>.</p>
+<p>Задача обработчика <code>mouseup</code>:</p>
+<ol>
+<li>Обработать успешный перенос, если он идет (существует аватар)</li>
+<li>Очистить данные <code>dragObject</code>.</li>
+</ol>
+<p>Это дает нам следующий код:</p>
+<div class="code-example" data-highlight-inline="3:4-17" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">document.onmouseup = function(e) {
+  // (1) обработать перенос, если он идет
+  if (dragObject.avatar) {
+    finishDrag(e);
+  }
+
+  // в конце mouseup перенос либо завершился, либо даже не начинался
+  // (2) в любом случае очистим "состояние переноса" dragObject
+  dragObject = {};
+}</code></pre>
+</div>
+</div>
+</div><p>Для завершения переноса в функции <code>finishDrag(e)</code> нам нужно понять, на каком элементе мы находимся, и если над <code>droppable</code> – обработать перенос, а нет – откатиться:</p>
+<div class="code-example" data-highlight-inline="1:17-33" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function finishDrag(e) {
+  var dropElem = findDroppable(e);
+
+  if (dropElem) {
+    ... успешный перенос ...
+  } else {
+    ... отмена переноса ...
+  }
+}</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#определяем-элемент-под-курсором" name="определяем-элемент-под-курсором">Определяем элемент под курсором</a></h3><p>Чтобы понять, над каким элементом мы остановились – используем метод <a href="https://developer.mozilla.org/en/DOM/document.elementFromPoint">document.elementFromPoint(clientX, clientY)</a>, который мы обсуждали в разделе <a href="/coordinates#elementFromPoint">координаты</a>. Этот метод получает координаты <em>относительно окна</em> и возвращает самый глубокий элемент, который там находится.</p>
+<p>Функция <code>findDroppable(event)</code>, описанная ниже, использует его и находит самый глубокий элемент с атрибутом <code>droppable</code> под курсором мыши:</p>
+<div class="code-example" data-highlight-block="1-1" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// возвратит ближайший droppable или null
+// это предварительный вариант findDroppable, исправлен ниже!
+function findDroppable(event) {
+
+  // взять элемент на данных координатах
+  var elem = document.elementFromPoint(event.clientX, event.clientY);
+
+  // найти ближайший сверху droppable
+  return elem.closest('.droppable');
+}</code></pre>
+</div>
+</div>
+</div><p>Обратите внимание – для <code>elementFromPoint</code> нужны координаты относительно окна <code>clientX/clientY</code>, а не <code>pageX/pageY</code>.</p>
+<p>Вариант выше – предварительный. Он не будет работать. Если попробовать применить эту функцию, будет все время возвращать один и тот же элемент! А именно – <em>текущий переносимый</em>. Почему так?</p>
+<p>…Дело в том, что в процессе переноса под мышкой находится именно аватар. При начале переноса ему даже <code>z-index</code> ставится большой, чтобы он был поверх всех остальных.</p>
+<p><strong>Аватар перекрывает остальные элементы. Поэтому функция <code>document.elementFromPoint()</code> увидит на текущих координатах именно его.</strong></p>
+<p>Чтобы это изменить, нужно либо поправить код переноса, чтобы аватар двигался <em>рядом</em> с курсором мыши, либо дать аватару стиль <code>pointer-events:none</code> (кроме IE10-), либо:</p>
+<ol>
+<li>Спрятать аватар.</li>
+<li>Вызывать <code>elementFromPoint</code>.</li>
+<li>Показать аватар.</li>
+</ol>
+<p>Напишем функцию <code>findDroppable(event)</code>, которая это делает:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function findDroppable(event) {
+  // спрячем переносимый элемент
+  dragObject.avatar.hidden = true;
+
+  // получить самый вложенный элемент под курсором мыши
+  var elem = document.elementFromPoint(event.clientX, event.clientY);
+
+  // показать переносимый элемент обратно
+  dragObject.avatar.hidden = false;
+
+  if (elem == null) {
+    // такое возможно, если курсор мыши "вылетел" за границу окна
+    return null;
+  }
+
+  return elem.closest('.droppable');
+}</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#dragmanager" name="dragmanager">DragManager</a></h2><p>Из фрагментов кода, разобранных выше, можно собрать мини-фреймворк.</p>
+<p>Объект <code>DragManager</code> будет запоминать текущий переносимый объект и отслеживать его перенос.</p>
+<p>Для его создания используем не обычный синтаксис <code>{...}</code>, а вызов <code>new function</code>. Это позволит прямо при создании объявить дополнительные переменные и функции в замыкании, которыми могут пользоваться методы объекта, а также назначить обработчики:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var DragManager = new function() {
+
+  var dragObject = {};
+
+  var self = this; // для доступа к себе из обработчиков
+
+  function onMouseDown(e) { ... }
+  function onMouseMove(e) { ... }
+  function onMouseUp(e) { ... }
+
+  document.onmousedown = onMouseDown;
+  document.onmousemove = onMouseMove;
+  document.onmouseup = onMouseUp;
+
+  this.onDragEnd = function(dragObject, dropElem) { };
+  this.onDragCancel = function(dragObject) { };
+}</code></pre>
+</div>
+</div>
+</div><p>Всю работу будут выполнять обработчики <code>onMouse*</code>, которые оформлены как локальные функции. В данном случае они ставятся на <code>document</code> через <code>on...</code>, но это легко поменять на <code>addEventListener</code>.</p>
+<p>Код функции <code>onMouse*</code> мы подробно рассмотрели ранее, но вы сможете увидеть их в полном примере ниже.</p>
+<p>Внутренний объект <code>dragObject</code> будет содержать информацию об объекте переноса.</p>
+<p>У него будут следующие свойства, которые также разобраны выше:</p>
+<dl>
+<dt><code>elem</code></dt>
+<dd>Текущий зажатый мышью объект, если есть (ставится в <code>mousedown</code>).</dd>
+<dt><code>avatar</code></dt>
+<dd>Элемент-аватар, который передвигается по странице.</dd>
+<dt><code>downX/downY</code></dt>
+<dd>Координаты, на которых был клик <code>mousedown</code></dd>
+<dt><code>shiftX/shiftY</code></dt>
+<dd>Относительный сдвиг курсора от угла элемента, вспомогательное свойство вычисляется в начале переноса.</dd>
+</dl>
+<p>Задачей <code>DragManager</code> является общее управление переносом. Что же касается действий при его окончании – их должен назначить внешний код, который использует <code>DragManager</code>.</p>
+<p>Можно сделать это через вспомогательные методы <code>onDrag*</code>, которые устанавливаются внешним кодом и затем вызываются фреймворком. Разработчик, подключив <code>DragManager</code>, описывает в этих методах, что делать при завершении или отмене переноса. Конечно же, можно заменить методы <code>onDrag*</code> на генерацию «своих» событий.</p>
+<p>С использованием <code>DragManager</code> пример, с которого начиналась эта глава – перенос иконок браузеров в компьютер, реализуется совсем просто:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">DragManager.onDragEnd = function(dragObject, dropElem) {
+
+  // скрыть/удалить переносимый объект
+  dragObject.elem.hidden = true;
+
+  // успешный перенос, показать улыбку классом computer-smile
+  dropElem.className = 'computer computer-smile';
+
+  // убрать улыбку через 0.2 сек
+  setTimeout(function() {
+    dropElem.classList.remove('computer-smile');
+  }, 200);
+};
+
+DragManager.onDragCancel = function(dragObject) {
+  // откат переноса
+  dragObject.avatar.rollback();
+};</code></pre>
+</div>
+</div>
+</div><p>Полный пример с кодом:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">DragManager.js</div><div class="code-tabs__switch">dragDemo.css</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/drag-and-drop-objects/dragDemo/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/3wuuIDG36XzhkZ2mcrZW?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:280px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/drag-and-drop-objects/dragDemo/"></iframe></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>var DragManager = new function() {
+
+  /**
+   * составной объект для хранения информации о переносе:
+   * {
+   *   elem - элемент, на котором была зажата мышь
+   *   avatar - аватар
+   *   downX/downY - координаты, на которых был mousedown
+   *   shiftX/shiftY - относительный сдвиг курсора от угла элемента
+   * }
+   */
+  var dragObject = {};
+
+  var self = this;
+
+  function onMouseDown(e) {
+
+    if (e.which != 1) return;
+
+    var elem = e.target.closest('.draggable');
+    if (!elem) return;
+
+    dragObject.elem = elem;
+
+    // запомним, что элемент нажат на текущих координатах pageX/pageY
+    dragObject.downX = e.pageX;
+    dragObject.downY = e.pageY;
+
+    return false;
+  }
+
+  function onMouseMove(e) {
+    if (!dragObject.elem) return; // элемент не зажат
+
+    if (!dragObject.avatar) { // если перенос не начат...
+      var moveX = e.pageX - dragObject.downX;
+      var moveY = e.pageY - dragObject.downY;
+
+      // если мышь передвинулась в нажатом состоянии недостаточно далеко
+      if (Math.abs(moveX) &lt; 3 &amp;&amp; Math.abs(moveY) &lt; 3) {
+        return;
+      }
+
+      // начинаем перенос
+      dragObject.avatar = createAvatar(e); // создать аватар
+      if (!dragObject.avatar) { // отмена переноса, нельзя "захватить" за эту часть элемента
+        dragObject = {};
+        return;
+      }
+
+      // аватар создан успешно
+      // создать вспомогательные свойства shiftX/shiftY
+      var coords = getCoords(dragObject.avatar);
+      dragObject.shiftX = dragObject.downX - coords.left;
+      dragObject.shiftY = dragObject.downY - coords.top;
+
+      startDrag(e); // отобразить начало переноса
+    }
+
+    // отобразить перенос объекта при каждом движении мыши
+    dragObject.avatar.style.left = e.pageX - dragObject.shiftX + 'px';
+    dragObject.avatar.style.top = e.pageY - dragObject.shiftY + 'px';
+
+    return false;
+  }
+
+  function onMouseUp(e) {
+    if (dragObject.avatar) { // если перенос идет
+      finishDrag(e);
+    }
+
+    // перенос либо не начинался, либо завершился
+    // в любом случае очистим "состояние переноса" dragObject
+    dragObject = {};
+  }
+
+  function finishDrag(e) {
+    var dropElem = findDroppable(e);
+
+    if (!dropElem) {
+      self.onDragCancel(dragObject);
+    } else {
+      self.onDragEnd(dragObject, dropElem);
+    }
+  }
+
+  function createAvatar(e) {
+
+    // запомнить старые свойства, чтобы вернуться к ним при отмене переноса
+    var avatar = dragObject.elem;
+    var old = {
+      parent: avatar.parentNode,
+      nextSibling: avatar.nextSibling,
+      position: avatar.position || '',
+      left: avatar.left || '',
+      top: avatar.top || '',
+      zIndex: avatar.zIndex || ''
+    };
+
+    // функция для отмены переноса
+    avatar.rollback = function() {
+      old.parent.insertBefore(avatar, old.nextSibling);
+      avatar.style.position = old.position;
+      avatar.style.left = old.left;
+      avatar.style.top = old.top;
+      avatar.style.zIndex = old.zIndex
+    };
+
+    return avatar;
+  }
+
+  function startDrag(e) {
+    var avatar = dragObject.avatar;
+
+    // инициировать начало переноса
+    document.body.appendChild(avatar);
+    avatar.style.zIndex = 9999;
+    avatar.style.position = 'absolute';
+  }
+
+  function findDroppable(event) {
+    // спрячем переносимый элемент
+    dragObject.avatar.hidden = true;
+
+    // получить самый вложенный элемент под курсором мыши
+    var elem = document.elementFromPoint(event.clientX, event.clientY);
+
+    // показать переносимый элемент обратно
+    dragObject.avatar.hidden = false;
+
+    if (elem == null) {
+      // такое возможно, если курсор мыши "вылетел" за границу окна
+      return null;
+    }
+
+    return elem.closest('.droppable');
+  }
+
+  document.onmousemove = onMouseMove;
+  document.onmouseup = onMouseUp;
+  document.onmousedown = onMouseDown;
+
+  this.onDragEnd = function(dragObject, dropElem) {};
+  this.onDragCancel = function(dragObject) {};
+
+};
+
+
+function getCoords(elem) { // кроме IE8-
+  var box = elem.getBoundingClientRect();
+
+  return {
+    top: box.top + pageYOffset,
+    left: box.left + pageXOffset
+  };
+
+}</code></pre></div><div class="code-tabs__section"><pre class="language-css line-numbers"><code>.computer {
+  width: 93px;
+  height: 98px;
+  background: url(https://js.cx/clipart/computer.gif) no-repeat;
+  padding: 5px;
+  font-style: italic;
+}
+
+.computer-smile {
+  background: url(https://js.cx/clipart/computer-smile.gif) no-repeat;
+}
+
+.draggable {
+  cursor: pointer;
+}</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;script src="https://cdn.polyfill.io/v1/polyfill.js?features=Element.prototype.closest"&gt;&lt;/script&gt;
+  &lt;script src="DragManager.js"&gt;&lt;/script&gt;
+  &lt;link rel="stylesheet" href="dragDemo.css"&gt;
+  &lt;script&gt;
+    DragManager.onDragCancel = function(dragObject) {
+      dragObject.avatar.rollback();
+    };
+
+    DragManager.onDragEnd = function(dragObject, dropElem) {
+      dragObject.elem.style.display = 'none';
+      dropElem.classList.add('computer-smile');
+      setTimeout(function() {
+        dropElem.classList.remove('computer-smile');
+      }, 200);
+    };
+  &lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;div style="height:64px"&gt;
+    &lt;img src="https://js.cx/browsers/chrome.svg" class="draggable"&gt;
+    &lt;img src="https://js.cx/browsers/firefox.svg" class="draggable"&gt;
+    &lt;img src="https://js.cx/browsers/ie.svg" class="draggable"&gt;
+    &lt;img src="https://js.cx/browsers/opera.svg" class="draggable"&gt;
+    &lt;img src="https://js.cx/browsers/safari.svg" class="draggable"&gt;
+  &lt;/div&gt;
+
+  &lt;p&gt;Браузер переносить сюда:&lt;/p&gt;
+
+  &lt;div class="computer droppable"&gt;
+  &lt;/div&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><h2><a class="main__anchor" href="#расширения" name="расширения">Расширения</a></h2><p>Существует масса возможных применений Drag’n’Drop. Здесь мы не будем реализовывать их все, поскольку не стоит цель создать фреймворк-монстр.</p>
+<p>Однако, мы рассмотрим их, чтобы, при необходимости, легко было написать то, что нужно.</p>
+<h3><a class="main__anchor" href="#захватывать-элемент-можно-только-за-ручку" name="захватывать-элемент-можно-только-за-ручку">Захватывать элемент можно только за «ручку»</a></h3><p>Часто бывает, что перенос должен быть инициирован только при захвате за определённую зону элемента. К примеру, модальное окно можно «взять», только захватив его за заголовок.</p>
+<p>Для этого достаточно добавить необходимую проверку, к примеру, в функцию <code>createAvatar</code> или перед её запуском.</p>
+<p>Если <code>mousedown</code> был внутри элемента, помеченного, к примеру, классом <code>draghandle</code>, то начинаем перенос, иначе – нет.</p>
+<h3><a class="main__anchor" href="#проверка-прав-на-droppable" name="проверка-прав-на-droppable">Проверка прав на droppable</a></h3><p>Бывает и так, что не на любое место в <code>droppable</code> можно положить элемент.</p>
+<p>Например: в админке есть дерево всех объектов сайта: статей, разделов, посетителей и т.п.</p>
+<ul>
+<li>В этом дереве есть узлы различных типов: «статьи», «разделы» и «пользователи».</li>
+<li>Все узлы являются переносимыми объектами.</li>
+<li>Узел «статья» (draggable) можно переносить в «раздел» (droppable), а узел «пользователи» – нельзя. Но и то и другое можно поместить в «корзину».</li>
+</ul>
+<p>Здесь решение: «можно или нет» переносить или нельзя зависит от «типа» переносимого объекта.</p>
+<p>Есть и более сложные варианты, когда решение зависит от конкретного места в <code>droppable</code>, над которым посетитель отпустил кнопку мыши. К примеру, переносить в верхнюю часть можно, а в нижнюю – нет.</p>
+<p>Эта задача решается добавлением проверки в <code>findDroppable(e)</code>. Эта функция знает и об аватаре и о событии, включая координаты. При попытке положить в «неправильное» место функция <code>findDroppable(e)</code> должна возвращать <code>null</code>.</p>
+<p>Однако, на практике бывают ситуации, когда решение «прямо сейчас» принять невозможно. Например, нужно сделать запрос на сервер: «А разрешено ли текущему посетителю производить такую операцию?»</p>
+<p>Как при этом должен вести себя интерфейс? Можно, конечно сделать, чтобы элемент после отпускания кнопки мыши «завис» над <code>droppable</code>, ожидая ответа. Однако, такое решение неудобно в реализации и странновато выглядит для посетителя.</p>
+<p>Как правило, применяют «оптимистичный» алгоритм, по которому мы считаем, что перенос обычно успешен, но при необходимости можем отменить его.</p>
+<p>При нём посетитель кладет объект туда, куда он хочет, а затем, в коде <code>onDragEnd</code>:</p>
+<ol>
+<li>Визуально обрабатывается завершение переноса, как будто все ок.</li>
+<li>Производится асинхронный запрос к серверу, содержащий информацию о переносе.</li>
+<li>Сервер обрабатывает перенос и возвращает ответ, все ли в порядке.</li>
+<li>Если нет – выводится ошибка и возвращается <code>avatar.rollback()</code>. Аватар в этом случае должен предусматривать возможность отката после успешного завершения.</li>
+</ol>
+<p>Процесс общения с сервером сопровождается индикацией загрузки и, при необходимости, блокировкой новых операций переноса до получения подтверждения.</p>
+<h3><a class="main__anchor" href="#подсветка-текущего-droppable" name="подсветка-текущего-droppable">Подсветка текущего droppable</a></h3><p>Удобно, когда пользователь во время переноса наглядно видит, куда он сейчас положит draggable. Например, текущий droppable (или его часть) подсвечиваются.</p>
+<p>Для этого в <code>DragManager</code> можно добавить дополнительные методы интеграции с внешним кодом:</p>
+<ul>
+<li><code>onDragEnter</code> – будет вызываться при заходе на <code>droppable</code>, из <code>onMouseMove</code>.</li>
+<li><code>onDragMove</code> – при каждом передвижении внутри <code>droppable</code>, из <code>onMouseMove</code>.</li>
+<li><code>onDragLeave</code> – при выходе с <code>droppable</code>, из <code>onMouseMove</code> и <code>onMouseUp</code>.</li>
+</ul>
+<p>Возможен более сложный вариант, когда нужно поддерживать не только перенос <em>в элемент</em>, но и перенос <em>между элементами</em>, например вставку одной статьи между двумя другими.</p>
+<p>Для этого код, который обрабатывает перенос, может «делить на части» droppable, к примеру, в отношении 25% – 50% – 25%, и смотреть:</p>
+<ul>
+<li>Если перенос в верхнюю четверть, то это – «над».</li>
+<li>Если перенос в середину, то это «внутрь».</li>
+<li>Если перенос в нижнюю четверть, то это – «под».</li>
+</ul>
+<p>Текущий <code>droppable</code> и позиция относительно него при этом могут помечаться подсветкой и жирной чертой над/под, если требуется.</p>
+<p>Пример индикации из Firefox:
+<img alt="" height="178" src="article/drag-and-drop-objects/between.png" width="196"/></p>
+<h3><a class="main__anchor" href="#анимация-отмены-переноса" name="анимация-отмены-переноса">Анимация отмены переноса</a></h3><p>Отмену переноса и возврат аватара на место можно красиво анимировать.</p>
+<p>Один из частых вариантов – скольжение объекта обратно к исходному месту, откуда его взяли. Для этого достаточно поправить <code>avatar.rollback()</code>.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Уточнённый алгоритм Drag’n’Drop:</p>
+<ol>
+<li>При <code>mousedown</code> запомнить координаты нажатия.</li>
+<li>При <code>mousemove</code> инициировать перенос, как только зажатый элемент передвинули на 3 пикселя или больше. Сообщить во внешний код вызовом <code>onDragStart</code>. При этом:</li>
+</ol>
+<ol>
+3. Создать аватар, если можно начать перенос элемента `draggable` с данной позиции курсора.
+4. Переместить аватар по экрану, установив его новую позицию из `e.pageX/pageY` с учетом изначального сдвига элемента относительно курсора.
+5. Сообщить во внешний код о текущем `droppable` под курсором и позиции над ним вызовами `onDragEnter`, `onDragMove`, `onDragLeave`.
+6. При `mouseup` обработать завершение переноса. Элемент под аватаром получить по координатам, предварительно спрятав аватар. Сообщить во внешний код вызовом `onDragEnd`.
+<p>Получившаяся реализация Drag’n’Drop проста, эффективна, изящна.</p>
+<p>Её очень легко поменять или адаптировать под «особые» потребности.</p>
+<p>ООП-вариант фреймворка находится в статье <a href="/drag-and-drop-plus">Применяем ООП: Drag'n'Drop++</a>.</p>
+</ol></cut></div></meta></article></main></div></body></html>

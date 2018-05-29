@@ -1,0 +1,185 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Методы contains и compareDocumentPosition" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Если есть два элемента, то иногда бывает нужно понять, лежит ли один из них выше другого, то есть является ли его предком.</p>
+<p>Обычные поисковые методы здесь не дают ответа, но есть два специальных. Они используются редко, но когда подобная задача встаёт, то знание метода может сэкономить много строк кода.</p>
+<cut>
+<h2><a class="main__anchor" href="#метод-contains-для-проверки-на-вложенность" name="метод-contains-для-проверки-на-вложенность">Метод contains для проверки на вложенность</a></h2><p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var result = parent.contains(child);</code></pre>
+</div>
+</div>
+</div><p>Возвращает <code>true</code>, если <code>parent</code> содержит <code>child</code> или <code>parent == child</code>.</p>
+<h2><a class="main__anchor" href="#метод-comparedocumentposition-для-порядка-узлов" name="метод-comparedocumentposition-для-порядка-узлов">Метод compareDocumentPosition для порядка узлов</a></h2><p>Бывает, что у нас есть два элемента, к примеру, <code>&lt;li&gt;</code> в списке, и нужно понять, какой из них выше другого.</p>
+<p>Метод <code>compareDocumentPosition</code> – более мощный, чем <code>contains</code>, он предоставляет одновременно информацию и о содержании и об относительном порядке элементов.</p>
+<p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var result = nodeA.compareDocumentPosition(nodeB);</code></pre>
+</div>
+</div>
+</div><p>Возвращаемое значение – битовая маска (см. <a href="/bitwise-operators">Побитовые операторы</a>), биты в которой означают следующее:</p>
+<table>
+<thead>
+<tr>
+<th>Биты</th>
+<th>Число</th>
+<th>Значение</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>000000</td><td>0</td><td><code>nodeA</code> и <code>nodeB</code> -- один и тот же узел</td></tr>
+<tr><td>000001</td><td>1</td><td>Узлы в разных документах (или один из них не в документе)</td></tr>
+<tr><td>000010</td><td>2</td><td><code>nodeB</code> предшествует <code>nodeA</code> (в порядке обхода документа)</td></tr>
+<tr><td>000100</td><td>4</td><td><code>nodeA</code> предшествует <code>nodeB</code></td></tr>
+<tr><td>001000</td><td>8</td><td><code>nodeB</code> содержит <code>nodeA</code></td></tr>
+<tr><td>010000</td><td>16</td><td><code>nodeA</code> содержит <code>nodeB</code></td></tr>
+<tr><td>100000</td><td>32</td><td>Зарезервировано для браузера</td></tr>
+</tbody>
+</table>
+<p>Понятие «предшествует» – означает не только «предыдущий сосед при общем родителе», но и имеет более общий смысл:  "раньше встречается в порядке <a href="http://algolist.manual.ru/ds/walk.php">прямого обхода</a> дерева документа.</p>
+<p>Могут быть и сочетания битов. Примеры реальных значений:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;p&gt;...&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;1.1&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script&gt;
+  var p = document.body.children[0];
+  var ul = document.body.children[1];
+  var li = ul.children[0];
+
+  // 1. &lt;ul&gt; находится после &lt;p&gt;
+  alert( ul.compareDocumentPosition(p) ); // 2 = 10
+
+  // 2. &lt;p&gt; находится до &lt;ul&gt;
+  alert( p.compareDocumentPosition(ul) ); // 4 = 100
+
+  // 3. &lt;ul&gt; родитель &lt;li&gt;
+  alert( ul.compareDocumentPosition(li) ); // 20 = 10100
+
+  // 4. &lt;ul&gt; потомок &lt;body&gt;
+  alert( ul.compareDocumentPosition(document.body) ); // 10 = 1010
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Более подробно:</p>
+<ol>
+<li>Узлы не вложены один в другой, поэтому стоит только бит «предшествования», отсюда <code>10</code>.</li>
+<li>То же самое, но обратный порядок узлов, поэтому <code>100</code>.</li>
+<li>Здесь стоят сразу два бита: <code>10100</code> означает, что <code>ul</code> одновременно содержит <code>li</code> и является его предшественником, то есть при прямом обходе дерева документа сначала встречается <code>ul</code>, а потом <code>li</code>.</li>
+<li>Аналогично предыдущему, <code>1010</code> означает, что <code>document.body</code> содержит <code>ul</code> и предшествует ему.</li>
+</ol>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Перевод в двоичную систему</span></div>
+<div class="important__content"><p>Самый простой способ самостоятельно посмотреть, как число выглядит в 2-ной системе – вызвать для него <code>toString(2)</code>, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var x = 20;
+alert( x.toString(2) ); // "10100"</code></pre>
+</div>
+</div>
+</div><p>Или так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 20..toString(2) );</code></pre>
+</div>
+</div>
+</div><p>Здесь после <code>20</code> две точки, так как если одна, то JS подумает, что после неё десятичная часть – будет ошибка.</p>
+</div></div>
+<p>Проверить конкретное условие, например, "<code>nodeA</code> содержит <code>nodeB</code>", можно при помощи битовых операций, в данном случае: <code>nodeA.compareDocumentPosition(nodeB) &amp; 16</code>, например:</p>
+<div class="code-example" data-highlight-block="8-10" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;ul&gt;
+  &lt;li&gt;1&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script&gt;
+  var body = document.body;
+  var li = document.body.children[0].children[0];
+
+  if (body.compareDocumentPosition(li) &amp; 16) {
+    alert( body + ' содержит ' + li );
+  }
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Более подробно о битовых масках:  <a href="/bitwise-operators">Побитовые операторы</a>.</p>
+<h2><a class="main__anchor" href="#поддержка-в-ie8" name="поддержка-в-ie8">Поддержка в IE8-</a></h2><p>В IE8- поддерживаются свои, нестандартные, метод и свойство:</p>
+<dl>
+<dt><a href="http://msdn.microsoft.com/en-us/library/ms536377.aspx">nodeA.contains(nodeB)</a></dt>
+<dd>Результат: <code>true</code>, если <code>nodeA</code> содержит <code>nodeB</code>, а также в том случае, если <code>nodeA == nodeB</code>.</dd>
+<dt><a href="http://msdn.microsoft.com/en-us/library/ms534635.aspx">node.sourceIndex</a></dt>
+<dd>Номер элемента <code>node</code> в порядке прямого обхода дерева. Только для узлов-элементов.</dd>
+</dl>
+<p>На их основе можно написать полифилл для <code>compareDocumentPosition</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// код с http://compatibility.shwups-cms.ch/en/polyfills/?&amp;id=82
+(function() {
+  var el = document.documentElement;
+  if (!el.compareDocumentPosition &amp;&amp; el.sourceIndex !== undefined) {
+
+    Element.prototype.compareDocumentPosition = function(other) {
+      return (this != other &amp;&amp; this.contains(other) &amp;&amp; 16) +
+        (this != other &amp;&amp; other.contains(this) &amp;&amp; 8) +
+        (this.sourceIndex &gt;= 0 &amp;&amp; other.sourceIndex &gt;= 0 ?
+          (this.sourceIndex &lt; other.sourceIndex &amp;&amp; 4) +
+          (this.sourceIndex &gt; other.sourceIndex &amp;&amp; 2) : 1
+        ) + 0;
+    }
+  }
+}());</code></pre>
+</div>
+</div>
+</div><p>С этим полифиллом метод доступен для элементов во всех браузерах.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Для проверки, является ли один узел предком другого, достаточно метода <code>nodeA.contains(nodeB)</code>.</li>
+<li>Для расширенной проверки на предшествование есть метод <code>compareDocumentPosition</code>.</li>
+<li>Для IE8 нужен полифилл для <code>compareDocumentPosition</code>.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

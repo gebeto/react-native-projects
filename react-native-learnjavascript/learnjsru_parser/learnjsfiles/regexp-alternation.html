@@ -1,0 +1,32 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Альтернация (или) |" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Альтернация – термин в регулярных выражениях, которому в русском языке соответствует слово «ИЛИ». Она обозначается символом вертикальной черты <code class="pattern">|</code> и позволяет выбирать между вариантами.</p>
+<cut>
+<p>Например, нам нужно найти языки программирования: HTML, PHP, Java и JavaScript.</p>
+<p>Соответствующее регулярное выражение: <code class="pattern">html|php|java(script)?</code>.</p>
+<p>Пример использования:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var reg = /html|php|css|java(script)?/gi
+
+var str = "Сначала появился HTML, затем CSS, потом JavaScript"
+
+alert( str.match(reg) ) // 'HTML', 'CSS', 'JavaScript'</code></pre>
+</div>
+</div>
+</div><p>Мы уже знаем похожую вещь – квадратные скобки. Они позволяют выбирать между символами, например <code class="pattern">gr[ae]y</code> найдёт <code class="match">gray</code>, либо <code class="match">grey</code>.</p>
+<p>Альтернация работает уже не посимвольно, а на уровне фраз и подвыражений. Регэксп <code class="pattern">A|B|C</code> обозначает поиск одного из выражений: <code>A</code>, <code>B</code> или <code>C</code>, причём в качестве выражений могут быть другие, сколь угодно сложные регэкспы.</p>
+<p>Для указания границ альтернации используют скобки <code>(...)</code>, например: <code class="pattern">before(XXX|YYY)after</code> будет искать <code class="match">beforeXXXafter</code> или <code class="match">beforeYYYafter</code>.</p>
+</cut></div></meta></article></main></div></body></html>

@@ -1,0 +1,132 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Взаимодействие с пользователем: alert, prompt, confirm" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В этом разделе мы рассмотрим базовые UI операции: <code>alert</code>, <code>prompt</code> и <code>confirm</code>, которые позволяют работать с данными, полученными от пользователя.</p>
+<cut>
+<h2><a class="main__anchor" href="#alert" name="alert">alert</a></h2><p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert(сообщение)</code></pre>
+</div>
+</div>
+</div><p><code>alert</code> выводит на экран окно с сообщением и приостанавливает выполнение скрипта, пока пользователь не нажмёт «ОК».</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "Привет" );</code></pre>
+</div>
+</div>
+</div><p>Окно сообщения, которое выводится, является <em>модальным окном</em>. Слово «модальное» означает, что посетитель не может взаимодействовать со страницей, нажимать другие кнопки и т.п., пока не разберётся с окном. В данном случае – пока не нажмёт на «OK».</p>
+<h2><a class="main__anchor" href="#prompt" name="prompt">prompt</a></h2><p>Функция prompt принимает два аргумента:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">result = prompt(title, default);</code></pre>
+</div>
+</div>
+</div><p>Она выводит модальное окно с заголовком <code>title</code>, полем для ввода текста, заполненным строкой по умолчанию <code>default</code> и кнопками OK/CANCEL.</p>
+<p>Пользователь должен либо что-то ввести и нажать OK, либо отменить ввод кликом на CANCEL или нажатием <kbd class="shortcut">Esc</kbd> на клавиатуре.</p>
+<p><strong>Вызов <code>prompt</code> возвращает то, что ввёл посетитель – строку или специальное значение <code>null</code>, если ввод отменён.</strong></p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Safari 5.1+ не возвращает <code>null</code></span></div>
+<div class="important__content"><p>Единственный браузер, который не возвращает <code>null</code> при отмене ввода – это Safari. При отсутствии ввода он возвращает пустую строку. Предположительно, это ошибка в браузере.</p>
+<p>Если нам важен этот браузер, то пустую строку нужно обрабатывать точно так же, как и <code>null</code>, т.е. считать отменой ввода.</p>
+</div></div>
+<p>Как и в случае с <code>alert</code>, окно <code>prompt</code> модальное.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var years = prompt('Сколько вам лет?', 100);
+
+alert('Вам ' + years + ' лет!')</code></pre>
+</div>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Всегда указывайте <code>default</code></span></div>
+<div class="important__content"><p>Второй параметр может отсутствовать. Однако при этом IE вставит в диалог значение по умолчанию <code>"undefined"</code>.</p>
+<p>Запустите этот код <u>в IE</u>, чтобы понять о чём речь:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var test = prompt("Тест");</code></pre>
+</div>
+</div>
+</div><p>Поэтому рекомендуется <em>всегда</em> указывать второй аргумент:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var test = prompt("Тест", ''); // &lt;-- так лучше</code></pre>
+</div>
+</div>
+</div></div></div>
+<h2><a class="main__anchor" href="#confirm" name="confirm">confirm</a></h2><p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">result = confirm(question);</code></pre>
+</div>
+</div>
+</div><p><code>confirm</code> выводит окно с вопросом <code>question</code> с двумя кнопками: OK и CANCEL.</p>
+<p><strong>Результатом будет <code>true</code> при нажатии OK и <code>false</code> – при CANCEL(<kbd class="shortcut">Esc</kbd>).</strong></p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var isAdmin = confirm("Вы - администратор?");
+
+alert( isAdmin );</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#особенности-встроенных-функций" name="особенности-встроенных-функций">Особенности встроенных функций</a></h2><p>Конкретное место, где выводится модальное окно с вопросом – обычно это центр браузера, и внешний вид окна выбирает браузер. Разработчик не может на это влиять.</p>
+<p>С одной стороны – это недостаток, так как нельзя вывести окно в своем, особо красивом, дизайне.</p>
+<p>С другой стороны, преимущество этих функций по сравнению с другими, более сложными методами взаимодействия, которые мы изучим в дальнейшем – как раз в том, что они очень просты.</p>
+<p>Это самый простой способ вывести сообщение или получить информацию от посетителя. Поэтому их используют в тех случаях, когда простота важна, а всякие «красивости» особой роли не играют.</p>
+<h2><a class="main__anchor" href="#резюме" name="резюме">Резюме</a></h2><ul>
+<li><code>alert</code> выводит сообщение.</li>
+<li><code>prompt</code> выводит сообщение и ждёт, пока пользователь введёт текст, а затем возвращает введённое значение или <code>null</code>, если ввод отменён (CANCEL/<kbd class="shortcut">Esc</kbd>).</li>
+<li><code>confirm</code> выводит сообщение и ждёт, пока пользователь нажмёт «OK» или «CANCEL» и возвращает <code>true/false</code>.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

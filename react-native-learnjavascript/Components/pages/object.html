@@ -1,0 +1,358 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Объекты как ассоциативные массивы" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Объекты в JavaScript сочетают в себе два важных функционала.</p>
+<p>Первый – это  ассоциативный массив: структура, пригодная для хранения любых данных. В этой главе мы рассмотрим использование объектов именно как массивов.</p>
+<p>Второй – языковые возможности для объектно-ориентированного программирования. Эти возможности мы изучим в последующих разделах учебника.</p>
+<cut>
+<h2><a class="main__anchor" href="#ассоциативные-массивы" name="ассоциативные-массивы">Ассоциативные массивы</a></h2><p><a href="http://ru.wikipedia.org/wiki/%D0%90%D1%81%D1%81%D0%BE%D1%86%D0%B8%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D1%8B%D0%B9_%D0%BC%D0%B0%D1%81%D1%81%D0%B8%D0%B2">Ассоциативный массив</a> – структура данных, в которой можно хранить любые данные в формате ключ-значение.</p>
+<p>Её можно легко представить как шкаф с подписанными ящиками. Все данные хранятся в ящичках. По имени можно легко найти ящик и взять то значение, которое в нём лежит.</p>
+<figure><div class="image" style="width:134px">
+<div class="image__ratio" style="padding-top:125.37313432835822%"></div>
+<img alt="" class="image__image" height="168" src="article/object/object.png" width="134">
+</img></div></figure><p>В отличие от реальных шкафов, в ассоциативный массив можно в любой момент добавить новые именованные «ящики» или удалить существующие. Далее мы увидим примеры, как это делается.</p>
+<p>Кстати, в других языках программирования такую структуру данных также называют <em>«словарь»</em> и <em>«хэш»</em>.</p>
+<h2><a class="main__anchor" href="#создание-объектов" name="создание-объектов">Создание объектов</a></h2><p>Пустой объект («пустой шкаф») может быть создан одним из двух синтаксисов:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">1. o = new Object();
+2. o = {}; // пустые фигурные скобки</code></pre>
+</div>
+</div>
+</div><p>Обычно все пользуются синтаксисом <code>(2)</code>, т.к. он короче.</p>
+<h2><a class="main__anchor" href="#операции-с-объектом" name="операции-с-объектом">Операции с объектом</a></h2><p>Объект может содержать в себе любые значения, которые называются <em>свойствами объекта</em>.  Доступ к свойствам осуществляется по <em>имени свойства</em> (иногда говорят <em>«по ключу»</em>).</p>
+<p>Например, создадим объект <code>person</code> для хранения информации о человеке:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var person = {}; // пока пустой</code></pre>
+</div>
+</div>
+</div><figure><div class="image" style="width:128px">
+<div class="image__ratio" style="padding-top:161.71875%"></div>
+<img alt="" class="image__image" height="207" src="article/object/object-person-empty.png" width="128">
+</img></div></figure><p>Основные операции с объектами – это создание, получение и удаление свойств.</p>
+<p>Для обращения к свойствам используется запись «через точку», вида <code>объект.свойство</code>, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// при присвоении свойства в объекте автоматически создаётся "ящик"
+// с именем "name" и в него записывается содержимое 'Вася'
+person.name = 'Вася';
+
+person.age = 25; // запишем ещё одно свойство: с именем 'age' и значением 25</code></pre>
+</div>
+</div>
+</div><figure><div class="image" style="width:125px">
+<div class="image__ratio" style="padding-top:132%"></div>
+<img alt="" class="image__image" height="165" src="article/object/object-person-1.png" width="125">
+</img></div></figure><p>Значения хранятся «внутри» ящиков. Обратим внимание – любые значения, любых типов: число, строка – не важно.</p>
+<p>Чтобы прочитать их – также обратимся через точку:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( person.name + ': ' + person.age ); // "Вася: 25"</code></pre>
+</div>
+</div>
+</div><p>Удаление осуществляется оператором <code>delete</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">delete person.age;</code></pre>
+</div>
+</div>
+</div><p>Осталось только свойство <code>name</code>:</p>
+<figure><div class="image" style="width:134px">
+<div class="image__ratio" style="padding-top:123.13432835820895%"></div>
+<img alt="" class="image__image" height="165" src="article/object/object-person-2.png" width="134">
+</img></div></figure><p>Иногда бывает нужно проверить, есть ли в объекте свойство с определенным ключом.</p>
+<p>Для этого есть особый оператор: <code>"in"</code>.</p>
+<p>Его синтаксис: <code>"prop" in obj</code>, причем имя свойства – в виде строки, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">if ("name" in person) {
+  alert( "Свойство name существует!" );
+}</code></pre>
+</div>
+</div>
+</div><p>Впрочем, чаще используется другой способ – сравнение значения с <code>undefined</code>.</p>
+<p><strong>Дело в том, что в JavaScript можно обратиться к любому свойству объекта, даже если его нет</strong>.</p>
+<p>Ошибки не будет.</p>
+<p>Но если свойство не существует, то вернется специальное значение <code>undefined</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var person = {};
+
+alert( person.lalala ); // undefined, нет свойства с ключом lalala</code></pre>
+</div>
+</div>
+</div><p>Таким образом мы можем легко проверить существование свойства – получив его и сравнив с <code>undefined</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var person = {
+  name: "Василий"
+};
+
+alert( person.lalala === undefined ); // true, свойства нет
+alert( person.name === undefined ); // false, свойство есть.</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">Разница между проверками <code>in</code> и <code>=== undefined</code></span></div>
+<div class="important__content"><p>Есть два средства для проверки наличия свойства в объекте: первое – оператор <code>in</code>, второе – получить его и сравнить с <code>undefined</code>.</p>
+<p>Они почти идентичны, но есть одна небольшая разница.</p>
+<p>Дело в том, что технически возможно, что <em>свойство есть, а его значением является <code>undefined</code></em>:</p>
+<div class="code-example" data-highlight-block="3-5" data-refresh="1" data-trusted="0">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var obj = {};
+obj.test = undefined; // добавили свойство со значением undefined
+
+// проверим наличие свойств test и заведомо отсутствующего blabla
+alert( obj.test === undefined ); // true
+alert( obj.blabla === undefined ); // true</code></pre>
+</div>
+</div>
+</div><p>…При этом, как видно из кода, при простом сравнении наличие такого свойства будет неотличимо от его отсутствия.</p>
+<p>Но оператор <code>in</code> гарантирует правильный результат:</p>
+<div class="code-example" data-highlight-block="3-4" data-refresh="1" data-trusted="0">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var obj = {};
+obj.test = undefined;
+
+alert( "test" in obj ); // true
+alert( "blabla" in obj ); // false</code></pre>
+</div>
+</div>
+</div><p>Как правило, в коде мы не будем присваивать <code>undefined</code>, чтобы корректно работали обе проверки. А в качестве значения, обозначающего неизвестность и неопределенность, будем использовать <code>null</code>.</p>
+</div></div>
+<h3><a class="main__anchor" href="#доступ-через-квадратные-скобки" name="доступ-через-квадратные-скобки">Доступ через квадратные скобки</a></h3><p>Существует альтернативный синтаксис работы со свойствами, использующий квадратные скобки <code>объект['свойство']</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var person = {};
+
+person['name'] = 'Вася'; // то же что и person.name = 'Вася'</code></pre>
+</div>
+</div>
+</div><p>Записи <code>person['name']</code> и <code>person.name</code> идентичны, но квадратные скобки позволяют использовать в качестве имени свойства любую строку:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var person = {};
+
+person['любимый стиль музыки'] = 'Джаз';</code></pre>
+</div>
+</div>
+</div><p>Такое присвоение было бы невозможно «через точку», так интерпретатор после первого пробела подумает, что свойство закончилось, и далее выдаст ошибку:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">person.любимый стиль музыки = 'Джаз'; // ??? ошибка</code></pre>
+</div>
+</div>
+</div><p>В обоих случаях, <strong>имя свойства обязано быть строкой</strong>. Если использовано значение другого типа – JavaScript приведет его к строке автоматически.</p>
+<h3><a class="main__anchor" href="#доступ-к-свойству-через-переменную" name="доступ-к-свойству-через-переменную">Доступ к свойству через переменную</a></h3><p>Квадратные скобки также позволяют обратиться к свойству, имя которого хранится в переменной:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var person = {};
+person.age = 25;
+var key = 'age';
+
+alert( person[key] ); // выведет person['age']</code></pre>
+</div>
+</div>
+</div><p>Вообще, если имя свойства хранится в переменной (<code>var key = "age"</code>), то единственный способ к нему обратиться – это квадратные скобки <code>person[key]</code>.</p>
+<p>Доступ через точку используется, если мы на этапе написания программы уже знаем название свойства. А если оно будет определено по ходу выполнения, например, введено посетителем и записано в переменную, то единственный выбор – квадратные скобки.</p>
+<h3><a class="main__anchor" href="#объявление-со-свойствами" name="объявление-со-свойствами">Объявление со свойствами</a></h3><p>Объект можно заполнить значениями при создании, указав их в фигурных скобках: <code>{ ключ1: значение1, ключ2: значение2, ... }</code>.</p>
+<p>Такой синтаксис называется <em>литеральным</em> (англ. literal).</p>
+<p>Следующие два фрагмента кода создают одинаковый объект:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var menuSetup = {
+  width: 300,
+  height: 200,
+  title: "Menu"
+};
+
+// то же самое, что:
+
+var menuSetup = {};
+menuSetup.width = 300;
+menuSetup.height = 200;
+menuSetup.title = 'Menu';</code></pre>
+</div>
+</div>
+</div><p>Названия свойств можно перечислять как в кавычках, так и без, если они удовлетворяют ограничениям для имён переменных.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var menuSetup = {
+  width: 300,
+  'height': 200,
+  "мама мыла раму": true
+};</code></pre>
+</div>
+</div>
+</div><p>В качестве значения можно тут же указать и другой объект:</p>
+<div class="code-example" data-highlight-block="3-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  name: "Таня",
+  age: 25,
+  size: {
+    top: 90,
+    middle: 60,
+    bottom: 90
+  }
+}
+
+alert(user.name) // "Таня"
+
+alert(user.size.top) // 90</code></pre>
+</div>
+</div>
+</div><p>Здесь значением свойства <code>size</code> является объект <code>{top: 90, middle: 60, bottom: 90 }</code>.</p>
+<h2><a class="main__anchor" href="#компактное-представление-объектов" name="компактное-представление-объектов">Компактное представление объектов</a></h2><div class="important important_warn">
+<div class="important__header"><span class="important__type">Hardcore coders only</span></div>
+<div class="important__content"><p>Эта секция относится ко внутреннему устройству структуры данных. Она не обязательна к прочтению.</p>
+</div></div>
+<p>Браузер использует специальное «компактное» представление объектов, чтобы сэкономить память в том случае, когда однотипных объектов много.</p>
+<p>Например, посмотрим на такой объект:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  name: "Vasya",
+  age: 25
+};</code></pre>
+</div>
+</div>
+</div><p>Здесь содержится информация о свойстве <code>name</code> и его строковом значении, а также о свойстве <code>age</code> и его численном значении. Представим, что таких объектов много.</p>
+<p>Получится, что информация об именах свойств <code>name</code> и <code>age</code> дублируется в каждом объекте. Чтобы этого избежать, браузер применяет оптимизацию.</p>
+<p><strong>При создании множества объектов одного и того же вида (с одинаковыми полями) интерпретатор выносит описание полей в отдельную структуру. А сам объект остаётся в виде непрерывной области памяти с данными.</strong></p>
+<p>Например, есть много объектов с полями <code>name</code> и <code>age</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">{name: "Вася", age: 25}
+{name: "Петя", age: 22}
+{name: "Маша", age: 19}
+...</code></pre>
+</div>
+</div>
+</div><p>Для их эффективного хранения будет создана структура, которая описывает данный вид объектов. Выглядеть она будет примерно так: <code>&lt;string name, number age&gt;</code>. А сами объекты будут представлены в памяти только данными:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">&lt;структура: string name, number age&gt;
+Вася 25
+Петя 22
+Маша 19</code></pre>
+</div>
+</div>
+</div><p>При добавлении нового объекта такой структуры достаточно хранить значения полей, но не их имена. Экономия памяти – налицо.</p>
+<p>А что происходит, если к объекту добавляется новое свойство? Например, к одному из них добавили свойство <code>isAdmin</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">user.isAdmin = true;</code></pre>
+</div>
+</div>
+</div><p>В этом случае браузер смотрит, есть ли уже структура, под которую подходит такой объект. Если нет – она создаётся и объект привязывается к ней.</p>
+<p><strong>Эта оптимизация является примером того, что далеко не всё то, что мы пишем, один-в-один переносится в память.</strong></p>
+<p>Современные интерпретаторы очень стараются оптимизировать как код, так и структуры данных. Детали применения и реализации этого способа хранения варьируются от браузера к браузеру. О том, как это сделано в Chrome можно узнать, например, из презентации <a href="http://www.slideshare.net/newmovie/know-yourengines-velocity2011">Know Your Engines</a>. Она была некоторое время назад, но с тех пор мало что изменилось.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Объекты – это ассоциативные массивы с дополнительными возможностями:</p>
+<ul>
+<li>Доступ к элементам осуществляется:
+<ul>
+<li>Напрямую по ключу <code>obj.prop = 5</code></li>
+<li>Через переменную, в которой хранится ключ:<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var key = "prop";
+obj[key] = 5</code></pre>
+</div>
+</div>
+</div></li>
+</ul>
+</li>
+<li>Удаление ключей: <code>delete obj.name</code>.</li>
+<li>Существование свойства может проверять оператор <code>in</code>: <code>if ("prop" in obj)</code>, как правило, работает и просто сравнение <code>if (obj.prop !== undefined)</code>.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

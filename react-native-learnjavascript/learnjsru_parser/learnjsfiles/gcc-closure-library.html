@@ -1,0 +1,138 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="GCC: интеграция с Google Closure Library" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Google Closure Compiler содержит ряд специальных возможностей для интеграции с Google Closure Library.</p>
+<p>Здесь важны две вещи.</p>
+<ol>
+<li>Для их использования возможно использовать минимум от Google Closure Library. Например, взять одну или несколько функций из библиотеки.</li>
+<li>GCC – расширяемый компилятор, можно добавить к нему свои «фазы оптимизации» для интеграции с другими инструментами и фреймворками.</li>
+</ol>
+<cut>
+<p>Интеграция с Google Closure Library подключается флагом <code>–process_closure_primitives</code>, который по умолчанию установлен в <code>true</code>. То есть, она включена по умолчанию.</p>
+<p>Этот флаг запускает специальный проход компилятора, описанный классом <code>ProcessClosurePrimitives</code> и подключает дополнительную проверку типов <code>ClosureReverseAbstractInterpreter</code>.</p>
+<p>Мы рассмотрим все действия, которые при этом происходят, а также некоторые опции, которые безопасным образом используют символы Google Closure Library  без объявления флага.</p>
+<h2><a class="main__anchor" href="#преобразование-основных-символов" name="преобразование-основных-символов">Преобразование основных символов</a></h2><p>Следующие действия описаны в классе <code>ProcessClosurePrimitives</code>.</p>
+<h3><a class="main__anchor" href="#замена-константы-compiled" name="замена-константы-compiled">Замена константы <code>COMPILED</code></a></h3><p>В Google Closure Library есть переменная:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/**
+ * @define {boolean} ...
+ */
+var COMPILED = false;</code></pre>
+</div>
+</div>
+</div><p>Проход <code>ProcessClosurePrimitives</code> переопределяет ее в <code>true</code> и использует это при оптимизациях, удаляя ветки кода, не предназначены для запуска на production.</p>
+<p>Такие функции существуют, например, в ядре Google Closure Library. К ним в первую очередь относятся вызовы, предназначенные для сборки и проверки зависимостей. Они содержат код, обрамленный проверкой <code>COMPILED</code>, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">goog.require = function(rule) {
+  // ...
+  if (!COMPILED) {
+    // основное тело функции
+  }
+}</code></pre>
+</div>
+</div>
+</div><p>Аналогично может поступить и любой скрипт, даже без использования Google Closure Library:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/** @define {boolean} */
+var COMPILED = false
+
+Framework = {}
+
+Framework.sayCompiled = function() {
+  if (!COMPILED) {
+    alert("Not compressed")
+  } else {
+    alert("Compressed")
+  }
+}</code></pre>
+</div>
+</div>
+</div><p>Для того, чтобы сработало, нужно сжать в продвинутом режиме:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">Framework = {};
+Framework.sayCompiled = Framework.a = function() {
+  alert( "Compressed" );
+};</code></pre>
+</div>
+</div>
+</div><p>Компилятор переопределил <code>COMPILED</code> в <code>true</code> и произвел соответствующие оптимизации.</p>
+<h3><a class="main__anchor" href="#автоподстановка-локали" name="автоподстановка-локали">Автоподстановка локали</a></h3><p>В Google Closure Compiler есть внутренняя опция <code>locale</code></p>
+<p>Эта опция переопределяет переменную <code>goog.LOCALE</code> на установленную при компиляции.</p>
+<p>Для использования опции <code>locale</code>, на момент написания статьи, ее нужно задать в Java коде компилятора, т.к. соответствующего флага нет.</p>
+<p>Как и <code>COMPILED</code>, константу <code>goog.LOCALE</code> можно использовать в своем коде без библиотеки Google Closure Library.</p>
+<h3><a class="main__anchor" href="#проверка-зависимостей" name="проверка-зависимостей">Проверка зависимостей</a></h3><p>Директивы <code>goog.provide</code>, <code>goog.require</code>, <code>goog.addDependency</code> обрабатываются особым образом.</p>
+<p>Все зависимости проверяются, а сами директивы проверки – удаляются из сжатого файла.</p>
+<h3><a class="main__anchor" href="#экспорт-символов" name="экспорт-символов">Экспорт символов</a></h3><p>Вызов <code>goog.exportSymbol</code> задаёт экспорт символа.</p>
+<p>Если подробнее, то код <code>goog.exportSymbol(„a“,myVar)</code> эквивалентен
+<code>window['a'] = myVar</code>.</p>
+<h3><a class="main__anchor" href="#автозамена-классов-css" name="автозамена-классов-css">Автозамена классов CSS</a></h3><p>Google Closure Library умеет преобразовывать классы CSS на более короткие по списку, который задаётся при помощи <code>goog.setCssNameMapping</code>.</p>
+<p>Например, следующая функция задает такой список.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">goog.setCssNameMapping({
+   "goog-menu": "a",
+   "goog-menu-disabled": "a-b",
+   "CSS_LOGO": "b",
+   "hidden": "c"
+ });</code></pre>
+</div>
+</div>
+</div><p>Тогда следующий вызов преобразуется в «a a-b»:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">goog.getCssName('goog-menu') + ' ' + goog.getCssName('goog-menu', 'disabled')</code></pre>
+</div>
+</div>
+</div><p>Google Closure Compiler производит соответствующие преобразования в сжатом файле и удаляет вызов <code>setCssNameMapping</code> из кода.</p>
+<p>Чтобы это сжатие работало, в HTML/CSS классы тоже должны сжиматься. По всей видимости, в приложениях Google это и происходит, но соответствующие инструменты закрыты от публики.</p>
+<h3><a class="main__anchor" href="#генерация-списка-экстернов" name="генерация-списка-экстернов">Генерация списка экстернов</a></h3><p>При объявлении внутренней опции <code>externExportsPath</code>, содержащей путь к файлу, в этот файл будут записаны все экспорты, описанные через <code>goog.exportSymbol</code>/<code>goog.exportProperty</code>.</p>
+<p>В дальнейшем этот файл может быть использован как список экстернов для компиляции.</p>
+<p>Эта опция может быть полезна для создания внешних библиотек, распространяемых со списком экстернов.</p>
+<p>Для её использования нужна своя обёртка вокруг компилятора на Java. Соответствующий проход компилятора описан в классе <code>ExternExportsPass</code>.</p>
+<h3><a class="main__anchor" href="#проверка-типов" name="проверка-типов">Проверка типов</a></h3><p>В Google Closure Library есть ряд функций для проверки типов. Например: <code>goog.isArray</code>, <code>goog.isString</code>, <code>goog.isNumber</code>, <code>goog.isDef</code> и т.п.</p>
+<p>Компилятор использует их для проверки типов, более подробно см. <a href="/gcc-check-types">GCC: статическая проверка типов</a></p>
+<p>Эта логика описана в классе <code>ClosureReverseAbstractInterpreter</code>. Названия функций, определяющих типы, жестко прописаны в Java-коде, поменять их на свои без модификации исходников нельзя.</p>
+<h3><a class="main__anchor" href="#автогенерация-экспортов-из-аннотаций" name="автогенерация-экспортов-из-аннотаций">Автогенерация экспортов из аннотаций</a></h3><p>Для этого в Google Closure Compiler есть внутренняя опция <code>generateExports</code>.</p>
+<p>Эта недокументированная опция добавляет проход компилятора, описанный классом <code>GenerateExports</code>.</p>
+<p>Он читает аннотации <code>@export</code> и создает из них экспортирующие вызовы <code>goog.exportSymbol/exportProperty</code>. Название экспортирующих функций находится в классе соглашений кодирования, каким по умолчанию является <code>GoogleCodingConvention</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/** @export */
+function Widget() {}
+  /** @export */
+Widget.prototype.hide = function() {
+  this.elem.style.display = 'none'
+}</code></pre>
+</div>
+</div>
+</div><p>После компиляции в продвинутом режиме:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function a() {}
+goog.d("Widget", a);
+a.prototype.a = function() {
+  this.b.style.display = "none"
+};
+goog.c(a.prototype, "hide", a.prototype.a);</code></pre>
+</div>
+</div>
+</div><p>Свойства благополучно экспортированы. Удобно.</p>
+<h3><a class="main__anchor" href="#резюме" name="резюме">Резюме</a></h3><p>Google Closure Compiler содержит дополнительные фичи, облегчающие интеграцию с Google Closure Library. Некоторые из них весьма полезны, но требуют создания своего Java-файла, который ставит внутренние опции.</p>
+<p>При обработке символов компилятор не смотрит, подключена ли библиотека, он находит обрабатывает их просто по именам. Поэтому вы можете использовать свою реализацию соответствующих функций.</p>
+<p>Google Closure Compiler можно легко расширить, добавив свои опции и проходы оптимизатора, для интеграции с вашими инструментами.</p>
+</cut></div></meta></article></main></div></body></html>

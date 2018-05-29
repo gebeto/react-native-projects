@@ -1,0 +1,184 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content='Свойство "margin"' itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Свойство <code>margin</code> задаёт отступы вокруг элемента. У него есть несколько особенностей, которые мы здесь рассмотрим.</p>
+<cut>
+<h2><a class="main__anchor" href="#объединение-отступов" name="объединение-отступов">Объединение отступов</a></h2><p>Вертикальные отступы поглощают друг друга, горизонтальные – нет.</p>
+<p>Например, вот документ с вертикальными и горизонтальными отступами:</p>
+<div class="code-example" data-autorun="true" data-demo-height="100" data-highlight-inline="1:12-24,3:17-29,5:17-29,8:12-24" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;body style="background: #aef"&gt;
+  &lt;p style="margin:20px; background:white"&gt;
+
+    &lt;span style="margin:20px; background:orange"&gt;Горизонтальный 20px&lt;/span&gt;
+    ← 40px →
+    &lt;span style="margin:20px; background:orange"&gt;20px Отступ &lt;/span&gt;
+
+  &lt;/p&gt;
+  &lt;p style="margin:15px; background:white"&gt;Вертикальный 20px&lt;/p&gt;
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-74i32i" src="about:blank" style="height:100px"></iframe>
+</div>
+</div><p>Расстояние по горизонтали между элементами <code>SPAN</code> равно <code>40px</code>, так как горизонтальные отступы по <code>20px</code> сложились.</p>
+<p>А вот по вертикали расстояние от <code>SPAN</code> до <code>P</code> равно <code>20px</code>: из двух вертикальных отступов выбирается больший <code>max(20px, 15px) = 20px</code> и применяется.</p>
+<h2><a class="main__anchor" href="#отрицательные-margin-top-left" name="отрицательные-margin-top-left">Отрицательные margin-top/left</a></h2><p>Отрицательные значения <code>margin-top/margin-left</code> смещают элемент со своего обычного места.</p>
+<p>В CSS есть другой способ добиться похожего эффекта – а именно, <code>position:relative</code>. Но между ними есть одно принципиальное различие.</p>
+<p><strong>При сдвиге через <code>margin</code> соседние элементы занимают освободившееся пространство, в отличие от <code>position: relative</code>, при котором элемент визуально сдвигается, но место, где он был, остается «занятым».</strong></p>
+<p>То есть, элемент продолжает полноценно участвовать в потоке.</p>
+<h2><a class="main__anchor" href="#пример-вынос-заголовка" name="пример-вынос-заголовка">Пример: вынос заголовка</a></h2><p>Например, есть документ с информационными блоками:</p>
+<div class="code-example" data-autorun="true" data-demo-height="400" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  div {
+    border: 1px solid blue;
+    margin: 2em;
+    font: .8em/1.25 Arial, sans-serif;
+  }
+
+  h2 {
+    background: #aef;
+    margin: 0 0 0.8em 0;
+  }
+&lt;/style&gt;
+
+&lt;div&gt;
+  &lt;h2&gt;Общие положения&lt;/h2&gt;
+
+  &lt;p&gt;Настоящие Правила дорожного движения устанавливают единый порядок дорожного движения на всей территории Российской Федерации. Другие нормативные акты, касающиеся дорожного движения, должны основываться на требованиях Правил и не противоречить им.&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;div&gt;
+  &lt;h2&gt;Общие обязанности водителей&lt;/h2&gt;
+
+  &lt;p&gt;Водитель механического транспортного средства обязан иметь при себе и по требованию сотрудников милиции передавать им для проверки:&lt;/p&gt;
+  &lt;ul&gt;
+    &lt;li&gt;водительское удостоверение на право управления транспортным средством соответствующей категории;&lt;/li&gt;
+    &lt;li&gt;...и так далее...&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-lcc01" src="about:blank" style="height:400px"></iframe>
+</div>
+</div><p><strong>Использование отрицательного <code>margin-top</code> позволяет вынести заголовки над блоком</strong>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/* вверх чуть больше, чем на высоту строки (1.25em) */
+
+h2 {
+  margin-top: -1.3em;
+}</code></pre>
+</div>
+</div>
+</div><p>Результат:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/margin/h2-margin-top/" target="_blank" title="открыть в новом окне"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/margin/h2-margin-top/" style="height:330px"></iframe>
+</div><p>А вот, что бы было при использовании <code>position</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">h2 {
+  position: relative;
+  top: -1.3em;
+}</code></pre>
+</div>
+</div>
+</div><p>Результат:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/margin/h2-margin-top-position/" target="_blank" title="открыть в новом окне"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/margin/h2-margin-top-position/" style="height:330px"></iframe>
+</div><p><strong>При использовании <code>position</code>, в отличие от <code>margin</code>, на месте заголовков, внутри блоков, осталось пустое пространство.</strong></p>
+<h2><a class="main__anchor" href="#пример-вынос-отчерка" name="пример-вынос-отчерка">Пример: вынос отчерка</a></h2><p>Организуем информацию чуть по-другому. Пусть после каждого заголовка будет отчерк:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div&gt;
+  &lt;h2&gt;Заголовок&lt;/h2&gt;
+  &lt;hr&gt;
+
+  &lt;p&gt;Текст Текст Текст.&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</div><p>Пример документа с такими отчерками:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/margin/hr-margin-left-src/" target="_blank" title="открыть в новом окне"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/margin/hr-margin-left-src/" style="height:320px"></iframe>
+</div><p>Для красоты мы хотим, чтобы отчерк <code>HR</code> начинался левее, чем основной текст. Отрицательный <code>margin-left</code> нам поможет:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+hr.margin { margin-left: -2em; }
+
+/* для сравнения */
+hr.position { position: relative; left: -2em; }</code></pre>
+</div>
+</div>
+</div><p>Результат:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/margin/hr-margin-left/" target="_blank" title="открыть в новом окне"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/margin/hr-margin-left/" style="height:320px"></iframe>
+</div><p>Обратите внимание на разницу между методами сдвига!</p>
+<ul>
+<li><code>hr.margin</code> сначала сдвинулся, а потом нарисовался до конца блока.</li>
+<li><code>hr.position</code> сначала нарисовался, а потом сдвинулся – в результате справа осталось пустое пространство.</li>
+</ul>
+<p>Уже отсюда видно, что отрицательные <code>margin</code> – исключительно полезное средство позиционирования!</p>
+<h2><a class="main__anchor" href="#отрицательные-margin-right-bottom" name="отрицательные-margin-right-bottom">Отрицательные margin-right/bottom</a></h2><p>Отрицательные <code>margin-right/bottom</code> ведут себя по-другому, чем <code>margin-left/top</code>. Они не сдвигают элемент, а «укорачивают» его.</p>
+<p>То есть, хотя сам размер блока не уменьшается, но следующий элемент будет думать, что он меньше на указанное в <code>margin-right/bottom</code> значение.</p>
+<p>Например, в примере ниже вторая строка налезает на первую:</p>
+<div class="code-example" data-autorun="true" data-demo-height="80" data-highlight-inline="0:36-57" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div style="border: 1px solid blue; margin-bottom: -0.5em"&gt;
+  Первый
+&lt;/div&gt;
+
+&lt;div style="border: 1px solid red"&gt;
+  Второй div думает, что высота первого на 0.5em меньше
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-78imgs" src="about:blank" style="height:80px"></iframe>
+</div>
+</div><p>Это используют, в частности для красивых вносок, с приданием иллюзии глубины.</p>
+<p>Например:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/margin/negative-margin-bottom/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="D6SUWmt3K68DVr9htxIR" href="http://plnkr.co/edit/D6SUWmt3K68DVr9htxIR?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/margin/negative-margin-bottom/" style="height:200px"></iframe>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Отрицательные <code>margin-left/top</code> сдвигают элемент влево-вверх. Остальные элементы это учитывают, в отличие от сдвига через <code>position</code>.</li>
+<li>Отрицательные <code>margin-right/bottom</code> заставляют другие элементы думать, что блок меньше по размеру справа-внизу, чем он на самом деле.</li>
+</ul>
+<p>Отличная статья на тему отрицательных <code>margin</code>: <a href="http://coding.smashingmagazine.com/2009/07/27/the-definitive-guide-to-using-negative-margins/">The Definitive Guide to Using Negative Margins</a></p>
+</cut></div></meta></article></main></div></body></html>

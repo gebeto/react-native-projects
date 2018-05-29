@@ -1,0 +1,593 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Основные операторы" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Для работы с переменными, со значениями, JavaScript поддерживает все стандартные операторы, большинство которых есть и в других языках программирования.</p>
+<p>Несколько операторов мы знаем со школы – это обычные сложение <code>+</code>, умножение <code>*</code>, вычитание и так далее.</p>
+<p>В этой главе мы сконцентрируемся на операторах, которые в курсе математики не проходят, и на их особенностях в JavaScript.</p>
+<cut>
+<h2><a class="main__anchor" href="#термины-унарный-бинарный-операнд" name="термины-унарный-бинарный-операнд">Термины: «унарный», «бинарный», «операнд»</a></h2><p>У операторов есть своя терминология, которая используется во всех языках программирования.</p>
+<p>Прежде, чем мы двинемся дальше – несколько терминов, чтобы понимать, о чём речь.</p>
+<ul>
+<li>
+<p><em>Операнд</em> – то, к чему применяется оператор. Например: <code>5 * 2</code> – оператор умножения с левым и правым операндами. Другое название: «аргумент оператора».</p>
+</li>
+<li>
+<p><em>Унарным</em> называется оператор, который применяется к одному выражению. Например, оператор унарный минус <code>"-"</code> меняет знак числа на противоположный:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var x = 1;
+
+x = -x;
+alert( x ); // -1, применили унарный минус</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p><em>Бинарным</em> называется оператор, который применяется к двум операндам. Тот же минус существует и в бинарной форме:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var x = 1, y = 3;
+alert( y - x ); // 2, бинарный минус</code></pre>
+</div>
+</div>
+</div></li>
+</ul>
+<h2><a class="main__anchor" href="#сложение-строк-бинарный" name="сложение-строк-бинарный">Сложение строк, бинарный +</a></h2><p>Обычно при помощи плюса <code>'+'</code> складывают числа.</p>
+<p>Но если бинарный оператор <code>'+'</code> применить к строкам, то он их объединяет в одну:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var a = "моя" + "строка";
+alert( a ); // моястрока</code></pre>
+</div>
+</div>
+</div><p>Иначе говорят, что «плюс производит конкатенацию (сложение) строк».</p>
+<p><strong>Если хотя бы один аргумент является строкой, то второй будет также преобразован к строке!</strong></p>
+<p>Причем не важно, справа или слева находится операнд-строка, в любом случае нестроковый аргумент будет преобразован. Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( '1' + 2 ); // "12"
+alert( 2 + '1' ); // "21"</code></pre>
+</div>
+</div>
+</div><p><strong>Это приведение к строке – особенность исключительно бинарного оператора <code>"+"</code>.</strong></p>
+<p>Остальные арифметические операторы работают только с числами и всегда приводят аргументы к числу.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 2 - '1' ); // 1
+alert( 6 / '2' ); // 3</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#преобразование-к-числу-унарный-плюс" name="преобразование-к-числу-унарный-плюс">Преобразование к числу, унарный плюс +</a></h3><p>Унарный, то есть применённый к одному значению, плюс ничего не делает с числами:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( +1 ); // 1
+alert( +(1 - 2) ); // -1</code></pre>
+</div>
+</div>
+</div><p>Как видно, плюс ничего не изменил в выражениях. Результат – такой же, как и без него.</p>
+<p>Тем не менее, он широко применяется, так как его «побочный эффект» – преобразование значения в число.</p>
+<p>Например, когда мы получаем значения из HTML-полей или от пользователя, то они обычно в форме строк.</p>
+<p>А что, если их нужно, к примеру, сложить? Бинарный плюс сложит их как строки:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var apples = "2";
+var oranges = "3";
+
+alert( apples + oranges ); // "23", так как бинарный плюс складывает строки</code></pre>
+</div>
+</div>
+</div><p>Поэтому используем унарный плюс, чтобы преобразовать к числу:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var apples = "2";
+var oranges = "3";
+
+alert( +apples + +oranges ); // 5, число, оба операнда предварительно преобразованы в числа</code></pre>
+</div>
+</div>
+</div><p>С точки зрения математики такое изобилие плюсов может показаться странным. С точки зрения программирования – никаких разночтений: сначала выполнятся унарные плюсы, приведут строки к числам, а затем – бинарный <code>'+'</code> их сложит.</p>
+<p>Почему унарные плюсы выполнились до бинарного сложения? Как мы сейчас увидим, дело в их приоритете.</p>
+<h2><a class="main__anchor" href="#приоритет" name="приоритет">Приоритет</a></h2><p>В том случае, если в выражении есть несколько операторов – порядок их выполнения определяется <em>приоритетом</em>.</p>
+<p>Из школы мы знаем, что умножение в выражении <code>2 * 2 + 1</code> выполнится раньше сложения, т.к. его <em>приоритет</em> выше, а скобки явно задают порядок выполнения. Но в JavaScript – гораздо больше операторов, поэтому существует целая <a href="https://developer.mozilla.org/en/JavaScript/Reference/operators/operator_precedence">таблица приоритетов</a>.</p>
+<p>Она содержит как уже пройденные операторы, так и те, которые мы еще не проходили. В ней каждому оператору задан числовой приоритет. Тот, у кого число больше – выполнится раньше. Если приоритет одинаковый, то порядок выполнения – слева направо.</p>
+<p>Отрывок из таблицы:</p>
+<table>
+<thead>
+<tr>
+<th>Приоритет</th>
+<th>Название</th>
+<th>Обозначение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>15</td>
+<td>унарный плюс</td>
+<td><code>+</code></td>
+</tr>
+<tr>
+<td>15</td>
+<td>унарный минус</td>
+<td><code>-</code></td>
+</tr>
+<tr>
+<td>14</td>
+<td>умножение</td>
+<td><code>*</code></td>
+</tr>
+<tr>
+<td>14</td>
+<td>деление</td>
+<td><code>/</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td>сложение</td>
+<td><code>+</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td>вычитание</td>
+<td><code>-</code></td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>3</td>
+<td>присваивание</td>
+<td><code>=</code></td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+</tbody>
+</table>
+<p>Так как «унарный плюс» имеет приоритет <code>15</code>, выше, чем <code>13</code> у обычного «сложения», то в выражении <code>+apples + +oranges</code> сначала сработали плюсы у <code>apples</code> и <code>oranges</code>, а затем уже обычное сложение.</p>
+<h2><a class="main__anchor" href="#присваивание" name="присваивание">Присваивание</a></h2><p>Обратим внимание, в таблице приоритетов также есть оператор присваивания <code>=</code>.</p>
+<p>У него – один из самых низких приоритетов: <code>3</code>.</p>
+<p>Именно поэтому, когда переменную чему-либо присваивают, например, <code>x = 2 * 2 + 1</code> сначала выполнится арифметика, а уже затем – произойдёт присваивание <code>=</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var x = 2 * 2 + 1;
+
+alert( x ); // 5</code></pre>
+</div>
+</div>
+</div><p><strong>Возможно присваивание по цепочке:</strong></p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var a, b, c;
+
+a = b = c = 2 + 2;
+
+alert( a ); // 4
+alert( b ); // 4
+alert( c ); // 4</code></pre>
+</div>
+</div>
+</div><p>Такое присваивание работает справа-налево, то есть сначала вычислятся самое правое выражение <code>2+2</code>, присвоится в <code>c</code>, затем выполнится <code>b = c</code> и, наконец, <code>a = b</code>.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Оператор <code>"="</code> возвращает значение</span></div>
+<div class="important__content"><p>Все операторы возвращают значение. Вызов <code>x = выражение</code> не является исключением.</p>
+<p>Он записывает выражение в <code>x</code>, а затем возвращает его. Благодаря этому присваивание можно использовать как часть более сложного выражения:</p>
+<div class="code-example" data-highlight-block="3-3" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var a = 1;
+var b = 2;
+
+var c = 3 - (a = b + 1);
+
+alert( a ); // 3
+alert( c ); // 0</code></pre>
+</div>
+</div>
+</div><p>В примере выше результатом <code>(a = b + 1)</code> является значение, которое записывается в <code>a</code> (т.е. <code>3</code>). Оно используется для вычисления <code>c</code>.</p>
+<p>Забавное применение присваивания, не так ли?</p>
+<p>Знать, как это работает – стоит обязательно, а вот писать самому – только если вы уверены, что это сделает код более читаемым и понятным.</p>
+</div></div>
+<h2><a class="main__anchor" href="#взятие-остатка" name="взятие-остатка">Взятие остатка %</a></h2><p>Оператор взятия остатка <code>%</code> интересен тем, что, несмотря на обозначение, никакого отношения к процентам не имеет.</p>
+<p>Его результат <code>a % b</code> – это остаток от деления <code>a</code> на <code>b</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( 5 % 2 ); // 1, остаток от деления 5 на 2
+alert( 8 % 3 ); // 2, остаток от деления 8 на 3
+alert( 6 % 3 ); // 0, остаток от деления 6 на 3</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#инкремент-декремент" name="инкремент-декремент">Инкремент/декремент: <code>++</code>, <code>--</code></a></h2><p>Одной из наиболее частых операций в JavaScript, как и во многих других языках программирования, является увеличение или уменьшение переменной на единицу.</p>
+<p>Для этого существуют даже специальные операторы:</p>
+<ul>
+<li>
+<p><strong>Инкремент</strong> <code>++</code> увеличивает на 1:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var i = 2;
+i++;      // более короткая запись для i = i + 1.
+alert(i); // 3</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p><strong>Декремент</strong> <code>--</code> уменьшает на 1:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var i = 2;
+i--;      // более короткая запись для i = i - 1.
+alert(i); // 1</code></pre>
+</div>
+</div>
+</div></li>
+</ul>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Важно:</span></div>
+<div class="important__content"><p>Инкремент/декремент можно применить только к переменной.
+Код <code>5++</code> даст ошибку.</p>
+</div></div>
+<p>Вызывать эти операторы можно не только после, но и перед переменной: <code>i++</code> (называется «постфиксная форма») или <code>++i</code> («префиксная форма»).</p>
+<p>Обе эти формы записи делают одно и то же: увеличивают на <code>1</code>.</p>
+<p>Тем не менее, между ними существует разница. Она видна только в том случае, когда мы хотим не только увеличить/уменьшить переменную, но и использовать результат в том же выражении.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-inline="3:13-14" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var i = 1;
+var a = ++i; // (*)
+
+alert(a); // 2</code></pre>
+</div>
+</div>
+</div><p>В строке <code>(*)</code> вызов <code>++i</code> увеличит переменную, а <em>затем</em> вернёт ее значение в <code>a</code>. Так что в <code>a</code> попадёт значение <code>i</code> <em>после</em> увеличения.</p>
+<p><strong>Постфиксная форма <code>i++</code> отличается от префиксной <code>++i</code> тем, что возвращает старое значение, бывшее до увеличения.</strong></p>
+<p>В примере ниже в <code>a</code> попадёт старое значение <code>i</code>, равное <code>1</code>:</p>
+<div class="code-example" data-highlight-inline="3:13-14" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var i = 1;
+var a = i++; // (*)
+
+alert(a); // 1</code></pre>
+</div>
+</div>
+</div><ul>
+<li>
+<p>Если результат оператора не используется, а нужно только увеличить/уменьшить переменную – без разницы, какую форму использовать:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var i = 0;
+i++;
+++i;
+alert( i ); // 2</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Если хочется тут же использовать результат, то нужна префиксная форма:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var i = 0;
+alert( ++i ); // 1</code></pre>
+</div>
+</div>
+</div></li>
+<li>
+<p>Если нужно увеличить, но нужно значение переменной <em>до увеличения</em> – постфиксная форма:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var i = 0;
+alert( i++ ); // 0</code></pre>
+</div>
+</div>
+</div></li>
+</ul>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Инкремент/декремент можно использовать в любых выражениях</span></div>
+<div class="important__content"><p>При этом он имеет более высокий приоритет и выполняется раньше, чем арифметические операции:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var i = 1;
+alert( 2 * ++i ); // 4</code></pre>
+</div>
+</div>
+</div><div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var i = 1;
+alert( 2 * i++ ); // 2, выполнился раньше но значение вернул старое</code></pre>
+</div>
+</div>
+</div><p>При этом, нужно с осторожностью использовать такую запись, потому что в более длинной строке при быстром «вертикальном» чтении кода легко пропустить такой <code>i++</code>, и будет неочевидно, что переменая увеличивается.</p>
+<p>Три строки, по одному действию в каждой – длиннее, зато нагляднее:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var i = 1;
+alert( 2 * i );
+i++;</code></pre>
+</div>
+</div>
+</div></div></div>
+<h2><a class="main__anchor" href="#побитовые-операторы" name="побитовые-операторы">Побитовые операторы</a></h2><p>Побитовые операторы рассматривают аргументы как 32-разрядные целые числа и работают на уровне их внутреннего двоичного представления.</p>
+<p>Эти операторы не являются чем-то специфичным для JavaScript, они поддерживаются в большинстве языков программирования.</p>
+<p>Поддерживаются следующие побитовые операторы:</p>
+<ul>
+<li>AND(и) ( <code>&amp;</code> )</li>
+<li>OR(или) ( <code>|</code> )</li>
+<li>XOR(побитовое исключающее или) ( <code>^</code> )</li>
+<li>NOT(не) ( <code>~</code> )</li>
+<li>LEFT SHIFT(левый сдвиг) ( <code>&lt;&lt;</code> )</li>
+<li>RIGHT SHIFT(правый сдвиг) ( <code>&gt;&gt;</code> )</li>
+<li>ZERO-FILL RIGHT SHIFT(правый сдвиг с заполнением нулями) ( <code>&gt;&gt;&gt;</code> )</li>
+</ul>
+<p>Они используются редко, поэтому вынесены в отдельную главу <a href="/bitwise-operators">Побитовые операторы</a>.</p>
+<h2><a class="main__anchor" href="#сокращённая-арифметика-с-присваиванием" name="сокращённая-арифметика-с-присваиванием">Сокращённая арифметика с присваиванием</a></h2><p>Часто нужно применить оператор к переменной и сохранить результат в ней же, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var n = 2;
+n = n + 5;
+n = n * 2;</code></pre>
+</div>
+</div>
+</div><p>Эту запись можно укоротить при помощи совмещённых операторов, вот так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var n = 2;
+n += 5; // теперь n=7 (работает как n = n + 5)
+n *= 2; // теперь n=14 (работает как n = n * 2)
+
+alert( n ); // 14</code></pre>
+</div>
+</div>
+</div><p>Так можно сделать для операторов <code>+,-,*,/,%</code> и бинарных <code>&lt;&lt;,&gt;&gt;,&gt;&gt;&gt;,&amp;,|,^</code>.</p>
+<p>Вызов с присваиванием имеет в точности такой же приоритет, как обычное присваивание, то есть выполнится после большинства других операций:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var n = 2;
+n *= 3 + 5;
+
+alert( n ); // 16  (n = 2 * 8)</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#оператор-запятая" name="оператор-запятая">Оператор запятая</a></h2><p>Один из самых необычных операторов – запятая <code>','</code>.</p>
+<p>Его можно вызвать явным образом, например:</p>
+<div class="code-example" data-highlight-block="0-0" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var a = (5, 6);
+
+alert( a );</code></pre>
+</div>
+</div>
+</div><p>Запятая позволяет перечислять выражения, разделяя их запятой <code>','</code>. Каждое из них – вычисляется и отбрасывается, за исключением последнего, которое возвращается.</p>
+<p>Запятая – единственный оператор, приоритет которого ниже присваивания. В выражении <code>a = (5,6)</code> для явного задания приоритета использованы скобки, иначе оператор <code>'='</code> выполнился бы до запятой <code>','</code>, получилось бы <code>(a=5), 6</code>.</p>
+<p>Зачем же нужен такой странный оператор, который отбрасывает значения всех перечисленных выражений, кроме последнего?</p>
+<p>Обычно он используется в составе более сложных конструкций, чтобы сделать несколько действий в одной строке. Например:</p>
+<div class="code-example" data-highlight-inline="1:5-26" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// три операции в одной строке
+for (a = 1, b = 3, c = a*b; a &lt; 10; a++) {
+ ...
+}</code></pre>
+</div>
+</div>
+</div><p>Такие трюки используются во многих JavaScript-фреймворках для укорачивания кода.</p>
+</cut></div></meta></article></main></div></body></html>

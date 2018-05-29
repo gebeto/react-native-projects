@@ -1,0 +1,391 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Утечки памяти" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p><em>Утечки памяти</em> происходят, когда браузер по какой-то причине не может освободить память от недостижимых объектов.</p>
+<p>Обычно это происходит автоматически (<a href="/memory-management">Управление памятью в JavaScript</a>). Кроме того, браузер освобождает память при переходе на другую страницу. Поэтому утечки в реальной жизни проявляют себя в двух ситуациях:</p>
+<cut>
+<ol>
+<li>Приложение, в котором посетитель все время на одной странице и работает со сложным JavaScript-интерфейсом. В этом случае утечки могут постепенно съедать доступную память.</li>
+<li>Страница регулярно делает что-то, вызывающее утечку памяти. Посетитель (например, менеджер) оставляет компьютер на ночь включенным, чтобы не закрывать браузер с кучей вкладок. Приходит утром – а браузер съел всю память <strike>и рухнул</strike> и сильно тормозит.</li>
+</ol>
+<p>Утечки бывают из-за ошибок браузера, ошибок в расширениях браузера и, гораздо реже, по причине ошибок в архитектуре JavaScript-кода. Мы разберём несколько наиболее частых и важных примеров.</p>
+<h2><a class="main__anchor" href="#коллекция-утечек-в-ie" name="коллекция-утечек-в-ie">Коллекция утечек в IE</a></h2><h3><a class="main__anchor" href="#утечка-dom-js-в-ie8" name="утечка-dom-js-в-ie8">Утечка DOM ↔ JS в IE8-</a></h3><p>IE до версии 8 не умел очищать циклические ссылки, появляющиеся между DOM-объектами и объектами JavaScript. В результате и DOM и JS оставались в памяти навсегда.</p>
+<p>В браузере IE8 была проведена серьёзная работа над ошибками, но утечка в IE8- появляется, если круговая ссылка возникает «через объект».</p>
+<p>Чтобы было понятнее, о чём речь, посмотрите на следующий код. Он вызывает утечку памяти в IE8-:</p>
+<div class="code-example" data-highlight-block="10-11" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">function leak() {
+  // Создаём новый DIV, добавляем к BODY
+  var elem = document.createElement('div');
+  document.body.appendChild(elem);
+
+  // Записываем в свойство жирный объект
+  elem.__expando = {
+    bigAss: new Array(1000000).join('lalala')
+  };
+
+  // Создаём круговую ссылку. Без этой строки утечки не будет.
+  elem.__expando.__elem = elem;
+
+  // Удалить элемент из DOM. Браузер должен очистить память.
+  elem.parentElement.removeChild(elem);
+}</code></pre>
+</div>
+</div>
+</div><p>Полный пример (только для IE8-, а также IE9 в режиме совместимости с IE8):</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/memory-leaks/leak-ie8/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/TdNLjafIHCgvAlFWOQXw?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/memory-leaks/leak-ie8/"></iframe></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;meta http-equiv="X-UA-Compatible" content="IE=8"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+
+  &lt;script&gt;
+    // Утечка в IE8 standards mode, а также в IE9 в режиме IE8
+    // См. http://blog.j15r.com/2009/07/memory-leaks-in-ie8.html
+    function leak() {
+      // Создаём новый DIV, добавляем к BODY
+      var elem = document.createElement('div');
+      document.body.appendChild(elem);
+
+      // Записываем в свойство жирный объект
+      elem.__expando = {
+        bigAss: new Array(1000000).join('lalala')
+      };
+
+      // Создаём круговую ссылку. Без этой строки утечки не будет.
+      elem.__expando.__elem = elem;
+
+      // Удалить элемент из DOM. Браузер должен очистить память.
+      elem.parentElement.removeChild(elem);
+    }
+  &lt;/script&gt;
+
+  &lt;p&gt;Нажимайте на кнопку и наблюдайте, как увеличивается количество занимаемой браузером памяти.&lt;/p&gt;
+  &lt;button onclick="leak()"&gt;Создать утечку!&lt;/button&gt;
+
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>Круговая ссылка и, как следствие, утечка может возникать и неявным образом, через замыкание:</p>
+<div class="code-example" data-highlight-block="6-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function leak() {
+  var elem = document.createElement('div');
+  document.body.appendChild(elem);
+
+  elem.__expando = {
+    bigAss: new Array(1000000).join('lalala'),
+    method: function() {} // создаётся круговая ссылка через замыкание
+  };
+
+  // Удалить элемент из DOM. Браузер должен очистить память.
+  elem.parentElement.removeChild(elem);
+}</code></pre>
+</div>
+</div>
+</div><p>Полный пример (IE8-, IE9 в режиме совместимости с IE8):</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/memory-leaks/leak-ie8-2/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/Tge43Pc5NZoOlwDznlJO?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/memory-leaks/leak-ie8-2/"></iframe></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;meta http-equiv="X-UA-Compatible" content="IE=8"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+
+  &lt;script&gt;
+    // Утечка в IE8 standards mode, а также в IE9 в режиме IE8
+    // См. http://blog.j15r.com/2009/07/memory-leaks-in-ie8.html
+    function leak() {
+      // Создаём новый DIV, добавляем к BODY
+      var elem = document.createElement('div');
+      document.body.appendChild(elem);
+
+      elem.__expando = {
+        bigAss: new Array(1000000).join('lalala'),
+        method: function() {} // создаётся круговая ссылка через замыкание
+      };
+
+      // Удалить элемент из DOM. Браузер должен очистить память.
+      elem.parentElement.removeChild(elem);
+    }
+  &lt;/script&gt;
+
+  &lt;p&gt;Нажимайте на кнопку и наблюдайте, как увеличивается количество занимаемой браузером памяти.&lt;/p&gt;
+  &lt;button onclick="leak()"&gt;Создать утечку!&lt;/button&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>Без привязки метода <code>method</code> к элементу здесь утечки не возникнет.</p>
+<p>Бывает ли такая ситуация в реальной жизни? Или это – целиком синтетический пример, для заумных программистов?</p>
+<p>Да, конечно бывает. Например, при разработке графических компонент – бывает удобно присвоить DOM-элементу ссылку на JavaScript-объект, который представляет собой компонент. Это упрощает делегирование и, в общем-то, логично, что DOM-элемент знает о компоненте на себе. Но в IE8- прямая привязка ведёт к утечке памяти!</p>
+<p>Примерно так:</p>
+<div class="code-example" data-highlight-block="5-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Menu(elem) {
+  elem.onclick = function() {};
+}
+
+var menu = new Menu(elem); // Menu содержит ссылку на elem
+elem.menu = menu; // такая привязка или что-то подобное ведёт к утечке в IE8</code></pre>
+</div>
+</div>
+</div><p>Полный пример (IE8-, IE9 в режиме совместимости с IE8):</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/memory-leaks/leak-ie8-widget/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/tvS6hJIZ4M16N2qEKmvI?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/memory-leaks/leak-ie8-widget/"></iframe></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;meta http-equiv="X-UA-Compatible" content="IE=8"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+
+  &lt;script&gt;
+    // Утечка в IE8 standards mode, а также в IE9 в режиме IE8
+    // См. http://blog.j15r.com/2009/07/memory-leaks-in-ie8.html
+    function leak() {
+      // Создаём новый DIV, добавляем к BODY
+      var elem = document.createElement('div');
+      document.body.appendChild(elem);
+
+      // Записываем в свойство ссылку на объект
+      var menu = new Menu(elem);
+      elem.menu = menu;
+
+      // Удалить элемент из DOM. Браузер должен очистить память.
+      elem.parentElement.removeChild(elem);
+    }
+
+    function Menu(elem) {
+      elem.onclick = function() {};
+      this.bigAss = new Array(1000000).join('lalala');
+    }
+  &lt;/script&gt;
+
+  &lt;p&gt;Нажимайте на кнопку и наблюдайте, как увеличивается количество занимаемой браузером памяти.&lt;/p&gt;
+  &lt;button onclick="leak()"&gt;Создать утечку!&lt;/button&gt;
+
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><h3><a class="main__anchor" href="#утечка-ie8-при-обращении-к-коллекциям-таблицы" name="утечка-ie8-при-обращении-к-коллекциям-таблицы">Утечка IE8 при обращении к коллекциям таблицы</a></h3><p>Эта утечка происходит только в IE8 в стандартном режиме. В нём при обращении к табличным псевдо-массивам (напр. <code>rows</code>) создаются и не очищаются внутренние ссылки, что приводит к утечкам.</p>
+<p>Также воспроизводится в новых IE в режиме совместимости с IE8.</p>
+<p>Код:</p>
+<div class="code-example" data-highlight-block="6-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var elem = document.createElement('div'); // любой элемент
+
+function leak() {
+
+  elem.innerHTML = '&lt;table&gt;&lt;tr&gt;&lt;td&gt;1&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;';
+
+  elem.firstChild.rows[0]; // просто доступ через rows[] приводит к утечке
+  // при том, что мы даже не сохраняем значение в переменную
+
+  elem.removeChild(elem.firstChild); // удалить таблицу (*)
+  // alert(elem.childNodes.length) // выдал бы 0, elem очищен, всё честно
+}</code></pre>
+</div>
+</div>
+</div><p>Полный пример (IE8):</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/memory-leaks/leak-ie8-table/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/FJGN44ik6GdE20i3xTUa?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/memory-leaks/leak-ie8-table/"></iframe></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+
+&lt;body&gt;
+
+  &lt;script&gt;
+    var elem = document.createElement('div'); // любой элемент
+
+    // Течёт в настоящем IE8, Standards Mode
+    // Не течёт в других IE. Не течёт в IE9 в режиме совместимости с IE8
+    function leak() {
+
+      for (var i = 0; i &lt; 2000; i++) {
+
+        elem.innerHTML = '&lt;table&gt;&lt;tr&gt;&lt;td&gt;1&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;';
+
+        elem.firstChild.rows[0]; // просто доступ через rows[] приводит к утечке
+        // при том, что мы даже без сохраненяем значение в переменную
+
+        elem.removeChild(elem.firstChild); // удалить таблицу
+        // elem.innerHTML = '' очистил бы память, он работает по-другому, см. главу "управление памятью"
+      }
+
+    }
+  &lt;/script&gt;
+
+
+  &lt;p&gt;Нажимайте на кнопку и наблюдайте, как увеличивается количество занимаемой браузером памяти.&lt;/p&gt;
+  &lt;button onclick="leak()"&gt;Создать утечку!&lt;/button&gt;
+
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>Особенности:</p>
+<ul>
+<li>Если убрать отмеченную строку, то утечки не будет.</li>
+<li>Если заменить строку <code>(*)</code> на <code>elem.innerHTML = ''</code>, то память будет очищена, т.к. этот способ работает по-другому, нежели просто <code>removeChild</code> (см. главу <a href="/memory-management">Управление памятью в JavaScript</a>).</li>
+<li>Утечка произойдёт не только при доступе к <code>rows</code>, но и к другим свойствам, например <code>elem.firstChild.tBodies[0]</code>.</li>
+</ul>
+<p>Эта утечка проявляется, в частности, при удалении детей элемента следующей функцией:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function empty(elem) {
+  while (elem.firstChild) elem.removeChild(elem.firstChild);
+}</code></pre>
+</div>
+</div>
+</div><p>Если идёт доступ к табличным коллекциям и регулярное обновление таблиц при помощи DOM-методов  – утечка в IE8 будет расти.</p>
+<p>Более подробно вы можете почитать об этой утечке в статье <a href="http://habrahabr.ru/post/141451/">Утечки памяти в IE8, или страшная сказка со счастливым концом</a>.</p>
+<h3><a class="main__anchor" href="#утечка-через-xmlhttprequest-в-ie8" name="утечка-через-xmlhttprequest-в-ie8">Утечка через XmlHttpRequest в IE8-</a></h3><p>Следующий код вызывает утечки памяти в IE8-:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function leak() {
+  var xhr = new XMLHttpRequest();
+
+  xhr.open('GET', '/server.do', true);
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4 &amp;&amp; xhr.status == 200) {
+      // ...
+    }
+  }
+
+  xhr.send(null);
+}</code></pre>
+</div>
+</div>
+</div><p>Как вы думаете, почему? Если вы внимательно читали то, что написано выше, то имеете информацию для ответа на этот вопрос…</p>
+<p>Посмотрим, какая структура памяти создается при каждом запуске:</p>
+<figure><div class="image" style="width:488px">
+<div class="image__ratio" style="padding-top:63.114754098360656%"></div>
+<img alt="" class="image__image" height="308" src="article/memory-leaks/leak-xhr.png" width="488">
+</img></div></figure><p>Когда запускается асинхронный запрос <code>xhr</code>, браузер создаёт специальную внутреннюю ссылку (internal reference) на этот объект и будет поддерживать её, пока он находится в процессе коммуникации. Именно поэтому объект <code>xhr</code> будет жив после окончания работы функции.</p>
+<p>Когда запрос завершен, браузер удаляет внутреннюю ссылку, <code>xhr</code> становится недостижимым и память очищается… Везде, кроме IE8-.</p>
+<p>Полный пример (IE8):</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/memory-leaks/leak-ie8-xhr/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/zfcCi3JPflt3girFcIOY?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/memory-leaks/leak-ie8-xhr/"></iframe></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;p&gt;Страница создаёт объект &lt;code&gt;XMLHttpRequest&lt;/code&gt; каждые 50 мс.&lt;/p&gt;
+
+  &lt;p&gt;Нажмите на кнопку и смотрите на память, она течёт в IE&amp;lt;9.&lt;/p&gt;
+
+  &lt;button onclick="setInterval(leak, 50);"&gt;Запустить&lt;/button&gt;
+
+  &lt;script&gt;
+    function leak() {
+      var xhr = new XMLHttpRequest();
+
+      xhr.open('GET', '?' + Math.random(), true);
+
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &amp;&amp; xhr.status == 200) {
+          document.getElementById('test').innerHTML++;
+        }
+      }
+
+      xhr.send(null);
+    }
+
+  &lt;/script&gt;
+
+  &lt;div&gt;Количество запросов: &lt;span id="test"&gt;0&lt;/span&gt;&lt;/div&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><p>Чтобы это исправить, нам нужно разорвать круговую ссылку <code>XMLHttpRequest ↔ JS</code>. Например, можно удалить <code>xhr</code> из замыкания:</p>
+<div class="code-example" data-highlight-block="12-12" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function leak() {
+  var xhr = new XMLHttpRequest();
+
+  xhr.open('GET', 'something.js?' + Math.random(), true);
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState != 4) return;
+
+    if (xhr.status == 200) {
+      document.getElementById('test').innerHTML++;
+    }
+
+    xhr = null; // по завершении запроса удаляем ссылку из замыкания
+  }
+
+  xhr.send(null);
+}</code></pre>
+</div>
+</div>
+</div><figure><div class="image" style="width:488px">
+<div class="image__ratio" style="padding-top:50.409836065573764%"></div>
+<img alt="" class="image__image" height="246" src="article/memory-leaks/leak-xhr-2.png" width="488">
+</img></div></figure><p>Теперь циклической ссылки нет – и не будет утечки.</p>
+<h2><a class="main__anchor" href="#объемы-утечек-памяти" name="объемы-утечек-памяти">Объемы утечек памяти</a></h2><p>Объем «утекающей» памяти может быть небольшим. Тогда это почти не ощущается. Но так как замыкания ведут к сохранению переменных внешних функций, то одна функция может тянуть за собой много чего ещё.</p>
+<p>Представьте, вы создали функцию, и одна из ее переменных содержит очень большую по объему строку (например, получает с сервера).</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f() {
+  var data = "Большой объем данных, например, переданных сервером"
+
+  /* делаем что-то хорошее (ну или плохое) с полученными данными */
+
+  function inner() {
+    // ...
+  }
+
+  return inner;
+}</code></pre>
+</div>
+</div>
+</div><p>Пока функция <code>inner</code> остается в памяти, <code>LexicalEnvironment</code> с переменной большого объема внутри висит в памяти.</p>
+<p>Висит до тех пор, пока функция <code>inner</code> жива.</p>
+<p>Как правило, JavaScript не знает, какие из переменных функции <code>inner</code> будут использованы, поэтому оставляет их все. Исключение – виртуальная машина V8 (Chrome, Opera, Node.JS), она часто (не всегда) видит, что переменная не используется во внутренних функциях, и очистит память.</p>
+<p>В других же интерпретаторах, даже если код спроектирован так, что никакой утечки нет, по вполне разумной причине может создаваться множество функций, а память будет расти потому, что функция тянет за собой своё замыкание.</p>
+<p>Сэкономить память здесь вполне можно. Мы же знаем, что переменная <code>data</code> не используется в <code>inner</code>. Поэтому просто обнулим её:</p>
+<div class="code-example" data-highlight-block="9-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f() {
+  var data = "Большое количество данных, например, переданных сервером"
+
+  /* действия с data */
+
+  function inner() {
+    // ...
+  }
+
+  data = null; // когда data станет не нужна -
+
+  return inner;
+}</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#поиск-и-устранение-утечек-памяти" name="поиск-и-устранение-утечек-памяти">Поиск и устранение утечек памяти</a></h2><h3><a class="main__anchor" href="#проверка-на-утечки" name="проверка-на-утечки">Проверка на утечки</a></h3><p>Существует множество шаблонов утечек и ошибок в браузерах, которые могут приводить к утечкам. Для их устранения сперва надо постараться изолировать и воспроизвести утечку.</p>
+<ul>
+<li><strong>Необходимо помнить, что браузер может очистить память не сразу когда объект стал недостижим, а чуть позже.</strong> Например, сборщик мусора может ждать, пока не будет достигнут определенный лимит использования памяти, или запускаться время от времени.</li>
+</ul>
+<p>Поэтому если вы думаете, что нашли проблему и тестовый код, запущенный в цикле, течёт – подождите примерно минуту, добейтесь, чтобы памяти ело стабильно и много. Тогда будет понятно, что это не особенность сборщика мусора.</p></cut></div></meta></article></main></div></body></html>

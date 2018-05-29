@@ -1,0 +1,275 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Методы объектов, this" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>До этого мы говорили об объекте лишь как о хранилище значений. Теперь пойдём дальше и поговорим об объектах как о сущностях со своими функциями («методами»).</p>
+<cut>
+<h2><a class="main__anchor" href="#методы-у-объектов" name="методы-у-объектов">Методы у объектов</a></h2><p>При объявлении объекта можно указать свойство-функцию, например:</p>
+<div class="code-example" data-highlight-block="3-3,10-11" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  name: 'Василий',
+
+  // метод
+  sayHi: function() {
+    alert( 'Привет!' );
+  }
+
+};
+
+// Вызов
+user.sayHi();</code></pre>
+</div>
+</div>
+</div><p>Свойства-функции называют «методами» объектов. Их можно добавлять и удалять в любой момент, в том числе и явным присваиванием:</p>
+<div class="code-example" data-highlight-block="4-6" data-highlight-inline="9:0-13" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  name: 'Василий'
+};
+
+user.sayHi = function() { // присвоили метод после создания объекта
+  alert('Привет!');
+};
+
+// Вызов метода:
+user.sayHi();</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#доступ-к-объекту-через-this" name="доступ-к-объекту-через-this">Доступ к объекту через this</a></h2><p>Для полноценной работы метод должен иметь доступ к данным объекта. В частности, вызов <code>user.sayHi()</code> может захотеть вывести имя пользователя.</p>
+<p><strong>Для доступа к текущему объекту из метода используется ключевое слово <code>this</code></strong>.</p>
+<p>Значением <code>this</code> является объект перед «точкой», в контексте которого вызван метод, например:</p>
+<div class="code-example" data-highlight-inline="4:11-20" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  name: 'Василий',
+
+  sayHi: function() {
+    alert( this.name );
+  }
+};
+
+user.sayHi(); // sayHi в контексте user</code></pre>
+</div>
+</div>
+</div><p>Здесь при выполнении функции <code>user.sayHi()</code> в <code>this</code> будет храниться ссылка на текущий объект <code>user</code>.</p>
+<p>Вместо <code>this</code> внутри <code>sayHi</code> можно было бы обратиться к объекту, используя переменную <code>user</code>:</p>
+<div class="code-example" data-highlight-inline="2:11-20" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">...
+  sayHi: function() {
+    alert( user.name );
+  }
+...</code></pre>
+</div>
+</div>
+</div><p>…Однако, такое решение нестабильно. Если мы решим скопировать объект в другую переменную, например <code>admin = user</code>, а в переменную <code>user</code> записать что-то другое – обращение будет совсем не по адресу:</p>
+<div class="code-example" data-highlight-inline="4:11-20" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  name: 'Василий',
+
+  sayHi: function() {
+    alert( user.name ); // приведёт к ошибке
+  }
+};
+
+var admin = user;
+user = null;
+
+admin.sayHi(); // упс! внутри sayHi обращение по старому имени, ошибка!</code></pre>
+</div>
+</div>
+</div><p>Использование <code>this</code> гарантирует, что функция работает именно с тем объектом, в контексте которого вызвана.</p>
+<p>Через <code>this</code> метод может не только обратиться к любому свойству объекта, но и передать куда-то ссылку на сам объект целиком:</p>
+<div class="code-example" data-highlight-block="3-5" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  name: 'Василий',
+
+  sayHi: function() {
+    showName(this); // передать текущий объект в showName
+  }
+};
+
+function showName(namedObj) {
+  alert( namedObj.name );
+}
+
+user.sayHi(); // Василий</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#подробнее-про-this" name="подробнее-про-this">Подробнее про this</a></h2><p>Любая функция может иметь в себе <code>this</code>. Совершенно неважно, объявлена ли она в объекте или отдельно от него.</p>
+<p>Значение <code>this</code> называется <em>контекстом вызова</em> и будет определено в момент вызова функции.</p>
+<p>Например, такая функция, объявленная без объекта, вполне допустима:</p>
+<div class="code-example" data-highlight-inline="1:9-23" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sayHi() {
+  alert( this.firstName );
+}</code></pre>
+</div>
+</div>
+</div><p>Эта функция ещё не знает, каким будет <code>this</code>. Это выяснится при выполнении программы.</p>
+<p><strong>Если одну и ту же функцию запускать в контексте разных объектов, она будет получать разный <code>this</code>:</strong></p>
+<div class="code-example" data-highlight-block="10-13" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = { firstName: "Вася" };
+var admin = { firstName: "Админ" };
+
+function func() {
+  alert( this.firstName );
+}
+
+user.f = func;
+admin.g = func;
+
+// this равен объекту перед точкой:
+user.f(); // Вася
+admin.g(); // Админ
+admin['g'](); // Админ (не важно, доступ к объекту через точку или квадратные скобки)</code></pre>
+</div>
+</div>
+</div><p>Итак, значение <code>this</code> не зависит от того, как функция была создана, оно определяется исключительно в момент вызова.</p>
+<h2><a class="main__anchor" href="#значение-this-при-вызове-без-контекста" name="значение-this-при-вызове-без-контекста">Значение this при вызове без контекста</a></h2><p>Если функция использует <code>this</code> – это подразумевает работу с объектом. Но и прямой вызов <code>func()</code> технически возможен.</p>
+<p>Как правило, такая ситуация возникает при ошибке в разработке.</p>
+<p>При этом <code>this</code> получает значение <code>window</code>, глобального объекта:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function func() {
+  alert( this ); // выведет [object Window] или [object global]
+}
+
+func();</code></pre>
+</div>
+</div>
+</div><p>Таково поведение в старом стандарте.</p>
+<p>А в режиме <code>use strict</code> вместо глобального объекта <code>this</code> будет <code>undefined</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function func() {
+  "use strict";
+  alert( this ); // выведет undefined (кроме IE9-)
+}
+
+func();</code></pre>
+</div>
+</div>
+</div><p>Обычно если в функции используется <code>this</code>, то она, всё же, служит для вызова в контексте объекта, так что такая ситуация – скорее исключение.</p>
+<h2><a class="main__anchor" href="#ссылочный-тип" name="ссылочный-тип">Ссылочный тип</a></h2><p>Контекст <code>this</code> никак не привязан к функции, даже если она создана в объявлении объекта. Чтобы <code>this</code> передался, нужно вызвать функцию именно через точку (или квадратные скобки).</p>
+<p>Любой более хитрый вызов приведёт к потере контекста, например:</p>
+<div class="code-example" data-highlight-block="8-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var user = {
+  name: "Вася",
+  hi: function() { alert(this.name); },
+  bye: function() { alert("Пока"); }
+};
+
+user.hi(); // Вася (простой вызов работает)
+
+// а теперь вызовем user.hi или user.bye в зависимости от имени
+(user.name == "Вася" ? user.hi : user.bye)(); // undefined</code></pre>
+</div>
+</div>
+</div><p>В последней строке примера метод получен в результате выполнения тернарного оператора и тут же вызван. Но <code>this</code> при этом теряется.</p>
+<p>Если хочется понять, почему, то причина кроется в деталях работы вызова <code>obj.method()</code>.</p>
+<p>Он ведь, на самом деле, состоит из двух независимых операций: точка <code>.</code> – получение свойства и скобки <code>()</code> – его вызов (предполагается, что это функция).</p>
+<p>Функция, как мы говорили раньше, сама по себе не запоминает контекст. Чтобы «донести его» до скобок, JavaScript применяет «финт ушами» – точка возвращает не функцию, а значение специального «ссылочного» типа <a href="https://people.mozilla.org/~jorendorff/es6-draft.html#sec-reference-specification-type">Reference Type</a>.</p>
+<p>Этот тип представляет собой связку «base-name-strict», где:</p>
+<ul>
+<li><em>base</em> – как раз объект,</li>
+<li><em>name</em> – имя свойства,</li>
+<li><em>strict</em> – вспомогательный флаг для передачи <code>use strict</code>.</li>
+</ul>
+<p>То есть, ссылочный тип (Reference Type) – это своеобразное «три-в-одном». Он существует исключительно для целей спецификации, мы его не видим, поскольку любой оператор тут же от него избавляется:</p>
+<ul>
+<li>Скобки <code>()</code> получают из <code>base</code> значение свойства <code>name</code> и вызывают в контексте base.</li>
+<li>Другие операторы получают из <code>base</code> значение свойства <code>name</code> и используют, а остальные компоненты игнорируют.</li>
+</ul>
+<p>Поэтому любая операция над результатом операции получения свойства, кроме вызова, приводит к потере контекста.</p>
+<p>Аналогично работает и получение свойства через квадратные скобки <code>obj[method]</code>.</p>
+</cut></div></meta></article></main></div></body></html>

@@ -1,0 +1,382 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Коллбэки и события на компонентах" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Компоненты, хоть и каждый сам по себе, обычно как-то общаются с остальной частью страницы</p>
+<p>Есть несколько способов, при помощи которых компоненты сообщают друг другу о важных событиях, которые в них произошли.</p>
+<cut>
+<h2><a class="main__anchor" href="#коллбэки" name="коллбэки">Коллбэки</a></h2><p>Коллбэк (от англ. callback) – это функция, которую мы передаём куда-либо и ожидаем, что она будет вызвана при наступлении события.</p>
+<p>Например, мы можем добавить в <code>options</code> для <code>Menu</code> новый параметр – функцию <code>onselect</code>, которая будет вызываться при выборе пункта меню:</p>
+<div class="code-example" data-highlight-block="9-9,12-14" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var menu = new Menu({
+  title: "Сладости",
+  template: _.template(document.getElementById('menu-template').innerHTML),
+  listTemplate: _.template(document.getElementById('menu-list-template').innerHTML,
+  items: {
+    "donut": "Пончик",
+    "cake": "Пирожное",
+    "chocolate": "Шоколадка"
+  },
+  onselect: showSelected
+});
+
+function showSelected(href) {
+  alert(href);
+}</code></pre>
+</div>
+</div>
+</div><p>В коде меню нужно будет вызывать её, например так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">...
+  function select(link) {
+    options.onselect(link.getAttribute('href').slice(1));
+    ...
+  }
+...</code></pre>
+</div>
+</div>
+</div><p>Полный пример:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">menu.js</div><div class="code-tabs__switch">menu.css</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/custom-events/menu-callback/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/r2PNj2QUrCgMXakiCqyQ?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:180px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/custom-events/menu-callback/"></iframe></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>function Menu(options) {
+  var elem;
+
+  function getElem() {
+    if (!elem) render();
+    return elem;
+  }
+
+  function render() {
+    var html = options.template({
+      title: options.title
+    });
+
+    elem = document.createElement('div');
+    elem.innerHTML = html;
+    elem = elem.firstElementChild;
+
+    elem.onmousedown = function() {
+      return false;
+    }
+
+    elem.onclick = function(event) {
+      if (event.target.closest('.title')) {
+        toggle();
+      }
+
+      if (event.target.closest('a')) {
+        event.preventDefault();
+        select(event.target.closest('a'));
+      }
+
+    }
+  }
+
+  function renderItems() {
+    if (elem.querySelector('ul')) return;
+
+    var listHtml = options.listTemplate({
+      items: options.items
+    });
+    elem.insertAdjacentHTML("beforeEnd", listHtml);
+  }
+
+  function select(link) {
+    options.onselect(link.getAttribute('href').slice(1));
+  }
+
+  function open() {
+    renderItems();
+    elem.classList.add('open');
+  };
+
+  function close() {
+    elem.classList.remove('open');
+  };
+
+  function toggle() {
+    if (elem.classList.contains('open')) close();
+    else open();
+  };
+
+  this.getElem = getElem;
+  this.toggle = toggle;
+  this.close = close;
+  this.open = open;
+}</code></pre></div><div class="code-tabs__section"><pre class="language-css line-numbers"><code>.menu ul {
+  display: none;
+  margin: 0;
+}
+
+.menu .title {
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.menu .title:before {
+  content: '▶';
+  padding-right: 6px;
+  color: green;
+}
+
+.menu.open ul {
+  display: block;
+}
+
+.menu.open .title:before {
+  content: '▼';
+}</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;link rel="stylesheet" href="menu.css"&gt;
+  &lt;script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.3.0/lodash.js"&gt;&lt;/script&gt;
+  &lt;script src="https://cdn.polyfill.io/v1/polyfill.js?features=Element.prototype.closest"&gt;&lt;/script&gt;
+  &lt;script src="menu.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;script type="text/template" id="menu-template"&gt;
+    &lt;div class="menu"&gt;
+      &lt;span class="title"&gt;&lt;%-title%&gt;&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/script&gt;
+
+  &lt;!--
+встроенная браузерная функция encodeURIComponent кодирует спец-символы для URL,
+например русские буквы и пробелы
+в этом примере русских букв в ключах items нет, но потенциально они возможны
+--&gt;
+  &lt;script type="text/template" id="menu-list-template"&gt;
+    &lt;ul&gt;
+      &lt;% for(var name in items) { %&gt;
+        &lt;li&gt;
+          &lt;a href="#&lt;%=encodeURIComponent(name)%&gt;"&gt;
+            &lt;%-items[name]%&gt;
+          &lt;/a&gt;
+        &lt;/li&gt;
+        &lt;% } %&gt;
+    &lt;/ul&gt;
+  &lt;/script&gt;
+
+  &lt;script&gt;
+    var menu = new Menu({
+      title: "Сладости",
+      template: _.template(document.getElementById('menu-template').innerHTML.trim()),
+      listTemplate: _.template(document.getElementById('menu-list-template').innerHTML.trim()),
+      items: {
+        cake: "Торт", // cake  &lt;a href="#cake"&gt;Торт&lt;/a&gt;
+        donut: "Пончик", // donut
+        chokolate: "Шоколадка" // chokolate
+      },
+      onselect: showSelected
+    });
+
+    function showSelected(itemName) {
+      alert(itemName);
+    }
+
+    document.body.appendChild(menu.getElem());
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><h2><a class="main__anchor" href="#свои-события" name="свои-события">Свои события</a></h2><p>Как мы уже знаем, в современных браузерах DOM-элементы могут <a href="/dispatch-events">генерировать произвольные события</a> при помощи встроенных методов, а в IE8- это возможно с использованием фреймворка, к примеру, jQuery.</p>
+<p>Воспользуемся ими, чтобы корневой элемент меню генерировал событие, которое мы назовём <code>select</code>, при выборе элемента, и передавал в объект события выбранное значение.</p>
+<p>Для этого модифицируем функцию <code>select</code>:</p>
+<div class="code-example" data-highlight-block="4-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function Menu(options) {
+  ...
+
+  function select(link) {
+    var widgetEvent = new CustomEvent("select", {
+      bubbles: true,
+      // detail - стандартное свойство CustomEvent для произвольных данных
+      detail: link.getAttribute('href').slice(1)
+    });
+    elem.dispatchEvent(widgetEvent);
+  }
+
+  ...
+}</code></pre>
+</div>
+</div>
+</div><p>Код, который заинтересован в том, чтобы узнавать, что выбрано в меню, подписывается на событие <code>select</code> его корневого элемента:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var menu = new Menu(...);
+
+var elem = menu.getElem();
+
+elem.addEventListener('select', function(event) {
+  alert( event.detail );
+});</code></pre>
+</div>
+</div>
+</div><p>Вместо <code>detail</code> можно было бы выбрать и другое название свойства, но тогда нужно позаботиться о том, чтобы оно не конфликтовало со стандартными. Кроме того, в конструкторе <code>CustomEvent</code> разрешено только <code>detail</code>, другое свойство понадобилось бы присваивать в отдельной строке.</p>
+<p>Полный пример:</p>
+<div class="code-tabs code-tabs_result_on"><div class="code-tabs__tools"><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_left" data-code-tabs-left="" title="&amp;larr;"></button></div><div class="code-tabs__switches-wrap"><div class="code-tabs__switches" data-code-tabs-switches=""><div class="code-tabs__switches-items"><div class="code-tabs__switch code-tabs__switch_current">Результат</div><div class="code-tabs__switch">menu.js</div><div class="code-tabs__switch">menu.css</div><div class="code-tabs__switch">index.html</div></div></div></div><div class="code-tabs__scroll-wrap"><button class="code-tabs__scroll-button code-tabs__scroll-button_right" data-code-tabs-right="" title="&amp;rarr;"></button></div><div class="code-tabs__buttons"><a class="code-tabs__button code-tabs__button_external" href="/article/custom-events/menu-event/" target="_blank" title="открыть в отдельном окне"></a><a class="code-tabs__button code-tabs__button_edit" href="http://plnkr.co/edit/tPjydo3vuVHtQ0rVvHq5?p=preview" target="_blank" title="редактировать в песочнице"></a></div></div><div class="code-tabs__content" data-code-tabs-content="" style="height:200px"><div class="code-tabs__section code-tabs__section_current"><iframe class="code-tabs__result" src="article/custom-events/menu-event/"></iframe></div><div class="code-tabs__section"><pre class="language-javascript line-numbers"><code>function Menu(options) {
+  var elem;
+
+  function getElem() {
+    if (!elem) render();
+    return elem;
+  }
+
+  function render() {
+    var html = options.template({
+      title: options.title
+    });
+
+    elem = document.createElement('div');
+    elem.innerHTML = html;
+    elem = elem.firstElementChild;
+
+    elem.onmousedown = function() {
+      return false;
+    }
+
+    elem.onclick = function(event) {
+      if (event.target.closest('.title')) {
+        toggle();
+      }
+
+      if (event.target.closest('a')) {
+        event.preventDefault();
+        select(event.target.closest('a'));
+      }
+
+    }
+  }
+
+  function renderItems() {
+    if (elem.querySelector('ul')) return;
+
+    var listHtml = options.listTemplate({
+      items: options.items
+    });
+    elem.insertAdjacentHTML("beforeEnd", listHtml);
+  }
+
+  function select(link) {
+    var widgetEvent = new CustomEvent("select", {
+      bubbles: true,
+      detail: link.getAttribute('href').slice(1)
+    });
+    elem.dispatchEvent(widgetEvent);
+  }
+
+  function open() {
+    renderItems();
+    elem.classList.add('open');
+  };
+
+  function close() {
+    elem.classList.remove('open');
+  };
+
+  function toggle() {
+    if (elem.classList.contains('open')) close();
+    else open();
+  };
+
+  this.getElem = getElem;
+  this.toggle = toggle;
+  this.close = close;
+  this.open = open;
+}</code></pre></div><div class="code-tabs__section"><pre class="language-css line-numbers"><code>.menu ul {
+  display: none;
+  margin: 0;
+}
+
+.menu .title {
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.menu .title:before {
+  content: '▶';
+  padding-right: 6px;
+  color: green;
+}
+
+.menu.open ul {
+  display: block;
+}
+
+.menu.open .title:before {
+  content: '▼';
+}</code></pre></div><div class="code-tabs__section"><pre class="language-markup line-numbers"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;link rel="stylesheet" href="menu.css"&gt;
+  &lt;script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.3.0/lodash.js"&gt;&lt;/script&gt;
+  &lt;script src="https://cdn.polyfill.io/v1/polyfill.js?features=CustomEvent,Element.prototype.closest"&gt;&lt;/script&gt;
+  &lt;script src="menu.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+  &lt;script type="text/template" id="menu-template"&gt;
+    &lt;div class="menu"&gt;
+      &lt;span class="title"&gt;&lt;%-title%&gt;&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/script&gt;
+
+  &lt;script type="text/template" id="menu-list-template"&gt;
+    &lt;ul&gt;
+      &lt;% for(var name in items) { %&gt;
+        &lt;li&gt;
+          &lt;a href="#&lt;%=encodeURIComponent(name)%&gt;"&gt;
+            &lt;%-items[name]%&gt;
+          &lt;/a&gt;
+        &lt;/li&gt;
+        &lt;% } %&gt;
+    &lt;/ul&gt;
+  &lt;/script&gt;
+
+  &lt;script&gt;
+    var menu = new Menu({
+      title: "Сладости",
+      template: _.template(document.getElementById('menu-template').innerHTML.trim()),
+      listTemplate: _.template(document.getElementById('menu-list-template').innerHTML.trim()),
+      items: {
+        cake: "Торт", // cake  &lt;a href="#cake"&gt;Торт&lt;/a&gt;
+        donut: "Пончик", // donut
+        chokolate: "Шоколадка" // chokolate
+      }
+    });
+
+    var elem = menu.getElem();
+    document.body.appendChild(elem);
+    elem.addEventListener('select', function(event) {
+      alert(event.detail);
+    });
+  &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre></div></div></div><div class="important important_warn">
+<div class="important__header"><span class="important__type">Внимание, инкапсуляция!</span></div>
+<div class="important__content"><p>Очень важно, что внешний код ставит обработчик на корневой элемент, но не на внутренние элементы меню.</p>
+<p>Строго говоря, он вообще не знает про то, как устроено меню, есть ли там ссылки и какие, или там вообще всё реализовано через кнопки.</p>
+<p>Меню для него – «чёрный ящик». Корневой элемент – точка доступа к его функционалу. Событие – не то, которое произошло на ссылке, а «переработанный вариант», интерпретация действия со стороны меню.</p>
+<p>Такое правило позволяет нам не опасаться проблем при оптимизации, расширении и даже полной переделке DOM-структуры меню. Коль скоро события и методы сохраняются, внешний код будет работать как прежде.</p>
+<p>Ещё раз – внешний код не имеет права залезать внутрь DOM-структуры меню, ставить там обработчики и так далее.</p>
+</div></div>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Для того, чтобы внешний код мог узнавать о важных событиях, произошедших внутри компоненты, используются:</p>
+<ul>
+<li>Коллбэки – функции, которые передаются «снаружи» при создании компонента, и которые он обязуется вызвать при наступлении событий.</li>
+<li>События – компонент генерирует их на корневом элементе при помощи <code>dispatchEvent</code>, а внешний код ставит обработчики при помощи <code>addEventListener</code>. Такие события всплывают, если указан флаг <code>bubbles</code>, поэтому можно использовать с ними делегирование.</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

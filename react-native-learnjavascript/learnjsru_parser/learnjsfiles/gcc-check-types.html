@@ -1,0 +1,155 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="GCC: статическая проверка типов" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Google Closure Compiler, как и любой кошерный компилятор, старается проверить правильность кода и предупредить о возможных ошибках.</p>
+<p>Первым делом он, разумеется, проверяет структуру кода и сразу же выдает такие ошибки как пропущенная скобка или лишняя запятая.</p>
+<p>Но, кроме этого, он умеет проверять типы переменных, используя как свои собственные знания о встроенных javascript-функциях и преобразованиях типов,
+так и информацию о типах из JSDoc, указываемую javascript-разработчиком.</p>
+<p>Это обеспечивает то, чем так гордятся компилируемые языки – статическую проверку типов, что позволяет избежать лишних ошибок во время выполнения.</p>
+<cut>
+<p>Для вывода предупреждений при проверки типов используется флаг <code>--jscomp_warning checkTypes</code>.</p>
+<h2><a class="main__anchor" href="#задание-типа-при-помощи-аннотации" name="задание-типа-при-помощи-аннотации">Задание типа при помощи аннотации</a></h2><p>Самый очевидный способ задать тип – это использовать аннотацию. Полный список аннотаций вы найдете в <a href="http://code.google.com/intl/ru/closure/compiler/docs/js-for-compiler.html">документации</a>.</p>
+<p>В следующем примере параметр <code>id</code> функции <code>f1</code> присваивается переменной <code>boolVar</code> другого типа:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/** @param {number} id */
+function f(id) {
+  /** @type {boolean} */
+  var boolVar;
+
+  boolVar = id; // (!)
+}</code></pre>
+</div>
+</div>
+</div><p>Компиляция с флагом <code>--jscomp_warning checkTypes</code> выдаст предупреждение:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">f.js:6: WARNING - assignment
+found   : number
+required: boolean
+        boolVar = id; // (!)
+        ^</code></pre>
+</div>
+</div>
+</div><p>Действительно: произошло присвоение значения типа <code>number</code> переменной типа <code>boolean</code>.</p>
+<p>Типы отслеживаются по цепочке вызовов.</p>
+<p>Еще пример, на этот раз вызов функции с некорректным параметром:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/** @param {number} id */
+function f1(id) {
+  f2(id); // (!)
+}
+
+/** @param {string} id */
+function f2(id) {}</code></pre>
+</div>
+</div>
+</div><p>Такой вызов приведёт к предупреждению со стороны минификатора:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">f2.js:3: WARNING - actual parameter 1 of f2 does not match formal parameter
+found   : number
+required: string
+  f2(id); // (!)
+     ^</code></pre>
+</div>
+</div>
+</div><p>Действительно, вызов функции <code>f2</code> произошел с числовым типом вместо строки.</p>
+<p><strong>Отслеживание приведений и типов идёт при помощи графа взаимодействий и выведению (infer) типов, который строит GCC по коду.</strong></p>
+<h2><a class="main__anchor" href="#знания-о-преобразовании-типов" name="знания-о-преобразовании-типов">Знания о преобразовании типов</a></h2><p>Google Closure Compiler знает, как операторы javascript преобразуют типы. Такой код уже не выдаст ошибку:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/** @param {number} id */
+function f1(id) {
+  /** @type {boolean} */
+  var boolVar;
+
+  boolVar = !!id
+}</code></pre>
+</div>
+</div>
+</div><p>Действительно – переменная преобразована к типу boolean двойным оператором НЕ.
+А код <code>boolVar = „test-“+id</code> выдаст ошибку, т.к. конкатенация со строкой дает тип <code>string</code>.</p>
+<h2><a class="main__anchor" href="#знание-о-типах-встроенных-функций-объектные-типы" name="знание-о-типах-встроенных-функций-объектные-типы">Знание о типах встроенных функций, объектные типы</a></h2><p>Google Closure Compiler содержит описания большинства встроенных объектов и функций javascript вместе с типами параметров и результатов.</p>
+<p>Например, объектный тип <code>Node</code> соответствует узлу DOM.</p>
+<p>Пример некорректного кода:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/** @param {Node} node */
+function removeNode(node) {
+  node.parentNode.removeChild(node)
+}
+document.onclick = function() {
+  removeNode("123")
+}</code></pre>
+</div>
+</div>
+</div><p>Выдаст предупреждение</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">f3.js:7: WARNING - actual parameter 1 of removeNode does not match formal parameter
+found   : string
+required: (Node|null)
+  removeNode("123")
+             ^</code></pre>
+</div>
+</div>
+</div><p>Обратите внимание – в этом примере компилятор выдает <code>required: Node|null</code>. Это потому, что указание объектного типа (не элементарного) подразумевает, что в функцию может быть передан <code>null</code>.</p>
+<p>В следующем примере тип указан жестко, без возможности обнуления:</p>
+<div class="code-example" data-highlight-block="0-0" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/** @param {!Node} node */
+function removeNode(node) {
+  node.parentNode.removeChild(node)
+}</code></pre>
+</div>
+</div>
+</div><p>Восклицательный знак означает, что параметр обязатален.</p>
+<p>Найти описания встроенных типов и объектов javascript вы можете в файле экстернов: <code>externs.zip</code> находится в корне архива <code>compiler.jar</code>.</p>
+<h2><a class="main__anchor" href="#интеграция-с-проверками-типов-из-google-closure-library" name="интеграция-с-проверками-типов-из-google-closure-library">Интеграция с проверками типов из Google Closure Library</a></h2><p>В Google Closure Library есть функции проверки типов: <code>goog.isArray</code>, <code>goog.isDef</code>, <code>goog.isNumber</code> и т.п.</p>
+<p>Google Closure Compiler знает о них и понимает, что внутри следующего <code>if</code> переменная может быть только функцией:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var goog = {
+  isFunction: function(f) {
+    return typeof f == 'function'
+  }
+}
+
+if (goog.isFunction(func)) {
+  func.apply(1, 2)
+}</code></pre>
+</div>
+</div>
+</div><p>Сжатие с проверкой выдаст предупреждение:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">f.js:6: WARNING - actual parameter 2 of Function.apply does not match formal parameter
+found   : number
+required: (Object|null|undefined)
+  func.apply(1, 2)
+                ^      ^</code></pre>
+</div>
+</div>
+</div><p>То есть, компилятор увидел, что код, использующий <code>func</code> находится в <code>if (goog.isFunction(func))</code> и сделал соответствующий вывод, что в этой ветке <code>func</code> является функцией, а значит вызов <code>func.apply(1,2)</code> ошибочен (второй аргумент не может быть числом).</p>
+<p>Дело тут именно в интеграции с Google Closure Library. Если поменять <code>goog</code> на <code>g</code> – предупреждения не будет.</p>
+<h2><a class="main__anchor" href="#резюме" name="резюме">Резюме</a></h2><p>Из нескольких примеров, которые мы рассмотрели, должна быть понятна общая логика проверки типов.</p>
+<p>Соответствующие различным типам и ограничениям на типы аннотации вы можете найти в <a href="http://code.google.com/intl/ru/closure/compiler/docs/js-for-compiler.html">Документации Google</a>. В частности, возможно указание нескольких возможных типов, типа <code>undefined</code> и т.п.</p>
+<p>Также можно указывать количество и тип параметров функции, ключевого слова <code>this</code>, объявлять классы, приватные методы и интерфейсы.</p>
+<p>Проверка типов javascript, предоставляемая Google Closure Compiler – пожалуй, самая продвинутая из существующих на сегодняшний день.</p>
+<p>С ней аннотации, документирующие типы и параметры, становятся не просто украшением, а реальным средством проверки, уменьшающим количество ошибок на production.</p>
+<p>Очень подробно проверка типов описана в книге <a href="http://www.ozon.ru/context/detail/id/6089988/">Closure: The Definitive Guide</a>, автора Michael Bolin.</p>
+</cut></div></meta></article></main></div></body></html>

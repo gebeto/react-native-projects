@@ -1,0 +1,115 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Объект события" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Чтобы хорошо обработать событие, недостаточно знать о том, что это – «клик» или «нажатие клавиши». Могут понадобиться детали: координаты курсора, введённый символ и другие, в зависимости от события.</p>
+<p>Детали произошедшего браузер записывает в «объект события», который передаётся первым аргументом в обработчик.</p>
+<cut>
+<h2><a class="main__anchor" href="#свойства-объекта-события" name="свойства-объекта-события">Свойства объекта события</a></h2><p>Пример ниже демонстрирует использование объекта события:</p>
+<div class="code-example" data-highlight-inline="3:26-31" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="button" value="Нажми меня" id="elem"&gt;
+
+&lt;script&gt;
+  elem.onclick = function(event) {
+    // вывести тип события, элемент и координаты клика
+    alert(event.type + " на " + event.currentTarget);
+    alert(event.clientX + ":" + event.clientY);
+  }
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Свойства объекта <code>event</code>:</p>
+<dl>
+<dt><code>event.type</code></dt>
+<dd>Тип события, в данном случае <code>click</code></dd>
+<dt><code>event.currentTarget</code></dt>
+<dd>Элемент, на котором сработал обработчик. Значение – в точности такое же, как и у <code>this</code>, но бывают ситуации, когда обработчик является методом объекта и его <code>this</code> при помощи <code>bind</code> привязан к этому объекту, тогда мы можем использовать <code>event.currentTarget</code>.</dd>
+<dt><code>event.clientX / event.clientY</code></dt>
+<dd>Координаты курсора в момент клика (относительно окна)</dd>
+</dl>
+<p>Есть также и ряд других свойств, в зависимости от событий, которые мы разберём в дальнейших главах, когда будем подробно знакомиться с событиями мыши, клавиатуры и так далее.</p>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Объект события доступен и в HTML</span></div>
+<div class="important__content"><p>При назначении обработчика в HTML, тоже можно использовать переменную <code>event</code>, это будет работать кросс-браузерно:</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-highlight-inline="0:30-47" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="button" onclick="alert(event.type)" value="Тип события"&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-77um6e" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><p>Это возможно потому, что когда браузер из атрибута создаёт функцию-обработчик, то она выглядит так: <code>function(event) { alert(event.type) }</code>. То есть, её первый аргумент называется <code>"event"</code>.</p>
+</div></div>
+<h2><a class="main__anchor" href="#особенности-ie8" name="особенности-ie8">Особенности IE8-</a></h2><p>IE8- вместо передачи параметра обработчику создаёт глобальный объект <code>window.event</code>. Обработчик может обратиться к нему.</p>
+<p>Работает это так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">elem.onclick = function() {
+  // window.event - объект события
+  alert( window.event.clientX );
+};</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#кроссбраузерное-решение" name="кроссбраузерное-решение">Кроссбраузерное решение</a></h3><p>Универсальное решение для получения объекта события:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">element.onclick = function(event) {
+  event = event || window.event; // (*)
+
+  // Теперь event - объект события во всех браузерах.
+};</code></pre>
+</div>
+</div>
+</div><p>Строка <code>(*)</code>, в случае, если функция не получила <code>event</code> (IE8-), использует <code>window.event</code>.-событие <code>event</code>.</p>
+<p>Можно написать и иначе, если мы сами не используем переменную <code>event</code> в замыкании:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">element.onclick = function(e) {
+  e = e || event;
+
+  // Теперь e - объект события во всех браузерах.
+};</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Объект события содержит ценную информацию о деталях события.</li>
+<li>Он передается первым аргументом <code>event</code> в обработчик для всех браузеров, кроме IE8-, в которых используется глобальная переменная <code>window.event</code>.</li>
+</ul>
+<p>Кросс-браузерно для JavaScript-обработчика получаем объект события так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">element.onclick = function(event) {
+  event = event || window.event;
+
+  // Теперь event - объект события во всех браузерах.
+};</code></pre>
+</div>
+</div>
+</div><p>Еще вариант:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">element.onclick = function(e) {
+  e = e || event; // если нет другой внешней переменной event
+  ...
+};</code></pre>
+</div>
+</div>
+</div></cut></div></meta></article></main></div></body></html>

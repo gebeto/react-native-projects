@@ -1,0 +1,329 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Стили, getComputedStyle" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Эта глава – о свойствах стиля, получении о них информации и изменении при помощи JavaScript.</p>
+<p>Перед прочтением убедитесь, что хорошо знакомы с <a href="http://www.w3.org/TR/CSS2/box.html">блочной моделью CSS</a> и понимаете, что такое <code>padding</code>, <code>margin</code>, <code>border</code>.</p>
+<cut>
+<h2><a class="main__anchor" href="#стили-элемента-свойство-style" name="стили-элемента-свойство-style">Стили элемента: свойство style</a></h2><p>Свойство <code>element.style</code> возвращает объект, который дает доступ к стилю элемента на чтение и запись.</p>
+<p>С его помощью можно изменять большинство CSS-свойств, например <code>element.style.width="100px"</code> работает так, как будто у элемента в атрибуте прописано <code>style="width:100px"</code>.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Единицы измерения обязательны в <code>style</code></span></div>
+<div class="important__content"><p>Об этом иногда забывают, но в <code>style</code> так же, как и в CSS, нужно указывать единицы измерения, например <code>px</code>.</p>
+<p>Ни в коем случае не просто <code>elem.style.width = 100</code> – работать не будет.</p>
+</div></div>
+<p><strong>Для свойств, названия которых состоят из нескольких слов, используется вотТакаяЗапись:</strong></p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">background-color  =&gt; elem.style.backgroundColor
+z-index           =&gt; elem.style.zIndex
+border-left-width =&gt; elem.style.borderLeftWidth</code></pre>
+</div>
+</div>
+</div><p>Пример использования <code>style</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">document.body.style.backgroundColor = prompt('background color?', 'green');</code></pre>
+</div>
+</div>
+</div><div class="important important_warn">
+<div class="important__header"><span class="important__type"><code>style.cssFloat</code> вместо <code>style.float</code></span></div>
+<div class="important__content"><p>Исключением является свойство <code>float</code>. В старом стандарте JavaScript слово <code>"float"</code> было зарезервировано и недоступно для использования в качестве свойства объекта. Поэтому используется не <code>elem.style.float</code>, а <code>elem.style.cssFloat</code>.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Свойства с префиксами</span></div>
+<div class="important__content"><p>Специфические свойства браузеров, типа <code>-moz-border-radius</code>, <code>-webkit-border-radius</code>, записываются следующим способом:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">button.style.MozBorderRadius = '5px';
+button.style.WebkitBorderRadius = '5px';</code></pre>
+</div>
+</div>
+</div><p>То есть, каждый дефис даёт большую букву.</p>
+</div></div>
+<p><strong>Чтобы сбросить поставленный стиль, присваивают в <code>style</code> пустую строку: <code>elem.style.width=""</code>.</strong></p>
+<p>При сбросе свойства <code>style</code> стиль будет взят из CSS.</p>
+<p>Например, для того, чтобы спрятать элемент, можно присвоить: <code>elem.style.display = "none"</code>.</p>
+<p>А вот чтобы показать его обратно – не обязательно явно указывать другой <code>display</code>, наподобие <code>elem.style.display = "block"</code>. Можно просто снять поставленный стиль: <code>elem.style.display = ""</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// если запустить этот код, то &lt;body&gt; "мигнёт"
+document.body.style.display = "none";
+
+setTimeout(function() {
+  document.body.style.display = "";
+}, 1000);</code></pre>
+</div>
+</div>
+</div><p><strong>Стиль в <code>style</code> находится в формате браузера, а не в том, в котором его присвоили.</strong></p>
+<p>Например:</p>
+<div class="code-example" data-demo-height="100" data-highlight-block="2-3,5-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;body&gt;
+  &lt;script&gt;
+    document.body.style.margin = '20px';
+    alert( document.body.style.marginTop ); // 20px!
+
+    document.body.style.color = '#abc';
+    alert( document.body.style.color ); // rgb(170, 187, 204)
+  &lt;/script&gt;
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><p>Обратите внимание на то, как браузер «распаковал» свойство <code>style.margin</code>, предоставив для чтения <code>style.marginTop</code>. То же самое произойдет и для <code>border</code>, <code>background</code> и т.д.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Свойство <code>style</code> мы используем лишь там, где не работают классы</span></div>
+<div class="important__content"><p>В большинстве случаев внешний вид элементов задаётся классами. А JavaScript добавляет или удаляет их. Такой код красив и гибок, дизайн можно легко изменять.</p>
+<p>Свойство <code>style</code> нужно использовать лишь там, где классы  не подходят, например если точное значение цвета/отступа/высоты вычисляется в JavaScript.</p>
+</div></div>
+<h3><a class="main__anchor" href="#строка-стилей-style-csstext" name="строка-стилей-style-csstext">Строка стилей style.cssText</a></h3><p>Свойство <code>style</code> является специальным объектом, ему нельзя присваивать строку.</p>
+<p>Запись <code>div.style="color:blue"</code> работать не будет. Но как же, всё-таки, поставить свойство стиля, если хочется задать его строкой?</p>
+<p>Можно попробовать использовать атрибут: <code>elem.setAttribute("style", ...)</code>, но самым правильным и, главное, кросс-браузерным (с учётом старых IE) решением такой задачи будет использование свойства <code>style.cssText</code>.</p>
+<p><strong>Свойство <code>style.cssText</code> позволяет поставить стиль целиком в виде строки.</strong></p>
+<p>Например:</p>
+<div class="code-example" data-highlight-inline="5:21-43,9:4-16" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;div&gt;Button&lt;/div&gt;
+
+&lt;script&gt;
+  var div = document.body.children[0];
+
+  div.style.cssText="color: red !important; \
+    background-color: yellow; \
+    width: 100px; \
+    text-align: center; \
+    blabla: 5; \
+  ";
+
+  alert(div.style.cssText);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div><p>Браузер разбирает строку <code>style.cssText</code> и применяет известные ему свойства. Неизвестные, наподобие <code>blabla</code>, большинство браузеров просто проигнорируют.</p>
+<p><strong>При установке <code>style.cssText</code> все предыдущие свойства <code>style</code> удаляются.</strong></p>
+<p>Итак, <code>style.cssText</code> осуществляет полную перезапись <code>style</code>. Если же нужно заменить какое-то конкретно свойство стиля, то обращаются именно к нему: <code>style.color</code>, <code>style.width</code> и т.п, чтобы не затереть что-то важное по ошибке.</p>
+<p>Свойство <code>style.cssText</code> используют, например, для новосозданных элементов, когда старых стилей точно нет.</p>
+<h3><a class="main__anchor" href="#чтение-стиля-из-style" name="чтение-стиля-из-style">Чтение стиля из style</a></h3><p>Записать в стиль очень просто. А как прочитать?</p>
+<p>Например, мы хотим узнать размер, отступы элемента, его цвет… Как это сделать?</p>
+<p><strong>Свойство <code>style</code> содержит лишь тот стиль, который указан в атрибуте элемента, без учёта каскада CSS.</strong></p>
+<p>Вот так <code>style</code> уже ничего не увидит:</p>
+<div class="code-example" data-demo-height="100" data-highlight-block="7-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;head&gt;
+  &lt;style&gt; body { color: red; margin: 5px } &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+  Красный текст
+  &lt;script&gt;
+    alert(document.body.style.color); //в большинстве браузеров
+    alert(document.body.style.marginTop); //  ничего не выведет
+  &lt;/script&gt;
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#полный-стиль-из-getcomputedstyle" name="полный-стиль-из-getcomputedstyle">Полный стиль из getComputedStyle</a></h2><p>Итак, свойство <code>style</code> дает доступ только к той информации, которая хранится в <code>elem.style</code>.</p>
+<p>Он не скажет ничего об отступе, если он появился в результате наложения CSS или встроенных стилей браузера:</p>
+<p>А если мы хотим, например, сделать анимацию и плавно увеличивать <code>marginTop</code> от текущего значения? Как нам сделать это? Ведь для начала нам надо это текущее значение получить.</p>
+<p><strong>Для того, чтобы получить текущее используемое значение свойства, используется метод <code>window.getComputedStyle</code>, описанный в стандарте <a href="http://www.w3.org/TR/2000/REC-DOM-Level-2-Style-20001113/css.html">DOM Level 2</a>.</strong></p>
+<p>Его синтаксис таков:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">getComputedStyle(element[, pseudo])</code></pre>
+</div>
+</div>
+</div><dl>
+<dt>element</dt>
+<dd>Элемент, значения для которого нужно получить</dd>
+<dt>pseudo</dt>
+<dd>Указывается, если нужен стиль псевдо-элемента, например <code>"::before"</code>. Пустая строка или отсутствие аргумента означают сам элемент.</dd>
+</dl>
+<p>Поддерживается всеми браузерами, кроме IE8-. Следующий код будет работать во всех не-IE браузерах и в IE9+:</p>
+<div class="code-example" data-demo-height="100" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  body {
+    margin: 10px
+  }
+&lt;/style&gt;
+
+&lt;body&gt;
+
+  &lt;script&gt;
+    var computedStyle = getComputedStyle(document.body);
+    alert( computedStyle.marginTop ); // выведет отступ в пикселях
+    alert( computedStyle.color ); // выведет цвет
+  &lt;/script&gt;
+
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">Вычисленное (computed) и окончательное (resolved) значения</span></div>
+<div class="important__content"><p>В CSS есть две концепции:</p>
+<ol>
+<li><em>Вычисленное</em> (computed) значение – это то, которое получено после применения всех правил CSS и CSS-наследования. Например, <code>width: auto</code> или <code>font-size: 125%</code>.</li>
+<li><em>Окончательное</em> (<a href="http://dev.w3.org/csswg/cssom/#resolved-values">resolved</a>) значение – непосредственно применяемое к элементу. При этом все размеры приводятся к пикселям, например <code>width: 212px</code> или <code>font-size: 16px</code>. В некоторых браузерах пиксели могут быть дробными.</li>
+</ol>
+<p>Когда-то <code>getComputedStyle</code> задумывалось для возврата вычисленного значения, но со временем оказалось, что окончательное гораздо удобнее.</p>
+<p>Поэтому сейчас в целом все значения возвращаются именно окончательные, кроме некоторых небольших глюков в браузерах, которые постепенно вычищаются.</p>
+</div></div>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type"><code>getComputedStyle</code> требует полное свойство!</span></div>
+<div class="important__content"><p>Для правильного получения значения нужно указать точное свойство. Например: <code>paddingLeft</code>, <code>marginTop</code>, <code>borderLeftWidth</code>.</p>
+<p><strong>При обращении к сокращенному: <code>padding</code>, <code>margin</code>, <code>border</code> – правильный результат не гарантируется.</strong></p>
+<p>Действительно, допустим свойства <code>paddingLeft/paddingTop</code> взяты из разных классов CSS. Браузер не обязан объединять их в одно свойство <code>padding</code>. Иногда, в простейших случаях, когда свойство задано сразу целиком, <code>getComputedStyle</code>  сработает для сокращённого свойства, но не во всех браузерах.</p>
+<p>Например, некоторые браузеры (Chrome) выведут <code>10px</code> в документе ниже, а некоторые (Firefox) – нет:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  body {
+    margin: 10px;
+  }
+&lt;/style&gt;
+&lt;script&gt;
+  var style = getComputedStyle(document.body);
+  alert( style.margin ); // в Firefox пустая строка
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</div></div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Стили посещенных ссылок – тайна!</span></div>
+<div class="important__content"><p>У посещенных ссылок может быть другой цвет, фон, чем у обычных. Это можно поставить в CSS с помощью псевдокласса <code>:visited</code>.</p>
+<p>Но <code>getComputedStyle</code> не дает доступ к этой информации, чтобы произвольная страница не могла определить, посещал ли пользователь ту или иную ссылку.</p>
+<p>Кроме того, большинство браузеров запрещают применять к <code>:visited</code> CSS-стили, которые могут изменить геометрию элемента, чтобы даже окольным путем нельзя было это понять. В целях безопасности.</p>
+</div></div>
+<h2><a class="main__anchor" href="#currentstyle-для-ie8" name="currentstyle-для-ie8">currentStyle для IE8-</a></h2><p>В IE8- нет <code>getComputedStyle</code>, но у элементов есть свойство <a href="http://msdn.microsoft.com/en-us/library/ms536497.aspx">currentStyle</a>, которое возвращает вычисленное (computed) значение: уже с учётом CSS-каскада, но не всегда в окончательном формате.</p>
+<p>Чтобы код работал и в старых и новых браузерах, обычно пишут кросс-браузерный код, наподобие такого:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function getStyle(elem) {
+  return window.getComputedStyle ? getComputedStyle(elem, "") : elem.currentStyle;
+}</code></pre>
+</div>
+</div>
+</div><p>Если вы откроете такой документ в IE8-, то размеры будут в процентах, а в современных браузерах – в пикселях.</p>
+<div class="code-example" data-demo-height="100" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;style&gt;
+  body {
+    margin: 10%
+  }
+&lt;/style&gt;
+
+&lt;body&gt;
+  &lt;script&gt;
+    var elem = document.body;
+
+    function getStyle(elem) {
+      return window.getComputedStyle ? getComputedStyle(elem, "") : elem.currentStyle;
+    }
+
+    var marginTop = getStyle(elem).marginTop;
+    alert( marginTop ); // IE8-: 10%, иначе пиксели
+  &lt;/script&gt;
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</div><div class="important important_smart">
+<div class="important__header"><span class="important__type">IE8-: перевод <code>pt,em,%</code> из <code>currentStyle</code> в пиксели</span></div>
+<div class="important__content"><p>Эта информация – дополнительная, она не обязательна для освоения.</p>
+<p>В IE для того, чтобы получить из процентов реальное значение в пикселях существует метод «runtimeStyle+pixel», <a href="http://erik.eae.net/archives/2007/07/27/18.54.15/#comment-102291">описанный Дином Эдвардсом</a>.</p>
+<p>Он основан на свойствах <code>runtimeStyle</code> и <code>pixelLeft</code>, работающих только в IE.</p>
+<p>В <a href="http://plnkr.co/edit/xPWiGxEojpSYnBi5rgNz?p=preview">песочнице</a> вы можете найти функцию <code>getIEComputedStyle(elem, prop)</code>, которая получает значение в пикселях для свойства <code>prop</code>, используя <code>elem.currentStyle</code> и метод Дина Эдвардса, и пример её применения.</p>
+<p>Если вам интересно, как он работает, ознакомьтесь со свойствами с <a href="http://msdn.microsoft.com/en-us/library/ms535889(v=vs.85).aspx">runtimeStyle</a> и <a href="http://msdn.microsoft.com/en-us/library/ms531129%28VS.85%29.aspx">pixelLeft</a> в MSDN и раскройте код.</p>
+<p>Конечно, это актуально только для IE8- и полифиллов.</p>
+</div></div>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Все DOM-элементы предоставляют следующие свойства.</p>
+<ul>
+<li>
+<p>Свойство <code>style</code> – это объект, в котором CSS-свойства пишутся <code>вотТакВот</code>. Чтение и изменение его свойств – это, по сути, работа с компонентами атрибута <code>style</code>.</p>
+</li>
+<li>
+<p><code>style.cssText</code> – строка стилей для чтения или записи. Аналог полного атрибута <code>style</code>.</p>
+</li>
+<li>
+<p>Свойство <code>currentStyle</code>(IE8-) и метод <code>getComputedStyle</code> (IE9+, стандарт) позволяют получить реальное, применённое сейчас к элементу свойство стиля с учётом CSS-каскада и браузерных стилей по умолчанию.</p>
+<p>При этом <code>currentStyle</code> возвращает значение из CSS, до окончательных вычислений, а <code>getComputedStyle</code> – окончательное, непосредственно применённое к элементу (как правило).</p>
+</li>
+</ul>
+<p>Более полная информация о свойстве <code>style</code>, включающая другие, реже используемые методы работы с ним, доступна <a href="https://developer.mozilla.org/en-US/docs/DOM/CSSStyleDeclaration">в документации</a>.</p>
+</cut></div></meta></article></main></div></body></html>

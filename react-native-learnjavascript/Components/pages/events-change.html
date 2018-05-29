@@ -1,0 +1,203 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Изменение: change, input, cut, copy, paste" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>На элементах формы происходят события клавиатуры и мыши, но есть и несколько других, особенных событий.</p>
+<h2><a class="main__anchor" href="#событие-change" name="событие-change">Событие change</a></h2><p>Событие <a href="http://www.w3.org/TR/html5/forms.html#event-input-change">change</a> происходит по окончании изменении значения элемента формы, когда это изменение зафиксировано.</p>
+<p>Для текстовых элементов это означает, что событие произойдёт не при каждом вводе, а при потере фокуса.</p>
+<p>Например, пока вы набираете что-то в текстовом поле ниже – события нет. Но как только вы уведёте фокус на другой элемент, например, нажмёте кнопку – произойдет событие <code>onchange</code>.</p>
+<div class="code-example" data-autorun="true" data-demo-height="40" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="text" onchange="alert(this.value)"&gt;
+&lt;input type="button" value="Кнопка"&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-8ul5vl" src="about:blank" style="height:40px"></iframe>
+</div>
+</div><p>Для остальных же элементов: <code>select</code>, <code>input type=checkbox/radio</code> оно срабатывает сразу при выборе значения.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Поздний <code>onchange</code> в IE8-</span></div>
+<div class="important__content"><p>В IE8- <code>checkbox/radio</code> при изменении мышью не инициируют событие сразу, а ждут потери фокуса.</p>
+<p>Для того, чтобы видеть изменения <code>checkbox/radio</code> тут же – в IE8- нужно повесить обработчик на событие <code>click</code> (оно произойдет и при изменении значения с клавиатуры) или воспользоваться событием <code>propertychange</code>, описанным далее.</p>
+</div></div>
+<h2><a class="main__anchor" href="#событие-input" name="событие-input">Событие input</a></h2><p>Событие <code>input</code> срабатывает <em>тут же</em> при изменении значения текстового элемента и поддерживается всеми браузерами, кроме IE8-.</p>
+<p>В IE9 оно поддерживается частично, а именно – <em>не возникает при удалении символов</em> (как и <code>onpropertychange</code>).</p>
+<p>Пример использования (не работает в IE8-):</p>
+<div class="code-example" data-autorun="true" data-demo-height="40" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="text"&gt; oninput: &lt;span id="result"&gt;&lt;/span&gt;
+&lt;script&gt;
+  var input = document.body.children[0];
+
+  input.oninput = function() {
+    document.getElementById('result').innerHTML = input.value;
+  };
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-60ot7q" src="about:blank" style="height:40px"></iframe>
+</div>
+</div><p>В современных браузерах <code>oninput</code> – самое главное событие для работы с элементом формы. Именно его, а не <code>keydown/keypress</code> следует использовать.</p>
+<p>Если бы ещё не проблемы со старыми IE… Впрочем, их можно решить при помощи события <code>propertychange</code>.</p>
+<h2><a class="main__anchor" href="#ie10-событие-propertychange" name="ie10-событие-propertychange">IE10-, событие propertychange</a></h2><p>Это событие происходит только в IE10-, при любом изменении свойства. Оно позволяет отлавливать изменение тут же. Оно нестандартное, и его основная область использования – исправление недочётов обработки событий в старых IE.</p>
+<p>Если поставить его на <code>checkbox</code> в IE8-, то получится «правильное» событие <code>change</code>:</p>
+<div class="code-example" data-autorun="true" data-demo-height="40" data-highlight-block="6-11" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="checkbox"&gt; Чекбокс с "onchange", работающим везде одинаково
+&lt;script&gt;
+  var checkbox = document.body.children[0];
+
+  if ("onpropertychange" in checkbox) {
+    // старый IE
+    checkbox.onpropertychange = function() {
+      // проверим имя изменённого свойства
+      if (event.propertyName == "checked") {
+        alert( checkbox.checked );
+      }
+    };
+  } else {
+    // остальные браузеры
+    checkbox.onchange = function() {
+      alert( checkbox.checked );
+    };
+  }
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-25uclj" src="about:blank" style="height:40px"></iframe>
+</div>
+</div><p>Это событие также срабатывает при изменении значения текстового элемента. Поэтому его можно использовать в старых IE вместо <code>oninput</code>.</p>
+<p>К сожалению, в IE9 у него недочёт: оно не срабатывает при удалении символов. Поэтому сочетания <code>onpropertychange</code> + <code>oninput</code> недостаточно, чтобы поймать любое изменение поля в старых IE. Далее мы рассмотрим пример, как это можно сделать иначе.</p>
+<h2><a class="main__anchor" href="#события-cut-copy-paste" name="события-cut-copy-paste">События cut, copy, paste</a></h2><p>Эти события используются редко. Они происходят при вырезании/вставке/копировании значения.</p>
+<p>К сожалению, кросс-браузерного способа получить данные, которые вставляются/копируются, не существует, поэтому их основное применение – это отмена соответствующей операции.</p>
+<p>Например, вот так:</p>
+<div class="code-example" data-autorun="true" data-demo-height="40" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="text" id="input"&gt; event: &lt;span id="result"&gt;&lt;/span&gt;
+&lt;script&gt;
+  input.oncut = input.oncopy = input.onpaste = function(event) {
+    result.innerHTML = event.type + ' ' + input.value;
+    return false;
+  };
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-cekvqq" src="about:blank" style="height:40px"></iframe>
+</div>
+</div><h2><a class="main__anchor" href="#пример-поле-с-контролем-смс" name="пример-поле-с-контролем-смс">Пример: поле с контролем СМС</a></h2><p>Как видим, событий несколько и они взаимно дополняют друг друга.</p>
+<p>Посмотрим, как их использовать, на примере.</p>
+<p>Сделаем поле для СМС, рядом с которым должно показываться число символов, обновляющееся при каждом изменении поля.</p>
+<p>Как такое реализовать?</p>
+<p>Событие <code>input</code> идеально решит задачу во всех браузерах, кроме IE9-. Собственно, если IE9- нам не нужен, то на этом можно и остановиться.</p>
+<h3><a class="main__anchor" href="#ie9" name="ie9">IE9-</a></h3><p>В IE8- событие <code>input</code> не поддерживается, но, как мы видели ранее, есть <code>onpropertychange</code>, которое может заменить его.</p>
+<p>Что же касается IE9 – там поддерживаются и <code>input</code> и <code>onpropertychange</code>, но они оба не работают при удалении символов. Поэтому мы будем отслеживать удаление при помощи <code>keyup</code> на <kbd class="shortcut">Delete</kbd>  и <kbd class="shortcut">BackSpace</kbd> . А вот удаление командой «вырезать» из меню – сможет отловить лишь <code>oncut</code>.</p>
+<p>Получается вот такая комбинация:</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="показать"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="text" id="sms"&gt; символов: &lt;span id="result"&gt;&lt;/span&gt;
+&lt;script&gt;
+  function showCount() {
+    result.innerHTML = sms.value.length;
+  }
+
+  sms.onkeyup = sms.oninput = showCount;
+  sms.onpropertychange = function() {
+    if (event.propertyName == "value") showCount();
+  }
+  sms.oncut = function() {
+    setTimeout(showCount, 0); // на момент oncut значение еще старое
+  };
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-12s3eu" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><p>Здесь мы добавили вызов <code>showCount</code> на все события, которые могут приводить к изменению значения. Да, иногда изменение будет обрабатываться несколько раз, но зато с гарантией. А лишние вызовы легко убрать, например, при помощи <code>throttle</code>-декоратора, описанного в задаче <a href="/task/throttle">Тормозилка</a>.</p>
+<p><strong>Есть и совсем другой простой, но действенный вариант: через <code>setInterval</code> регулярно проверять значение и, если оно слишком длинное, обрезать его.</strong></p>
+<p>Чтобы сэкономить ресурсы браузера, мы можем начинать отслеживание по <code>onfocus</code>, а прекращать – по <code>onblur</code>, вот так:</p>
+<div class="code-example" data-autorun="true" data-demo-height="60" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;input type="text" id="sms"&gt; символов: &lt;span id="result"&gt;&lt;/span&gt;
+
+&lt;script&gt;
+  var timerId;
+
+  sms.onfocus = function() {
+
+    var lastValue = sms.value;
+    timerId = setInterval(function() {
+      if (sms.value != lastValue) {
+        showCount();
+        lastValue = sms.value;
+      }
+    }, 20);
+  };
+
+  sms.onblur = function() {
+    clearInterval(timerId);
+  };
+
+  function showCount() {
+    result.innerHTML = sms.value.length;
+  }
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-erthj9" src="about:blank" style="height:60px"></iframe>
+</div>
+</div><p>Обратим внимание – весь этот «танец с бубном» нужен только для поддержки IE8-, в которых не поддерживается <code>oninput</code> и IE9, где <code>oninput</code> не работает при удалении.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>События изменения данных:</p>
+<table>
+<thead>
+<tr>
+<th>Событие</th>
+<th>Описание</th>
+<th>Особенности</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>change</code></td>
+<td>Изменение значения любого элемента формы. Для текстовых элементов срабатывает при потере фокуса.</td>
+<td>В IE8- на чекбоксах ждет потери фокуса, поэтому для мгновенной реакции ставят также <code>onclick</code>-обработчик или <code>onpropertychange</code>.</td>
+</tr>
+<tr>
+<td><code>input</code></td>
+<td>Событие срабатывает только на текстовых элементах. Оно не ждет потери фокуса, в отличие от <code>change</code>.</td>
+<td>В IE8- не поддерживается, в IE9 не работает при удалении символов.</td>
+</tr>
+<tr>
+<td><code>propertychange</code></td>
+<td>Только для IE10-. Универсальное событие для отслеживания изменения свойств элементов. Имя изменённого свойства содержится в <code>event.propertyName</code>. Используют для мгновенной реакции на изменение значения в старых IE.</td>
+<td>В IE9 не срабатывает при удалении символов.</td>
+</tr>
+<tr>
+<td><code>cut/copy/paste</code></td>
+<td>Срабатывают при вставке/копировании/удалении текста. Если в их обработчиках отменить действие браузера, то вставки/копирования/удаления не произойдёт.</td>
+<td>Вставляемое значение получить нельзя: на момент срабатывания события в элементе всё ещё <em>старое</em> значение, а новое недоступно.</td>
+</tr>
+</tbody>
+</table>
+<p>Ещё особенность: в IE8- события <code>change</code>, <code>propertychange</code>, <code>cut</code> и аналогичные не всплывают. То есть, обработчики нужно назначать на сам элемент, без делегирования.</p>
+</div></meta></article></main></div></body></html>

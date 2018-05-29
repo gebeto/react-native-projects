@@ -1,0 +1,380 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Жадные и ленивые квантификаторы" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Квантификаторы – с виду очень простая, но на самом деле очень хитрая штука.</p>
+<p>Необходимо очень хорошо понимать, как именно происходит поиск, если конечно мы хотим искать что-либо сложнее чем <code class="pattern">/\d+/</code>.</p>
+<cut>
+<p>Для примера рассмотрим задачу, которая часто возникает в типографике – заменить в тексте кавычки вида <code>"..."</code> (их называют «английские кавычки») на «кавычки-ёлочки»: <code>«...»</code>.</p>
+<p>Для этого нужно сначала найти все слова в таких кавычках.</p>
+<p>Соответствующее регулярное выражение может выглядеть так: <code class="pattern">/".+"/g</code>, то есть мы ищем кавычку, после которой один или более произвольный символ, и в конце опять кавычка.</p>
+<p>Однако, если попробовать применить его на практике, даже на таком простом случае…</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var reg = /".+"/g;
+
+var str = 'a "witch" and her "broom" is one';
+
+alert( str.match(reg) ); // "witch" and her "broom"</code></pre>
+</div>
+</div>
+</div><p>…Мы увидим, что оно работает совсем не так, как задумано!</p>
+<p>Вместо того, чтобы найти два совпадения <code class="match">"witch"</code> и <code class="match">"broom"</code>, оно находит одно: <code class="match">"witch" and her "broom"</code>.</p>
+<p>Это как раз тот случай, когда <em>жадность</em> – причина всех зол.</p>
+<h2><a class="main__anchor" href="#жадный-поиск" name="жадный-поиск">Жадный поиск</a></h2><p>Чтобы найти совпадение, движок регулярных выражений обычно использует следующий алгоритм:</p>
+<ul>
+<li>Для каждой позиции в поисковой строке
+<ul>
+<li>Проверить совпадение на данной позиции</li>
+<li>Посимвольно, с учётом классов и квантификаторов сопоставив с ней регулярное выражение.</li>
+</ul>
+</li>
+</ul>
+<p>Это общие слова, гораздо понятнее будет, если мы проследим, что именно он делает для регэкспа <code class="pattern">".+"</code>.</p>
+<ol>
+<li>
+<p>Первый символ шаблона – это кавычка <code class="pattern">"</code>.</p>
+<p>Движок регулярных выражений пытается сопоставить её на 0-й позиции в строке, но символ <code>a</code>, поэтому на 0-й позиции соответствия явно нет.</p>
+<p>Далее он переходит 1ю, 2ю позицию в исходной строке и, наконец, обнаруживает кавычку на 3-й позиции:</p>
+<figure><div class="image" style="width:463px">
+<div class="image__ratio" style="padding-top:28.077753779697623%"></div>
+<img alt="" class="image__image" height="130" src="article/regexp-greedy-and-lazy/witch_greedy1.png" width="463">
+</img></div></figure></li>
+<li>
+<p>Кавычка найдена, далее движок проверяет, есть ли соответствие для остальной части паттерна.</p>
+<p>В данном случае следующий символ шаблона: <code class="pattern">.</code> (точка). Она обозначает «любой символ», так что следующая буква строки <code class="match">'w'</code> вполне подходит:</p>
+<figure><div class="image" style="width:463px">
+<div class="image__ratio" style="padding-top:28.077753779697623%"></div>
+<img alt="" class="image__image" height="130" src="article/regexp-greedy-and-lazy/witch_greedy2.png" width="463">
+</img></div></figure></li>
+<li>
+<p>Далее «любой символ» повторяется, так как стоит квантификатор <code class="pattern">.+</code>. Движок регулярных выражений берёт один символ за другим, до тех пор, пока у него это получается.</p>
+<p>В данном случае это означает «до конца строки»:</p>
+<figure><div class="image" style="width:463px">
+<div class="image__ratio" style="padding-top:28.077753779697623%"></div>
+<img alt="" class="image__image" height="130" src="article/regexp-greedy-and-lazy/witch_greedy3.png" width="463">
+</img></div></figure></li>
+<li>
+<p>Итак, текст закончился, движок регулярных выражений больше не может найти «любой символ», он закончил повторения для <code class="pattern">.+</code> и переходит к следующему символу шаблона.</p>
+<p>Следующий символ шаблона – это кавычка. Её тоже необходимо найти, чтобы соответствие было полным. А тут – беда, ведь поисковый текст завершился!</p>
+<p>Движок регулярных выражений понимает, что, наверное, взял многовато <code class="pattern">.+</code> и начинает отступать обратно.</p>
+<p>Иными словами, он сокращает текущее совпадение на один символ:</p>
+<figure><div class="image" style="width:463px">
+<div class="image__ratio" style="padding-top:28.077753779697623%"></div>
+<img alt="" class="image__image" height="130" src="article/regexp-greedy-and-lazy/witch_greedy4.png" width="463">
+</img></div></figure><p>Это называется «фаза возврата» или «фаза бэктрекинга» (backtracking – англ.).</p>
+<p>Теперь <code class="pattern">.+</code> соответствует почти вся оставшаяся строка, за исключением одного символа, и движок регулярных выражений ещё раз пытается подобрать соответствие для остатка шаблона, начиная с оставшейся части строки.</p>
+<p>Если бы последним символом строки была кавычка <code class="pattern">'"'</code>, то на этом бы всё и закончилось. Но последний символ <code class="subject">'e'</code>, так что совпадения нет.</p>
+</li>
+<li>
+<p>…Поэтому движок уменьшает число повторений <code class="pattern">.+</code> ещё на один символ:</p>
+<figure><div class="image" style="width:463px">
+<div class="image__ratio" style="padding-top:28.077753779697623%"></div>
+<img alt="" class="image__image" height="130" src="article/regexp-greedy-and-lazy/witch_greedy5.png" width="463">
+</img></div></figure><p>Кавычка <code class="pattern">'"'</code> не совпадает с <code class="subject">'n'</code>. Опять неудача.</p>
+</li>
+<li>
+<p>Движок продолжает отступать, он уменьшает количество повторений точки <code class="pattern">'.'</code> до тех пор, пока остаток паттерна, то есть в данном случае кавычка <code class="pattern">'"'</code>, не совпадёт:</p>
+<figure><div class="image" style="width:463px">
+<div class="image__ratio" style="padding-top:28.077753779697623%"></div>
+<img alt="" class="image__image" height="130" src="article/regexp-greedy-and-lazy/witch_greedy6.png" width="463">
+</img></div></figure></li>
+<li>
+<p>Совпадение получено. Дальнейший поиск по оставшейся части строки <code class="subject">is one</code> новых совпадений не даст.</p>
+</li>
+</ol>
+<p>Возможно, это не совсем то, что мы ожидали.</p>
+<p><strong>В жадном режиме (по умолчанию) регэксп повторяет квантификатор настолько много раз, насколько это возможно, чтобы найти соответствие.</strong></p>
+<p>То есть, любой символ <code class="pattern">.+</code> повторился максимальное количество раз, что и привело к такой длинной строке.</p>
+<p>А мы, наверное, хотели, чтобы каждая строка в кавычках была независимым совпадением? Для этого можно переключить квантификатор <code>+</code> в «ленивый» режим, о котором будет речь далее.</p>
+<h2><a class="main__anchor" href="#ленивый-режим" name="ленивый-режим">Ленивый режим</a></h2><p>Ленивый режим работы квантификаторов – противоположность жадному, он означает «повторять минимальное количество раз».</p>
+<p>Его можно включить, если поставить знак вопроса <code class="pattern">'?'</code> после квантификатора, так что он станет таким: <code class="pattern">*?</code> или <code class="pattern">+?</code> или даже <code class="pattern">??</code> для <code class="pattern">'?'</code>.</p>
+<p>Чтобы не возникло путаницы – важно понимать: обычно <code>?</code> сам является квантификатором (ноль или один). Но если он стоит <em>после другого квантификатора (или даже после себя)</em>, то обретает другой смысл – в этом случае он меняет режим его работы на ленивый.</p>
+<p>Регэксп <code class="pattern">/".+?"/g</code> работает, как задумано – находит отдельно <code class="match">witch</code> и <code class="match">broom</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var reg = /".+?"/g;
+
+var str = 'a "witch" and her "broom" is one';
+
+alert( str.match(reg) ); // witch, broom</code></pre>
+</div>
+</div>
+</div><p>Чтобы в точности понять, как поменялась работа квантификатора, разберём поиск по шагам.</p>
+<ol>
+<li>
+<p>Первый шаг – тот же, кавычка <code class="pattern">'"'</code> найдена на 3-й позиции:</p>
+<figure><div class="image" style="width:463px">
+<div class="image__ratio" style="padding-top:28.077753779697623%"></div>
+<img alt="" class="image__image" height="130" src="article/regexp-greedy-and-lazy/witch_greedy1.png" width="463">
+</img></div></figure></li>
+<li>
+<p>Второй шаг – тот же, находим произвольный символ <code class="pattern">'.'</code>:</p>
+<figure><div class="image" style="width:463px">
+<div class="image__ratio" style="padding-top:28.077753779697623%"></div>
+<img alt="" class="image__image" height="130" src="article/regexp-greedy-and-lazy/witch_greedy2.png" width="463">
+</img></div></figure></li>
+<li>
+<p>А вот дальше – так как стоит ленивый режим работы <code>+</code>, то движок не повторит точку (произвольный символ) ещё раз, а останавливается на достигнутом и пытается проверить, есть ли соответствие остальной части шаблона, то есть <code class="pattern">'"'</code>:</p>
+<figure><div class="image" style="width:463px">
+<div class="image__ratio" style="padding-top:28.077753779697623%"></div>
+<img alt="" class="image__image" height="130" src="article/regexp-greedy-and-lazy/witch_lazy3.png" width="463">
+</img></div></figure><p>Если бы остальная часть шаблона на данной позиции совпала, то совпадение было бы найдено. Но в данном случае – нет, символ <code>'i'</code> не равен „"“.</p>
+</li>
+<li>
+<p>Движок регулярных выражений увиличивает количество повторений точки на одно и пытается найти соответствие остатку шаблона ещё раз:</p>
+<p><img alt="" height="130" src="article/regexp-greedy-and-lazy/witch_lazy4.png" width="463">
+Опять неудача. Тогда поисковой движок увеличивает количество повторений ещё и ещё…</img></p>
+</li>
+<li>
+<p>Только на пятом шаге поисковой движок наконец находит соответствие для остатка паттерна:</p>
+<figure><div class="image" style="width:463px">
+<div class="image__ratio" style="padding-top:28.077753779697623%"></div>
+<img alt="" class="image__image" height="130" src="article/regexp-greedy-and-lazy/witch_lazy5.png" width="463">
+</img></div></figure></li>
+<li>
+<p>Так как поиск происходит с флагом <code>g</code>, то он продолжается с конца текущего совпадения, давая ещё один результат:</p>
+<figure><div class="image" style="width:463px">
+<div class="image__ratio" style="padding-top:28.077753779697623%"></div>
+<img alt="" class="image__image" height="130" src="article/regexp-greedy-and-lazy/witch_lazy6.png" width="463">
+</img></div></figure></li>
+</ol>
+<p>В примере выше продемонстрирована работа ленивого режима для <code class="pattern">+?</code>. Квантификаторы  <code class="pattern">+?</code> и <code class="pattern">??</code> ведут себя аналогично – «ленивый» движок увеличивает количество повторений только в том случае, если для остальной части шаблона на данной позиции нет соответствия.</p>
+<p><strong>Ленивость распространяется только на тот квантификатор, после которого стоит <code>?</code>.</strong></p>
+<p>Прочие квантификаторы остаются жадными.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "123 456".match(/\d+ \d+?/g) ); // 123 4</code></pre>
+</div>
+</div>
+</div><ol>
+<li>
+<p>Подшаблон <code class="pattern">\d+</code> пытается найти столько цифр, сколько возможно (работает жадно), так что он находит <code class="match">123</code> и останавливается, поскольку символ пробела <code class="pattern">' '</code> не подходит под <code class="pattern">\d</code>.</p>
+</li>
+<li>
+<p>Далее в шаблоне пробел, он совпадает.</p>
+</li>
+<li>
+<p>Далее в шаблоне идёт <code class="pattern">\d+?</code>.</p>
+<p>Квантификатор указан в ленивом режиме, поэтому он находит одну цифру <code class="match">4</code> и пытается проверить, есть ли совпадение с остатком шаблона.</p>
+<p>Но после <code class="pattern">\d+?</code> в шаблоне ничего нет.</p>
+<p><strong>Ленивый режим без необходимости лишний раз квантификатор не повторит.</strong></p>
+<p>Так как шаблон завершился, то искать дальше, в общем-то нечего. Получено совпадение <code class="match">123 4</code>.</p>
+</li>
+<li>
+<p>Следующий поиск продолжится с <code>5</code>, но ничего не найдёт.</p>
+</li>
+</ol>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Конечные автоматы и не только</span></div>
+<div class="important__content"><p>Современные движки регулярных выражений могут иметь более хитрую реализацию внутренних алгоритмов, чтобы искать быстрее.</p>
+<p>Однако, чтобы понять, как работает регулярное выражение, и строить регулярные выражения самому, знание этих хитрых алгоритмов ни к чему. Они служат лишь внутренней оптимизации способа поиска, описанного выше.</p>
+<p>Кроме того, сложные регулярные выражения плохо поддаются всяким оптимизациям, так что поиск вполне может работать и в точности как здесь описано.</p>
+</div></div>
+<h2><a class="main__anchor" href="#альтернативный-подход" name="альтернативный-подход">Альтернативный подход</a></h2><p>В данном конкретном случае, возможно искать строки в кавычках, оставаясь в жадном режиме, с использованием регулярного выражения <code class="pattern">"[^"]+"</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var reg = /"[^"]+"/g;
+
+var str = 'a "witch" and her "broom" is one';
+
+alert( str.match(reg) ); // witch, broom</code></pre>
+</div>
+</div>
+</div><p>Регэксп <code class="pattern">"[^"]+"</code> даст правильные результаты, поскольку ищет кавычку <code class="pattern">'"'</code>, за которой идут столько не-кавычек (исключающие квадратные скобки), сколько возможно.</p>
+<p>Так что вторая кавычка автоматически прекращает повторения <code class="pattern">[^"]+</code> и позволяет найти остаток шаблона <code class="pattern">"</code>.</p>
+<p><strong>Эта логика ни в коей мере не заменяет ленивые квантификаторы!</strong></p>
+<p>Она просто другая. И то и другое бывает полезно.</p>
+<p>Давайте посмотрим пример, когда нужен именно такой вариант, а ленивые квантификаторы не подойдут.</p>
+<p>Например, мы хотим найти в тексте ссылки вида <code>&lt;a href="..." class="doc"&gt;</code>, с любым содержанием <code>href</code>.</p>
+<p>Какое регулярное выражение для этого подойдёт?</p>
+<p>Первый вариант может выглядеть так: <code class="pattern">/&lt;a href=".*" class="doc"&gt;/g</code>.</p>
+<p>Проверим его:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = '...&lt;a href="link" class="doc"&gt;...';
+var reg = /&lt;a href=".*" class="doc"&gt;/g;
+
+// Сработало!
+alert( str.match(reg) ); // &lt;a href="link" class="doc"&gt;</code></pre>
+</div>
+</div>
+</div><p>А если в тексте несколько ссылок?</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = '...&lt;a href="link1" class="doc"&gt;... &lt;a href="link2" class="doc"&gt;...';
+var reg = /&lt;a href=".*" class="doc"&gt;/g;
+
+// Упс! Сразу две ссылки!
+alert( str.match(reg) ); // &lt;a href="link1" class="doc"&gt;... &lt;a href="link2" class="doc"&gt;</code></pre>
+</div>
+</div>
+</div><p>На этот раз результат неверен.</p>
+<p>Жадный <code class="pattern">.*</code> взял слишком много символов.</p>
+<p>Соответствие получилось таким:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">&lt;a href="....................................." class="doc"&gt;
+&lt;a href="link1" class="doc"&gt;... &lt;a href="link2" class="doc"&gt;</code></pre>
+</div>
+</div>
+</div><p>Модифицируем шаблон – добавим ленивость квантификатору <code class="pattern">.*?</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = '...&lt;a href="link1" class="doc"&gt;... &lt;a href="link2" class="doc"&gt;...';
+var reg = /&lt;a href=".*?" class="doc"&gt;/g;
+
+// Сработало!
+alert( str.match(reg) ); // &lt;a href="link1" class="doc"&gt;, &lt;a href="link2" class="doc"&gt;</code></pre>
+</div>
+</div>
+</div><p>Теперь всё верно, два результата:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">&lt;a href="....." class="doc"&gt;    &lt;a href="....." class="doc"&gt;
+&lt;a href="link1" class="doc"&gt;... &lt;a href="link2" class="doc"&gt;</code></pre>
+</div>
+</div>
+</div><p>Почему теперь всё в порядке – для внимательного читателя, после объяснений, данных выше в этой главе, должно быть полностью очевидно.</p>
+<p>Поэтому не будем останавливаться здесь на деталях, а попробуем ещё пример:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str = '...&lt;a href="link1" class="wrong"&gt;... &lt;p style="" class="doc"&gt;...';
+var reg = /&lt;a href=".*?" class="doc"&gt;/g;
+
+// Неправильное совпадение!
+alert( str.match(reg) ); // &lt;a href="link1" class="wrong"&gt;... &lt;p style="" class="doc"&gt;</code></pre>
+</div>
+</div>
+</div><p>Совпадение – не ссылка, а более длинный текст.</p>
+<p>Получилось следующее:</p>
+<ol>
+<li>
+<p>Найдено совпадение <code class="match">&lt;a href="</code>.</p>
+</li>
+<li>
+<p>Лениво ищем <code class="pattern">.*?</code>, после каждого символа проверяя, есть ли совпадение остальной части шаблона.</p>
+<p>Подшаблон <code class="pattern">.*?</code> будет брать символы до тех пор, пока не найдёт <code class="match">class="doc"&gt;</code>.</p>
+<p>В данном случае этот поиск закончится уже за пределами ссылки, в теге <code>&lt;p&gt;</code>, вообще не имеющем отношения к <code>&lt;a&gt;</code>.</p>
+</li>
+<li>
+<p>Получившееся совпадение:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-none"><code class="language-none">&lt;a href="..................................." class="doc"&gt;
+&lt;a href="link1" class="wrong"&gt;... &lt;p style="" class="doc"&gt;</code></pre>
+</div>
+</div>
+</div></li>
+</ol>
+<p>Итак, ленивость нам не помогла.</p>
+<p>Необходимо как-то прекратить поиск <code class="pattern">.*</code>, чтобы он не вышел за пределы кавычек.</p>
+<p>Для этого мы используем более точное указание, какие символы нам подходят, а какие нет.</p>
+<p>Правильный вариант: <code class="pattern">[^"]*</code>. Этот шаблон будет брать все символы до ближайшей кавычки, как раз то, что требуется.</p>
+<p>Рабочий пример:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var str1 = '...&lt;a href="link1" class="wrong"&gt;... &lt;p style="" class="doc"&gt;...';
+var str2 = '...&lt;a href="link1" class="doc"&gt;... &lt;a href="link2" class="doc"&gt;...';
+var reg = /&lt;a href="[^"]*" class="doc"&gt;/g;
+
+// Работает!
+alert( str1.match(reg) ); // null, совпадений нет, и это верно
+alert( str2.match(reg) ); // &lt;a href="link1" class="doc"&gt;, &lt;a href="link2" class="doc"&gt;</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Квантификаторы имеют два режима работы:</p>
+<dl>
+<dt>Жадный</dt>
+<dd>Режим по умолчанию – движок регулярных выражений повторяет его по-максимуму. Когда повторять уже нельзя, например нет больше цифр для <code>\d+</code>, он продолжает поиск с оставшейся части текста. Если совпадение найти не удалось – отступает обратно, уменьшая количество повторений.</dd>
+<dt>Ленивый</dt>
+<dd>При указании после квантификатора символа <code>?</code> он работает в ленивом режиме. То есть, он перед каждым повторением проверяет совпадение оставшейся части шаблона на текущей позиции.</dd>
+</dl>
+<p>Как мы видели в примере выше, ленивый режим – не панацея от «слишком жадного» забора символов. Альтернатива – более аккуратно настроенный «жадный», с исключением символов. Как мы увидим далее, можно исключать не только символы, но и целые подшаблоны.</p>
+</cut></div></meta></article></main></div></body></html>

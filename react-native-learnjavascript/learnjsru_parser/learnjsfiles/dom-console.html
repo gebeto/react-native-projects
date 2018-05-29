@@ -1,0 +1,66 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Работа с DOM из консоли" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Исследовать и изменять DOM можно с помощью инструментов разработки, встроенных в браузер. Посмотрим средства для этого на примере Google Chrome.</p>
+<cut>
+<h2><a class="main__anchor" href="#доступ-к-элементу" name="доступ-к-элементу">Доступ к элементу</a></h2><p>Откройте документ <a href="/article/dom-console/losi.html">losi.html</a> и, в инструментах разработчика, перейдите во вкладку Elements.</p>
+<p>Чтобы проанализировать любой элемент:</p>
+<ul>
+<li>Выберите его во вкладке Elements.</li>
+<li>…Либо внизу вкладки Elements есть лупа, при нажатии на которую можно выбрать элемент кликом.</li>
+<li>…Либо, что обычно удобнее всего, просто кликните на нужном месте на странице правой кнопкой и выберите в меню «Проверить Элемент».</li>
+</ul>
+<figure><div class="image" style="width:584px">
+<div class="image__ratio" style="padding-top:51.54109589041096%"></div>
+<img alt="" class="image__image" height="301" src="article/dom-console/1.png" width="584">
+</img></div></figure><p>Справа будет различная информация об элементе:</p>
+<dl>
+<dt>Computed Style</dt>
+<dd>Итоговые свойства CSS элемента, которые он приобрёл в результате применения всего каскада стилей, включая внешние CSS-файлы и атрибут <code>style</code>.</dd>
+<dt>Style</dt>
+<dd>Каскад стилей, применённый к элементу. Каждое стилевое правило отдельно, здесь же можно менять стили кликом.</dd>
+<dt>Metrics</dt>
+<dd>Размеры элемента.</dd>
+<dt>…</dt>
+<dd>И еще некоторые реже используемые вкладки, которые станут понятны по мере изучения DOM.</dd>
+</dl>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">DOM в Elements не совсем соответствует реальному</span></div>
+<div class="important__content"><p>Отображение DOM во вкладке Elements не совсем соответствует реальному. В частности, там не отображаются пробельные узлы. Это сделано для удобства просмотра. Но мы-то знаем, что они есть.</p>
+<p>С другой стороны, в Elements можно увидеть CSS-псевдоэлементы, такие как <code>::before</code>, <code>::after</code>. Это также сделано для удобства, в DOM их не существует.</p>
+</div></div>
+<h2><a class="main__anchor" href="#выбранные-элементы-0-1" name="выбранные-элементы-0-1">Выбранные элементы $0 $1…</a></h2><p>Зачастую бывает нужно выбрать элемент DOM и сделать с ним что-то на JavaScript.</p>
+<p>Находясь во вкладке Elements, откройте консоль нажатием Esc (или перейдите на вкладку Console).</p>
+<p><strong>Последний элемент, выбранный во вкладке Elements, доступен в консоли как <code>$0</code>, предыдущий – <code>$1</code> и так далее.</strong></p>
+<p>Запустите на элементе команду, которая делает его красным:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">$0.style.backgroundColor = 'red';</code></pre>
+</div>
+</div>
+</div><p>В браузере это может выглядеть примерно так:</p>
+<figure><div class="image" style="width:560px">
+<div class="image__ratio" style="padding-top:61.25000000000001%"></div>
+<img alt="" class="image__image" height="343" src="article/dom-console/2.png" width="560">
+</img></div></figure><p>Мы выделили элемент, применили к нему JavaScript в консоли, тут же увидели изменения в браузере.</p>
+<p>Есть и обратная дорожка. Любой элемент из JS-переменной можно посмотреть во вкладке Elements, для этого:</p>
+<ol>
+<li>Выведите эту переменную в консоли, например при помощи <code>console.log</code>.</li>
+<li>Кликните на выводе в консоли правой кнопкой мыши.</li>
+<li>Выберите соответствующий пункт меню.</li>
+</ol>
+<figure><div class="image" style="width:560px">
+<div class="image__ratio" style="padding-top:58.92857142857143%"></div>
+<img alt="" class="image__image" height="330" src="article/dom-console/3.png" width="560">
+</img></div></figure><p>Таким образом, можно легко перемещаться из Elements в консоль и обратно.</p>
+<h2><a class="main__anchor" href="#ещё-методы-консоли" name="ещё-методы-консоли">Ещё методы консоли</a></h2><p>Для поиска элементов в консоли есть два специальных метода:</p>
+<ul>
+<li><code>$$("div.my")</code> – ищет все элементы в DOM по данному CSS-селектору.</li>
+<li><code>$("div.my")</code> – ищет первый элемент в DOM по данному CSS-селектору.</li>
+</ul>
+<p>Более полная документация по методам консоли доступна на страницах <a href="https://developers.google.com/web/tools/chrome-devtools/debug/console/console-reference">Console API Reference для Chrome</a> и <a href="https://getfirebug.com/wiki/index.php/Command_Line_API">Command Line API для Firebug</a>, а также на <a href="http://firebug.ru">firebug.ru</a>.</p>
+<p>Другие браузеры реализуют похожий функционал, освоив Chrome/Firebug, вы легко с ними разберётесь.</p>
+</cut></div></meta></article></main></div></body></html>

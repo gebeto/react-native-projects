@@ -1,0 +1,417 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Классы" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В современном JavaScript появился новый, «более красивый» синтаксис для классов.</p>
+<p>Новая конструкция <code>class</code> – удобный «синтаксический сахар» для задания конструктора вместе с прототипом.</p>
+<h2><a class="main__anchor" href="#class" name="class">Class</a></h2><p>Синтаксис для классов выглядит так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">class Название [extends Родитель]  {
+  constructor
+  методы
+}</code></pre>
+</div>
+</div>
+</div><p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+class User {
+
+  constructor(name) {
+    this.name = name;
+  }
+
+  sayHi() {
+    alert(this.name);
+  }
+
+}
+
+let user = new User("Вася");
+user.sayHi(); // Вася</code></pre>
+</div>
+</div>
+</div><p>Функция <code>constructor</code> запускается при создании <code>new User</code>, остальные методы записываются в <code>User.prototype</code>.</p>
+<p>Это объявление примерно аналогично такому:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function User(name) {
+  this.name = name;
+}
+
+User.prototype.sayHi = function() {
+  alert(this.name);
+};</code></pre>
+</div>
+</div>
+</div><p>В обоих случаях <code>new User</code> будет создавать объекты. Метод <code>sayHi</code> также в обоих случаях находится в прототипе.</p>
+<p>Но при объявлении через <code>class</code> есть и ряд отличий:</p>
+<ul>
+<li><code>User</code> нельзя вызывать без <code>new</code>, будет ошибка.</li>
+<li>Объявление класса с точки зрения области видимости ведёт себя как <code>let</code>. В частности, оно видно только в текущем блоке и только в коде, который находится ниже объявления (Function Declaration видно и до объявления).</li>
+</ul>
+<p>Методы, объявленные внутри <code>class</code>, также имеют ряд особенностей:</p>
+<ul>
+<li>Метод <code>sayHi</code> является именно методом, то есть имеет доступ к <code>super</code>.</li>
+<li>Все методы класса работают в строгом режиме <code>use strict</code>, даже если он не указан.</li>
+<li>Все методы класса не перечислимы. То есть в цикле <code>for..in</code> по объекту их не будет.</li>
+</ul>
+<h2><a class="main__anchor" href="#class-expression" name="class-expression">Class Expression</a></h2><p>Также, как и Function Expression, классы можно задавать «инлайн», в любом выражении и внутри вызова функции.</p>
+<p>Это называется Class Expression:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let User = class {
+  sayHi() { alert('Привет!'); }
+};
+
+new User().sayHi();</code></pre>
+</div>
+</div>
+</div><p>В примере выше у класса нет имени, что один-в-один соответствует синтаксису функций. Но имя можно дать. Тогда оно, как и в Named Function Expression, будет доступно только внутри класса:</p>
+<div class="code-example" data-highlight-block="7-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let SiteGuest = class User {
+  sayHi() { alert('Привет!'); }
+};
+
+new SiteGuest().sayHi(); // Привет
+new User(); // ошибка</code></pre>
+</div>
+</div>
+</div><p>В примере выше имя <code>User</code> будет доступно только внутри класса и может быть использовано, например, для создания новых объектов данного типа.</p>
+<p>Наиболее очевидная область применения этой возможности – создание вспомогательного класса прямо при вызове функции.</p>
+<p>Например, функция <code>createModel</code> в примере ниже создаёт объект по классу и данным, добавляет ему <code>_id</code> и пишет в «реестр» <code>allModels</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let allModels = {};
+
+function createModel(Model, ...args) {
+  let model = new Model(...args);
+
+  model._id = Math.random().toString(36).slice(2);
+  allModels[model._id] = model;
+
+  return model;
+}
+
+let user = createModel(class User {
+  constructor(name) {
+    this.name = name;
+  }
+  sayHi() {
+    alert(this.name);
+  }
+}, "Вася");
+
+user.sayHi(); // Вася
+
+alert( allModels[user._id].name ); // Вася</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#геттеры-сеттеры-и-вычисляемые-свойства" name="геттеры-сеттеры-и-вычисляемые-свойства">Геттеры, сеттеры и вычисляемые свойства</a></h2><p>В классах, как и в обычных объектах, можно объявлять геттеры и сеттеры через <code>get/set</code>, а также использовать <code>[…]</code> для свойств с вычисляемыми именами:</p>
+<div class="code-example" data-highlight-block="8-8,13-13,18-18" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+class User {
+  constructor(firstName, lastName) {
+    this.firstName = firstName;
+    this.lastName = lastName;
+  }
+
+  // геттер
+  get fullName() {
+    return `${this.firstName} ${this.lastName}`;
+  }
+
+  // сеттер
+  set fullName(newValue) {
+    [this.firstName, this.lastName] = newValue.split(' ');
+  }
+
+  // вычисляемое название метода
+  ["test".toUpperCase()]() {
+    alert("PASSED!");
+  }
+
+};
+
+let user = new User("Вася", "Пупков");
+alert( user.fullName ); // Вася Пупков
+user.fullName = "Иван Петров";
+alert( user.fullName ); // Иван Петров
+user.TEST(); // PASSED!</code></pre>
+</div>
+</div>
+</div><p>При чтении <code>fullName</code> будет вызван метод <code>get fullName()</code>, при присвоении – метод <code>set fullName</code> с новым значением.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type"><code>class</code> не позволяет задавать свойства-значения</span></div>
+<div class="important__content"><p>В синтаксисе классов, как мы видели выше, можно создавать методы. Они будут записаны в прототип, как например <code>User.prototype.sayHi</code>.</p>
+<p>Однако, нет возможности задать в прототипе обычное значение (не функцию), такое как <code>User.prototype.key = "value"</code>.</p>
+<p>Конечно, никто не мешает после объявления класса в прототип дописать подобные свойства, однако предполагается, что в прототипе должны быть только методы.</p>
+<p>Если свойство-значение, всё же, необходимо, то можно создать геттер, который будет нужное значение возвращать.</p>
+</div></div>
+<h2><a class="main__anchor" href="#статические-свойства" name="статические-свойства">Статические свойства</a></h2><p>Класс, как и функция, является объектом. Статические свойства класса <code>User</code> – это свойства непосредственно <code>User</code>, то есть доступные из него «через точку».</p>
+<p>Для их объявления используется ключевое слово <code>static</code>.</p>
+<p>Например:</p>
+<div class="code-example" data-highlight-block="8-10" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+class User {
+  constructor(firstName, lastName) {
+    this.firstName = firstName;
+    this.lastName = lastName;
+  }
+
+  static createGuest() {
+    return new User("Гость", "Сайта");
+  }
+};
+
+let user = User.createGuest();
+
+alert( user.firstName ); // Гость
+
+alert( User.createGuest ); // createGuest ... (функция)</code></pre>
+</div>
+</div>
+</div><p>Как правило, они используются для операций, не требующих наличия объекта, например – для фабричных, как в примере выше, то есть как альтернативные варианты конструктора. Или же, можно добавить метод <code>User.compare</code>, который будет сравнивать двух пользователей для целей сортировки.</p>
+<p>Также статическими удобно делать константы:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+class Menu {
+  static get elemClass() {
+    return "menu"
+  }
+}
+
+alert( Menu.elemClass ); // menu</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#наследование" name="наследование">Наследование</a></h2><p>Синтаксис:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">class Child extends Parent {
+  ...
+}</code></pre>
+</div>
+</div>
+</div><p>Посмотрим как это выглядит на практике. В примере ниже объявлено два класса: <code>Animal</code> и наследующий от него <code>Rabbit</code>:</p>
+<div class="code-example" data-highlight-block="12-12" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+class Animal {
+  constructor(name) {
+    this.name = name;
+  }
+
+  walk() {
+    alert("I walk: " + this.name);
+  }
+}
+
+class Rabbit extends Animal {
+  walk() {
+    super.walk();
+    alert("...and jump!");
+  }
+}
+
+new Rabbit("Вася").walk();
+// I walk: Вася
+// and jump!</code></pre>
+</div>
+</div>
+</div><p>Как видим, в <code>new Rabbit</code> доступны как свои методы, так и (через <code>super</code>) методы родителя.</p>
+<p>Это потому, что при наследовании через <code>extends</code> формируется стандартная цепочка прототипов: методы <code>Rabbit</code> находятся в <code>Rabbit.prototype</code>, методы <code>Animal</code> – в <code>Animal.prototype</code>, и они связаны через <code>__proto__</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+class Animal { }
+class Rabbit extends Animal { }
+
+alert( Rabbit.prototype.__proto__ == Animal.prototype ); // true</code></pre>
+</div>
+</div>
+</div><p>Как видно из примера выше, методы родителя (<code>walk</code>) можно переопределить в наследнике. При этом для обращения к родительскому методу используют <code>super.walk()</code>.</p>
+<p>С конструктором – немного особая история.</p>
+<p>Конструктор <code>constructor</code> родителя наследуется автоматически. То есть, если в потомке не указан свой <code>constructor</code>, то используется родительский. В примере выше <code>Rabbit</code>, таким образом, использует <code>constructor</code> от <code>Animal</code>.</p>
+<p>Если же у потомка свой <code>constructor</code>, то, чтобы в нём вызвать конструктор родителя – используется синтаксис <code>super()</code> с аргументами для родителя.</p>
+<p>Например, вызовем конструктор <code>Animal</code> в <code>Rabbit</code>:</p>
+<div class="code-example" data-highlight-block="13-16" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+class Animal {
+  constructor(name) {
+    this.name = name;
+  }
+
+  walk() {
+    alert("I walk: " + this.name);
+  }
+}
+
+class Rabbit extends Animal {
+  constructor() {
+    // вызвать конструктор Animal с аргументом "Кроль"
+    super("Кроль"); // то же, что и Animal.call(this, "Кроль")
+  }
+}
+
+new Rabbit().walk(); // I walk: Кроль</code></pre>
+</div>
+</div>
+</div><p>Для такого вызова есть небольшие ограничения:</p>
+<ul>
+<li>Вызвать конструктор родителя можно только изнутри конструктора потомка. В частности, <code>super()</code> нельзя вызвать из произвольного метода.</li>
+<li>В конструкторе потомка мы обязаны вызвать <code>super()</code> до обращения к <code>this</code>. До вызова <code>super</code> не существует <code>this</code>, так как по спецификации в этом случае именно <code>super</code> инициализует <code>this</code>.</li>
+</ul>
+<p>Второе ограничение выглядит несколько странно, поэтому проиллюстрируем его примером:</p>
+<div class="code-example" data-highlight-block="9-14" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+class Animal {
+  constructor(name) {
+    this.name = name;
+  }
+}
+
+class Rabbit extends Animal {
+  constructor() {
+    alert(this); // ошибка, this не определён!
+    // обязаны вызвать super() до обращения к this
+    super();
+    // а вот здесь уже можно использовать this
+  }
+}
+
+new Rabbit();</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><ul>
+<li>Классы можно объявлять как в основном потоке кода, так и «инлайн», по аналогии с Function Declaration и Expression.</li>
+<li>В объявлении классов можно использовать методы, геттеры/сеттеры и вычислимые названия методов.</li>
+<li>При наследовании вызов конструктора родителя осуществляется через <code>super(...args)</code>, вызов родительских методов – через <code>super.method(...args)</code>.</li>
+</ul>
+<p>Концепция классов, которая после долгих обсуждений получилась в стандарте ECMAScript, носит название «максимально минимальной». То есть, в неё вошли только те возможности, которые уж точно необходимы.</p>
+<p>В частности, не вошли «приватные» и «защищённые» свойства. То есть, все свойства и методы класса технически доступны снаружи. Возможно, они появятся в будущих редакциях стандарта.</p>
+</div></meta></article></main></div></body></html>

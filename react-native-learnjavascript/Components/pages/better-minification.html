@@ -1,0 +1,153 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Улучшаем сжатие кода" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Здесь мы обсудим разные приёмы, которые используются, чтобы улучшить сжатие кода.</p>
+<cut>
+<h2><a class="main__anchor" href="#больше-локальных-переменных" name="больше-локальных-переменных">Больше локальных переменных</a></h2><p>Например, код jQuery обёрнут в  функцию, запускаемую «на месте».</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">(function(window, undefined) {
+  // ...
+  var jQuery = ...
+
+  window.jQuery = jQuery; // сделать переменную глобальной
+
+})(window);</code></pre>
+</div>
+</div>
+</div><p>Переменные <code>window</code> и <code>undefined</code> стали локальными. Это позволит сжимателю заменить их на более короткие.</p>
+<h2><a class="main__anchor" href="#ооп-без-прототипов" name="ооп-без-прототипов">ООП без прототипов</a></h2><p>Приватные переменные будут сжаты и заинлайнены.</p>
+<p>Например, этот код хорошо сожмётся:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function User(firstName, lastName) {
+  var fullName = firstName + ' ' + lastName;
+
+  this.sayHi = function() {
+    showMessage(fullName);
+  }
+
+  function showMessage(msg) {
+    alert( '**' + msg + '**' );
+  }
+}</code></pre>
+</div>
+</div>
+</div><p>…А этот – плохо:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function User(firstName, lastName) {
+  this._firstName = firstName;
+  this._lastName = lastName;
+}
+
+User.prototype.sayHi = function() {
+  this._showMessage(this._fullName);
+}
+
+User.prototype._showMessage = function(msg) {
+  alert( '**' + msg + '**' );
+}</code></pre>
+</div>
+</div>
+</div><p>Сжимаются только локальные переменные, свойства объектов не сжимаются, поэтому эффект от сжатия для второго кода будет совсем небольшим.</p>
+<p>При этом, конечно, нужно иметь в виду общий стиль ООП проекта, достоинства и недостатки такого подхода.</p>
+<h2><a class="main__anchor" href="#сжатие-под-платформу-define" name="сжатие-под-платформу-define">Сжатие под платформу, define</a></h2><p>Можно делать разные сборки в зависимости от платформы (мобильная/десктоп) и браузера.</p>
+<p>Ведь не секрет, что ряд функций могут быть реализованы по разному, в зависимости от того, поддерживает ли среда выполнения нужную возможность.</p>
+<h3><a class="main__anchor" href="#способ-1-локальная-переменная" name="способ-1-локальная-переменная">Способ 1: локальная переменная</a></h3><p>Проще всего это сделать локальной переменной в модуле:</p>
+<div class="code-example" data-highlight-block="2-3" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">(function($) {
+
+  /** @const */
+  var platform = 'IE';
+
+  // .....
+
+  if (platform == 'IE') {
+    alert( 'IE' );
+  } else {
+    alert( 'NON-IE' );
+  }
+
+})(jQuery);</code></pre>
+</div>
+</div>
+</div><p>Нужное значение директивы можно вставить при подготовке JavaScript к сжатию.</p>
+<p>Сжиматель заинлайнит её и оптимизирует соответствующие IE.</p>
+<h3><a class="main__anchor" href="#способ-2-define" name="способ-2-define">Способ 2: define</a></h3><p>UglifyJS и GCC позволяют задать значение глобальной переменной из командной строки.</p>
+<p>В GCC эта возможность доступна лишь в «продвинутом режиме» работы оптимизатора, который мы рассмотрим далее (он редко используется).</p>
+<p>Удобнее в этом плане устроен UglifyJS. В нём можно указать флаг <code>-d SYMBOL[=VALUE]</code>, который заменит все переменные <code>SYMBOL</code> на указанное значение <code>VALUE</code>. Если <code>VALUE</code> не указано, то оно считается равным <code>true</code>.</p>
+<p>Флаг не работает, если переменная определена явно.</p>
+<p>Например, рассмотрим код:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// my.js
+if (isIE) {
+  alert( "Привет от IE" );
+} else {
+  alert( "Не IE :)" );
+}</code></pre>
+</div>
+</div>
+</div><p>Сжатие вызовом <code>uglifyjs -d isIE my.js</code> даст:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">alert( "Привет от IE" );</code></pre>
+</div>
+</div>
+</div><p>…Ну а чтобы код работал в обычном окружении, нужно определить в нём значение переменной по умолчанию. Это обычно делается в каком-то другом файле (на весь проект), так как если объявить <code>var isIE</code> в этом, то флаг <code>-d isIE</code> не сработает.</p>
+<p>Но можно и «хакнуть» сжиматель, объявив переменную так:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">// объявит переменную при отсутствии сжатия
+// при сжатии не повредит
+window.isIE = window.isIE || getBrowserVersion();</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#убираем-вызовы-console" name="убираем-вызовы-console">Убираем вызовы console.*</a></h2><p>Минификатор имеет в своём распоряжении дерево кода и может удалить ненужные вызовы.</p>
+<p>Для UglifyJS это делают опции компилятора:</p>
+<ul>
+<li><code>drop_debugger</code> – убирает вызовы <code>debugger</code>.</li>
+<li><code>drop_console</code> – убирает вызовы <code>console.*</code>.</li>
+</ul>
+<p>Можно написать и дополнительную функцию преобразования, которая убирает другие вызовы, например для <code>log.*</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var uglify = require('uglify-js');
+var pro = uglify.uglify;
+
+function ast_squeeze_console(ast) {
+  var w = pro.ast_walker(),
+    walk = w.walk,
+    scope;
+  return w.with_walkers({
+    "stat": function(stmt) {
+      if (stmt[0] === "call" &amp;&amp; stmt[1][0] == "dot" &amp;&amp; stmt[1][1] instanceof Array &amp;&amp; stmt[1][1][0] == 'name' &amp;&amp; stmt[1][1][1] == "log") {
+        return ["block"];
+      }
+      return ["stat", walk(stmt)];
+    },
+    "call": function(expr, args) {
+      if (expr[0] == "dot" &amp;&amp; expr[1] instanceof Array &amp;&amp; expr[1][0] == 'name' &amp;&amp; expr[1][1] == "console") {
+        return ["atom", "0"];
+      }
+    }
+  }, function() {
+    return walk(ast);
+  });
+};</code></pre>
+</div>
+</div>
+</div><p>Эту функцию следует вызвать на результате <code>parse</code>, и она пройдётся по дереву и удалит все вызовы <code>log.*</code>.</p>
+</cut></div></meta></article></main></div></body></html>

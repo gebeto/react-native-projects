@@ -1,0 +1,616 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Применяем ООП: Drag'n'Drop++" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Эта статья представляет собой продолжение главы <a href="/drag-and-drop-objects">Мышь: Drag'n'Drop более глубоко</a>.
+Она посвящена более гибкой и расширяемой реализации переноса.</p>
+<p>Рекомендуется прочитать указанную главу перед тем, как двигаться дальше.</p>
+<cut>
+<p>В сложных приложениях Drag’n’Drop обладает рядом особенностей:</p>
+<ol>
+<li>
+<p>Перетаскиваются <em>элементы</em> из <em>зоны переноса <code>dragZone</code></em> в <em>зону-цель <code>dropTarget</code></em>. При этом сама зона не переносится.</p>
+<p>Например – два списка, нужен перенос элемента из одного в другой. В этом случае один список является зоной переноса, второй – зоной-целью.</p>
+<p>Возможно, что перенос осуществляется внутри одного и того же списка. При этом  <code>dragZone == dropTarget</code>.</p>
+</li>
+<li>
+<p>На странице может быть несколько разных зон переноса и зон-целей.</p>
+</li>
+<li>
+<p>Обработка завершения переноса может быть асинхронной, с уведомлением сервера.</p>
+</li>
+<li>
+<p>Должно быть легко добавить новый тип зоны переноса или зоны-цели, а также расширить поведение существующей.</p>
+</li>
+<li>
+<p>Фреймворк для переноса должен быть расширяемым с учётом сложных сценариев.</p>
+</li>
+</ol>
+<p>Всё это вполне реализуемо. Но для этого фреймворк, описанный в статье <a href="/drag-and-drop-objects">Мышь: Drag'n'Drop более глубоко</a>, нужно отрефакторить, и разделить на сущности.</p>
+<h2><a class="main__anchor" href="#основные-сущности" name="основные-сущности">Основные сущности</a></h2><p>Всего будет 4 сущности:</p>
+<dl>
+<dt><code>DragZone</code></dt>
+<dd>Зона переноса. С нее начинается перенос. Она принимает нажатие мыши и генерирует аватар нужного типа.</dd>
+<dt><code>DragAvatar</code></dt>
+<dd>Переносимый объект. Предоставляет доступ к информации о том, что переносится. Умеет двигать себя по экрану. В зависимости от вида переноса, может что-то делать с собой в конце, например, самоуничтожаться.</dd>
+<dt><code>DropTarget</code></dt>
+<dd>Зона-цель, на которую можно положить. В процессе переноса аватара над ней умеет рисовать на себе предполагаемое «место приземления». Обрабатывает окончание переноса.</dd>
+<dt><code>dragManager</code></dt>
+<dd>Единый объект, который стоит над всеми ними, ставит обработчики <code>mousedown/mousemove/mouseup</code> и управляет процессом. В терминах ООП, это не класс, а <a href="http://ru.wikipedia.org/wiki/%D0%9E%D0%B4%D0%B8%D0%BD%D0%BE%D1%87%D0%BA%D0%B0_%28%D1%88%D0%B0%D0%B1%D0%BB%D0%BE%D0%BD_%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F%29">объект-синглтон</a>, поэтому он с маленькой буквы.</dd>
+</dl>
+<p>На макете страницы ниже возможен перенос студентов из левого списка – вправо, в одну из команд или в «корзину»:</p>
+<figure><div class="image" style="width:524px">
+<div class="image__ratio" style="padding-top:99.42748091603053%"></div>
+<img alt="" class="image__image" height="521" src="article/drag-and-drop-plus/dragzonetarget.png" width="524">
+</img></div></figure><p>Здесь левый список является зоной переноса <code>ListDragZone</code>, а правые списки – это несколько зон-целей <code>ListDropTarget</code>. Кроме того, корзина также является зоной-целью отдельного типа <code>RemoveDropTarget</code>.</p>
+<h2><a class="main__anchor" href="#пример" name="пример">Пример</a></h2><p>В этой статье мы реализуем пример, когда узлы дерева можно переносить внутри него. То есть, дерево, которое является одновременно <code>TreeDragZone</code> и <code>TreeDropTarget</code>.</p>
+<p>Структура дерева будет состоять из вложенных списков с заголовком в <code>SPAN</code>:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;ul&gt;
+  &lt;li&gt;&lt;span&gt;Заголовок 1&lt;/span&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;span&gt;Заголовок 1.1&lt;/span&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;span&gt;Заголовок 1.2&lt;/span&gt;&lt;/li&gt;
+      ...
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  ...
+&lt;/ul&gt;</code></pre>
+</div>
+</div>
+</div><p>При переносе:</p>
+<ul>
+<li>Для аватара нужно клонировать заголовок узла, на котором было нажатие.</li>
+<li>Узлы, на которые можно положить, при переносе подсвечиваются красным.</li>
+<li>Нельзя перенести узел сам в себя или в своего потомка.</li>
+<li>Дерево само поддерживает сортировку по алфавиту среди узлов.</li>
+<li>Обязательна расширяемость кода, поддержка большого количества узлов и т.п.</li>
+</ul>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/drag-and-drop-plus/dragTree/" style="height:450px"></iframe>
+</div><h2><a class="main__anchor" href="#dragmanager" name="dragmanager">dragManager</a></h2><p>Обязанность <code>dragManager</code> – обработка событий мыши и координация всех остальных сущностей в процессе переноса.</p>
+<p><strong>Готовьтесь, дальше будет много кода с комментариями.</strong></p>
+<p>Следующий код должен быть очевиден по смыслу, если вы читали <a href="/drag-and-drop-objects">предыдущую статью</a>. Объект взят оттуда, и из него изъята лишняя функциональность, которая перенесена в другие сущности.</p>
+<p>Если вызываемые в нём методы <code>onDrag*</code> непонятны – смотрите далее, в описание остальных объектов.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">var dragManager = new function() {
+
+  var dragZone, avatar, dropTarget;
+  var downX, downY;
+
+  var self = this;
+
+  function onMouseDown(e) {
+
+    if (e.which != 1) { // не левой кнопкой
+      return false;
+    }
+
+    dragZone = findDragZone(e);
+
+    if (!dragZone) {
+      return;
+    }
+
+    // запомним, что элемент нажат на текущих координатах pageX/pageY
+    downX = e.pageX;
+    downY = e.pageY;
+
+    return false;
+  }
+
+  function onMouseMove(e) {
+    if (!dragZone) return; // элемент не зажат
+
+    if (!avatar) { // элемент нажат, но пока не начали его двигать
+      if (Math.abs(e.pageX - downX) &lt; 3 &amp;&amp; Math.abs(e.pageY - downY) &lt; 3) {
+        return;
+      }
+      // попробовать захватить элемент
+      avatar = dragZone.onDragStart(downX, downY, e);
+
+      if (!avatar) { // не получилось, значит перенос продолжать нельзя
+        cleanUp(); // очистить приватные переменные, связанные с переносом
+        return;
+      }
+    }
+
+    // отобразить перенос объекта, перевычислить текущий элемент под курсором
+    avatar.onDragMove(e);
+
+    // найти новый dropTarget под курсором: newDropTarget
+    // текущий dropTarget остался от прошлого mousemove
+    // *оба значения: и newDropTarget и dropTarget могут быть null
+    var newDropTarget = findDropTarget(e);
+
+    if (newDropTarget != dropTarget) {
+      // уведомить старую и новую зоны-цели о том, что с них ушли/на них зашли
+      dropTarget &amp;&amp; dropTarget.onDragLeave(newDropTarget, avatar, e);
+      newDropTarget &amp;&amp; newDropTarget.onDragEnter(dropTarget, avatar, e);
+    }
+
+    dropTarget = newDropTarget;
+
+    dropTarget &amp;&amp; dropTarget.onDragMove(avatar, e);
+
+    return false;
+  }
+
+  function onMouseUp(e) {
+
+    if (e.which != 1) { // не левой кнопкой
+      return false;
+    }
+
+    if (avatar) { // если уже начали передвигать
+
+      if (dropTarget) {
+        // завершить перенос и избавиться от аватара, если это нужно
+        // эта функция обязана вызвать avatar.onDragEnd/onDragCancel
+        dropTarget.onDragEnd(avatar, e);
+      } else {
+        avatar.onDragCancel();
+      }
+
+    }
+
+    cleanUp();
+  }
+
+  function cleanUp() {
+    // очистить все промежуточные объекты
+    dragZone = avatar = dropTarget = null;
+  }
+
+  function findDragZone(event) {
+    var elem = event.target;
+    while (elem != document &amp;&amp; !elem.dragZone) {
+      elem = elem.parentNode;
+    }
+    return elem.dragZone;
+  }
+
+  function findDropTarget(event) {
+    // получить элемент под аватаром
+    var elem = avatar.getTargetElem();
+
+    while (elem != document &amp;&amp; !elem.dropTarget) {
+      elem = elem.parentNode;
+    }
+
+    if (!elem.dropTarget) {
+      return null;
+    }
+
+    return elem.dropTarget;
+  }
+
+  document.ondragstart = function() {
+    return false;
+  }
+
+  document.onmousemove = onMouseMove;
+  document.onmouseup = onMouseUp;
+  document.onmousedown = onMouseDown;
+};</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#dragzone" name="dragzone">DragZone</a></h2><p>Основная задача <code>DragZone</code> – создать аватар и инициализировать его. В зависимости от места, где произошел клик, аватар получит соответствующий подэлемент зоны.</p>
+<p>Метод для создания аватара <code>_makeAvatar</code> вынесен отдельно, чтобы его легко можно было переопределить и подставить собственный тип аватара.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/**
+ * Зона, из которой можно переносить объекты
+ * Умеет обрабатывать начало переноса на себе и создавать "аватар"
+ * @param elem DOM-элемент, к которому привязана зона
+ */
+function DragZone(elem) {
+  elem.dragZone = this;
+  this._elem = elem;
+}
+
+/**
+ * Создать аватар, соответствующий зоне.
+ * У разных зон могут быть разные типы аватаров
+ */
+DragZone.prototype._makeAvatar = function() {
+  /* override */
+};
+
+/**
+ * Обработать начало переноса.
+ *
+ * Получает координаты изначального нажатия мышки, событие.
+ *
+ * @param downX Координата изначального нажатия по X
+ * @param downY Координата изначального нажатия по Y
+ * @param event текущее событие мыши
+ *
+ * @return аватар или false, если захватить с данной точки ничего нельзя
+ */
+DragZone.prototype.onDragStart = function(downX, downY, event) {
+
+  var avatar = this._makeAvatar();
+
+  if (!avatar.initFromEvent(downX, downY, event)) {
+    return false;
+  }
+
+  return avatar;
+};</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#treedragzone" name="treedragzone">TreeDragZone</a></h3><p>Объект зоны переноса для дерева, по существу, не вносит ничего нового, по сравнению с <code>DragZone</code>.</p>
+<p>Он только переопределяет <code>_makeAvatar</code> для создания <code>TreeDragAvatar</code>.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function TreeDragZone(elem) {
+  DragZone.apply(this, arguments);
+}
+
+extend(TreeDragZone, DragZone);
+
+TreeDragZone.prototype._makeAvatar = function() {
+  return new TreeDragAvatar(this, this._elem);
+};</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#dragavatar" name="dragavatar">DragAvatar</a></h2><p>Аватар создается только зоной переноса при начале Drag’n’Drop. Он содержит всю необходимую информацию об объекте, который переносится.</p>
+<p>В дальнейшем вся работа происходит <em>только с аватаром</em>, сама зона напрямую не вызывается.</p>
+<p>У аватара есть три основных свойства:</p>
+<dl>
+<dt><code>_dragZone</code></dt>
+<dd>
+<p>Зона переноса, которая его создала.</p>
+</dd>
+<dt><code>_dragZoneElem</code></dt>
+<dd>
+<p>Элемент, соответствующий аватару в зоне переноса. По умолчанию – DOM-элемент всей зоны. Это подходит в тех случаях, когда зона перетаскивается только целиком.
+При инициализации аватара значение этого свойства может быть уточнено, например изменено на подэлемент списка, который перетаскивается.</p>
+</dd>
+<dt><code>_elem</code></dt>
+<dd>
+<p>Основной элемент аватара, который будет двигаться по экрану. По умолчанию  равен <code>_dragZoneElem</code>, т.е мы переносим сам элемент.</p>
+<p>При инициализации мы можем также склонировать <code>_dragZoneElem</code>, или создать своё красивое представление переносимого элемента и поместить его в <code>_elem</code>.</p>
+</dd>
+</dl>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/**
+ * "Аватар" - элемент, который перетаскивается.
+ *
+ * В простейшем случае аватаром является сам переносимый элемент
+ * Также аватар может быть клонированным элементом
+ * Также аватар может быть иконкой и вообще чем угодно.
+ */
+function DragAvatar(dragZone, dragElem) {
+  /** "родительская" зона переноса */
+  this._dragZone = dragZone;
+
+  /**
+   * подэлемент родительской зоны, к которому относится аватар
+   * по умолчанию - элемент, соответствующий всей зоне
+   * может быть уточнен в initFromEvent
+   */
+  this._dragZoneElem = dragElem;
+
+  /**
+   * Сам элемент аватара, который будет носиться по экрану.
+   * Инициализуется в initFromEvent
+   */
+  this._elem = dragElem;
+}
+
+/**
+ * Инициализировать this._elem и позиционировать его
+ * При необходимости уточнить this._dragZoneElem
+ * @param downX Координата X нажатия мыши
+ * @param downY Координата Y нажатия мыши
+ * @param event Текущее событие мыши
+ */
+DragAvatar.prototype.initFromEvent = function(downX, downY, event) {
+  /* override */
+};
+
+/**
+ * Возвращает информацию о переносимом элементе для DropTarget
+ * @param event
+ */
+DragAvatar.prototype.getDragInfo = function(event) {
+  // тут может быть еще какая-то информация, необходимая для обработки конца или процесса переноса
+  return {
+    elem: this._elem,
+    dragZoneElem: this._dragZoneElem,
+    dragZone: this._dragZone
+  };
+};
+
+/**
+ * Возвращает текущий самый глубокий DOM-элемент под this._elem
+ * Приватное свойство _currentTargetElem обновляется при каждом передвижении
+ */
+DragAvatar.prototype.getTargetElem = function() {
+  return this._currentTargetElem;
+};
+
+/**
+ * При каждом движении мыши перемещает this._elem
+ * и записывает текущий элемент под this._elem в _currentTargetElem
+ * @param event
+ */
+DragAvatar.prototype.onDragMove = function(event) {
+  this._elem.style.left = event.pageX - this._shiftX + 'px';
+  this._elem.style.top = event.pageY - this._shiftY + 'px';
+
+  this._currentTargetElem = getElementUnderClientXY(this._elem, event.clientX, event.clientY);
+};
+
+/**
+ * Действия с аватаром, когда перенос не удался
+ * Например, можно вернуть элемент обратно или уничтожить
+ */
+DragAvatar.prototype.onDragCancel = function() {
+  /* override */
+};
+
+/**
+ * Действия с аватаром после успешного переноса
+ */
+DragAvatar.prototype.onDragEnd = function() {
+  /* override */
+};</code></pre>
+</div>
+</div>
+</div><h3><a class="main__anchor" href="#treedragavatar" name="treedragavatar">TreeDragAvatar</a></h3><p>Основные изменения – в методе <code>initFromEvent</code>, который создает аватар из узла, на котором был клик.</p>
+<p>Обратите внимание, возможно что клик был не на заголовке <code>SPAN</code>, а просто где-то на дереве. В этом случае <code>initFromEvent</code> возвращает <code>false</code> и перенос не начинается.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function TreeDragAvatar(dragZone, dragElem) {
+  DragAvatar.apply(this, arguments);
+}
+
+extend(TreeDragAvatar, DragAvatar);
+
+TreeDragAvatar.prototype.initFromEvent = function(downX, downY, event) {
+  if (event.target.tagName != 'SPAN') return false;
+
+  this._dragZoneElem = event.target;
+  var elem = this._elem = this._dragZoneElem.cloneNode(true);
+  elem.className = 'avatar';
+
+  // создать вспомогательные свойства shiftX/shiftY
+  var coords = getCoords(this._dragZoneElem);
+  this._shiftX = downX - coords.left;
+  this._shiftY = downY - coords.top;
+
+  // инициировать начало переноса
+  document.body.appendChild(elem);
+  elem.style.zIndex = 9999;
+  elem.style.position = 'absolute';
+
+  return true;
+};
+
+/**
+ * Вспомогательный метод
+ */
+TreeDragAvatar.prototype._destroy = function() {
+  this._elem.parentNode.removeChild(this._elem);
+};
+
+/**
+ * При любом исходе переноса элемент-клон больше не нужен
+ */
+TreeDragAvatar.prototype.onDragCancel = function() {
+  this._destroy();
+};
+
+TreeDragAvatar.prototype.onDragEnd = function() {
+  this._destroy();
+};</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#droptarget" name="droptarget">DropTarget</a></h2><p>Именно на <code>DropTarget</code> ложится работа по отображению предполагаемой «точки приземления» аватара, а также, по завершению переноса, обработка результата.</p>
+<p>Как правило, <code>DropTarget</code> принимает переносимый узел в себя, а вот как конкретно организован процесс вставки – нужно описать в классе-наследнике. Разные типы зон делают разное при вставке: <code>TreeDropTarget</code> вставляет элемент в качестве потомка, а <code>RemoveDropTarget</code> – удаляет.</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">/**
+ * Зона, в которую объекты можно класть
+ * Занимается индикацией передвижения по себе, добавлением в себя
+ */
+function DropTarget(elem) {
+  elem.dropTarget = this;
+  this._elem = elem;
+
+  /**
+   * Подэлемент, над которым в настоящий момент находится аватар
+   */
+  this._targetElem = null;
+}
+
+/**
+ * Возвращает DOM-подэлемент, над которым сейчас пролетает аватар
+ *
+ * @return DOM-элемент, на который можно положить или undefined
+ */
+DropTarget.prototype._getTargetElem = function(avatar, event) {
+  return this._elem;
+};
+
+/**
+ * Спрятать индикацию переноса
+ * Вызывается, когда аватар уходит с текущего this._targetElem
+ */
+DropTarget.prototype._hideHoverIndication = function(avatar) {
+  /* override */
+};
+
+/**
+ * Показать индикацию переноса
+ * Вызывается, когда аватар пришел на новый this._targetElem
+ */
+DropTarget.prototype._showHoverIndication = function(avatar) {
+  /* override */
+};
+
+/**
+ * Метод вызывается при каждом движении аватара
+ */
+DropTarget.prototype.onDragMove = function(avatar, event) {
+
+  var newTargetElem = this._getTargetElem(avatar, event);
+
+  if (this._targetElem != newTargetElem) {
+
+    this._hideHoverIndication(avatar);
+    this._targetElem = newTargetElem;
+    this._showHoverIndication(avatar);
+  }
+};
+
+/**
+ * Завершение переноса.
+ * Алгоритм обработки (переопределить функцию и написать в потомке):
+ * 1. Получить данные переноса из avatar.getDragInfo()
+ * 2. Определить, возможен ли перенос на _targetElem (если он есть)
+ * 3. Вызвать avatar.onDragEnd() или avatar.onDragCancel()
+ *  Если нужно подтвердить перенос запросом на сервер, то avatar.onDragEnd(),
+ *  а затем асинхронно, если сервер вернул ошибку, avatar.onDragCancel()
+ *  При этом аватар должен уметь "откатываться" после onDragEnd.
+ *
+ * При любом завершении этого метода нужно (делается ниже):
+ *  снять текущую индикацию переноса
+ *  обнулить this._targetElem
+ */
+DropTarget.prototype.onDragEnd = function(avatar, event) {
+  this._hideHoverIndication(avatar);
+  this._targetElem = null;
+};
+
+/**
+ * Вход аватара в DropTarget
+ */
+DropTarget.prototype.onDragEnter = function(fromDropTarget, avatar, event) {};
+
+/**
+ * Выход аватара из DropTarget
+ */
+DropTarget.prototype.onDragLeave = function(toDropTarget, avatar, event) {
+  this._hideHoverIndication();
+  this._targetElem = null;
+};</code></pre>
+</div>
+</div>
+</div><p>Как видно, из кода выше, по умолчанию <code>DropTarget</code> занимается только отслеживанием и индикацией «точки приземления». По умолчанию, единственной возможной «точкой приземления» является сам элемент зоны. В более сложных ситуациях это может быть подэлемент.</p>
+<p>Для применения в реальности необходимо как минимум переопределить обработку результата переноса в <code>onDragEnd</code>.</p>
+<h3><a class="main__anchor" href="#treedroptarget" name="treedroptarget">TreeDropTarget</a></h3><p><code>TreeDropTarget</code> содержит код, специфичный для дерева:</p>
+<ul>
+<li>Индикацию переноса над элементом: методы <code>_showHoverIndication</code> и <code>_hideHoverIndication</code>.</li>
+<li>Получение текущей точки приземления <code>_targetElem</code> в методе <code>_getTargetElem</code>. Ей может быть только заголовок узла дерева, причем дополнительно проверяется, что это не потомок переносимого узла.</li>
+<li>Обработка успешного переноса в <code>onDragEnd</code>, вставка исходного узла <code>avatar.dragZoneElem</code> в узел, соответствующий <code>_targetElem</code>.</li>
+</ul>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function TreeDropTarget(elem) {
+  TreeDropTarget.parent.constructor.apply(this, arguments);
+}
+
+extend(TreeDropTarget, DropTarget);
+
+TreeDropTarget.prototype._showHoverIndication = function() {
+  this._targetElem &amp;&amp; this._targetElem.classList.add('hover');
+};
+
+TreeDropTarget.prototype._hideHoverIndication = function() {
+  this._targetElem &amp;&amp; this._targetElem.classList.remove('hover');
+};
+
+TreeDropTarget.prototype._getTargetElem = function(avatar, event) {
+  var target = avatar.getTargetElem();
+  if (target.tagName != 'SPAN') {
+    return;
+  }
+
+  // проверить, может быть перенос узла внутрь самого себя или в себя?
+  var elemToMove = avatar.getDragInfo(event).dragZoneElem.parentNode;
+
+  var elem = target;
+  while (elem) {
+    if (elem == elemToMove) return; // попытка перенести родителя в потомка
+    elem = elem.parentNode;
+  }
+
+  return target;
+};
+
+TreeDropTarget.prototype.onDragEnd = function(avatar, event) {
+
+  if (!this._targetElem) {
+    // перенос закончился вне подходящей точки приземления
+    avatar.onDragCancel();
+    return;
+  }
+
+  this._hideHoverIndication();
+
+  // получить информацию об объекте переноса
+  var avatarInfo = avatar.getDragInfo(event);
+
+  avatar.onDragEnd(); // аватар больше не нужен, перенос успешен
+
+  // вставить элемент в детей в отсортированном порядке
+  var elemToMove = avatarInfo.dragZoneElem.parentNode; // &lt;LI&gt;
+  var title = avatarInfo.dragZoneElem.innerHTML; // переносимый заголовок
+
+  // получить контейнер для узлов дерева, соответствующий точке преземления
+  var ul = this._targetElem.parentNode.getElementsByTagName('UL')[0];
+  if (!ul) { // нет детей, создадим контейнер
+    ul = document.createElement('UL');
+    this._targetElem.parentNode.appendChild(ul);
+  }
+
+  // вставить новый узел в нужное место среди потомков, в алфавитном порядке
+  var li = null;
+  for (var i = 0; i &lt; ul.children.length; i++) {
+    li = ul.children[i];
+    var childTitle = li.children[0].innerHTML;
+    if (childTitle &gt; title) {
+      break;
+    }
+    li = null;
+  }
+
+  ul.insertBefore(elemToMove, li);
+
+  this._targetElem = null;
+};</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Реализация Drag’n’Drop оказалась отличным способом применить ООП в JavaScript.</p>
+<p>Исходный код примера целиком находится <a href="http://plnkr.co/edit/GZMmUwVeTJ35MS6yQMal?p=preview">в песочнице</a>.</p>
+<ul>
+<li>
+<p>Синглтон <code>dragManager</code> и классы <code>Drag*</code> задают общий фреймворк. От них наследуются конкретные объекты. Для создания новых зон достаточно унаследовать стандартные классы и переопределить их.</p>
+</li>
+<li>
+<p>Мини-фреймворк для Drag’n’Drop, который здесь представлен, является переписанным и обновленным вариантом реальной библиотеки, на основе которой было создано много успешных скриптов переноса.</p>
+<p>В зависимости от ваших потребностей, вы можете расширить его, добавить перенос нескольких объектов одновременно, поддержку событий и другие возможности.</p>
+</li>
+<li>
+<p>На сегодняшний день в каждом серьезном фреймворке есть библиотека для Drag’n’Drop. Она работает похожим образом, но сделать универсальный перенос – штука непростая. Зачастую он перегружен лишним функционалом, либо наоборот – недостаточно расширяем в нужных местах.
+Понимание, как это все может быть устроено, на примере этой статьи, может помочь в адаптации существующего кода под ваши потребности.</p>
+</li>
+</ul>
+</cut></div></meta></article></main></div></body></html>

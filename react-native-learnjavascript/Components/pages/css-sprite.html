@@ -1,0 +1,198 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="CSS-спрайты" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>CSS-спрайт – способ объединить много изображений в одно, чтобы:</p>
+<ol>
+<li>Сократить количество обращений к серверу.</li>
+<li>Загрузить несколько изображений сразу, включая те, которые понадобятся в будущем.</li>
+<li>Если у изображений сходная палитра, то объединённое изображение будет меньше по размеру, чем совокупность исходных картинок.</li>
+</ol>
+<cut>
+<p>Рассмотрим, как это работает, на примере дерева:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;ul&gt;
+  &lt;li class="open"&gt;
+    &lt;div class="icon"&gt;&lt;/div&gt;
+    &lt;div class="text"&gt;Раздел 1
+      &lt;br&gt;В две строки&lt;/div&gt;
+    &lt;ul&gt;
+      &lt;li class="closed"&gt;
+        &lt;div class="icon"&gt;&lt;/div&gt;
+        &lt;div class="text"&gt;Раздел 1.1 в одну строку&lt;/div&gt;
+      &lt;/li&gt;
+      &lt;li class="leaf"&gt;
+        &lt;div class="icon"&gt;&lt;/div&gt;
+        &lt;div class="text"&gt;Страница 1.2
+          &lt;br&gt; в две строки&lt;/div&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li class="closed"&gt;
+    &lt;div class="icon"&gt;&lt;/div&gt;
+    &lt;div class="text"&gt;Раздел 2
+      &lt;br&gt;В две строки&lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+</div>
+</div>
+</div><div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/css-sprite/sprite-tree-src/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="P2vylzWy8XWXPS7T21ik" href="http://plnkr.co/edit/P2vylzWy8XWXPS7T21ik?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/css-sprite/sprite-tree-src/" style="height:200px"></iframe>
+</div><p>Сейчас «плюс», «минус» и «статья» – три отдельных изображения. Объединим их в спрайт.</p>
+<h2><a class="main__anchor" href="#шаг-1-использовать-background" name="шаг-1-использовать-background">Шаг 1. Использовать background</a></h2><p>Первый шаг к объединению изображений в «спрайт» – показывать их через <code>background</code>., а не через тег <code>IMG</code>.</p>
+<p>В данном случае он уже сделан. Стиль для дерева:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">.icon {
+  width: 16px;
+  height: 16px;
+  float: left;
+}
+
+.open .icon {
+  cursor: pointer;
+  background: url(minus.gif);
+}
+
+.closed .icon {
+  cursor: pointer;
+  background: url(plus.gif);
+}
+
+.leaf .icon {
+  cursor: text;
+  background: url(article.gif);
+}</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#шаг-2-объединить-изображения" name="шаг-2-объединить-изображения">Шаг 2. Объединить изображения</a></h2><p>Составим из нескольких изображений одно <code>icons.gif</code>, расположив их, например, по вертикали.</p>
+<p>Из <img alt="" height="16" src="article/css-sprite/plus.gif" width="16">, <img alt="" height="16" src="article/css-sprite/minus.gif" width="16"> и <img alt="" height="16" src="article/css-sprite/article.gif" width="16"> получится одна картинка: <img alt="" height="48" src="article/css-sprite/icons.gif" width="16"/></img></img></img></p>
+<h2><a class="main__anchor" href="#шаг-3-показать-часть-спрайта-в-окошке" name="шаг-3-показать-часть-спрайта-в-окошке">Шаг 3. Показать часть спрайта в «окошке»</a></h2><p>А теперь самое забавное. Размер <code>DIV'а</code> для иконки – жёстко фиксирован:</p>
+<div class="code-example" data-highlight-block="2-3" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+.icon {
+  width: 16px;
+  height: 16px;
+  float: left;
+}</code></pre>
+</div>
+</div>
+</div><p>Это значит, что если поставить <code>background'ом</code> объединённую картинку, то вся она не поместится, будет видна только верхняя часть:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/css-sprite/sprite-tree-1/" style="height:60px"></iframe>
+</div><p>Если бы высота иконки была больше, например, <code>16x48</code>, как в примере ниже, то было бы видно и остальное:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/css-sprite/height48/" style="height:80px"></iframe>
+</div><p>…Но так как там всего <code>16px</code>, то помещается только одно изображение.</p>
+<h2><a class="main__anchor" href="#шаг-4-сдвинуть-спрайт" name="шаг-4-сдвинуть-спрайт">Шаг 4. Сдвинуть спрайт</a></h2><p>Сдвиг фона <code>background-position</code> позволяет выбирать, какую именно часть спрайта видно.</p>
+<p>В спрайте <code>icons.gif</code> изображения объединены так, что сдвиг на <code>16px</code> покажет следующую иконку:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+.icon {
+  width: 16px;
+  height: 16px;
+  float: left;
+  background: url(icons.gif) no-repeat;
+}
+
+.open .icon {
+  background-position: 0 -16px; /* вверх на 16px */
+  cursor: pointer;
+}
+
+.closed .icon {
+  background-position: 0 0px; /* по умолчанию */
+  cursor: pointer;
+}
+
+.leaf .icon {
+  background-position: 0 -32px; /* вверх на 32px */
+  cursor: text;
+}</code></pre>
+</div>
+</div>
+</div><p>Результат:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"><div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_external" href="/article/css-sprite/sprite-tree/" target="_blank" title="открыть в новом окне"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-plunk-id="SU7nBoZQZE1wCOjOBMPo" href="http://plnkr.co/edit/SU7nBoZQZE1wCOjOBMPo?p=preview" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/css-sprite/sprite-tree/" style="height:200px"></iframe>
+</div><ul>
+<li>В спрайт могут объединяться изображения разных размеров, т.е. сдвиг может быть любым.</li>
+<li>Сдвигать можно и по горизонтали и по вертикали.</li>
+</ul>
+<h3><a class="main__anchor" href="#отступы" name="отступы">Отступы</a></h3><p>Обычно отступы делаются <code>margin/padding</code>, но иногда их бывает удобно предусмотреть в спрайте.</p>
+<p>Тогда если элемент немного больше, чем размер изображения, то в «окошке» не появится лишнего.</p>
+<p>Пример спрайта с отступами:</p>
+<figure><div class="image" style="width:424px">
+<div class="image__ratio" style="padding-top:17.68867924528302%"></div>
+<img alt="" class="image__image" height="75" src="article/css-sprite/sprites-example.png" width="424">
+</img></div></figure><p>Иконка RSS находится в нём на координатах <code>(90px, 40px)</code>:</p>
+<figure><div class="image" style="width:473px">
+<div class="image__ratio" style="padding-top:35.30655391120507%"></div>
+<img alt="" class="image__image" height="167" src="article/css-sprite/sprites-example-lines2.png" width="473">
+</img></div></figure><p>Это значит, что чтобы показать эту иконку, нужно сместить фон:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">background-position: -90px -40px;</code></pre>
+</div>
+</div>
+</div><p>При этом в левом-верхнем углу фона как раз и будет эта иконка:</p>
+<div class="code-result">
+<div class="code-result__toolbar toolbar"></div>
+<iframe class="code-result__iframe" data-trusted="1" src="article/css-sprite/sprite-example/" style="height:300px"></iframe>
+</div><p>Элемент, в котором находится иконка (в рамке), больше по размеру, чем картинка.</p>
+<p>Его стиль:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-css"><code class="language-css">/*+ no-beautify */
+.rss {
+  width: 35px; /* ширина/высота больше чем размер иконки */
+  height: 35px;
+  border: 1px solid black;
+  float: left;
+  background-image: url(sprite.png);
+  background-position: -90px -40px;
+}</code></pre>
+</div>
+</div>
+</div><p>Если бы в спрайте не было отступов, то в такое большое «окошко» наверняка влезли бы другие иконки.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><div class="important important_smart">
+<div class="important__header"><span class="important__type">Когда использовать для изображений <code>IMG</code>, а когда – <code>CSS background</code>?</span></div>
+<div class="important__content"><p>Решение лучше всего принимать, исходя из принципов семантической вёрстки.</p>
+<p>Задайте вопрос – что здесь делает изображение? Является ли оно самостоятельным элементом страницы (фотография, аватар посетителя), или же оформляет что-либо (иконка узла дерева)?</p>
+<p>Элемент <code>IMG</code> следует использовать в первом случае, а для оформления у нас есть CSS.</p>
+</div></div>
+<p>Спрайты позволяют:</p>
+<ol>
+<li>Сократить количество обращений к серверу.</li>
+<li>Загрузить несколько изображений сразу, включая те, которые понадобятся в будущем.</li>
+<li>Если у изображений сходная палитра, то объединённое изображение будет меньше по размеру, чем совокупность исходных картинок.</li>
+</ol>
+<p>Если фоновое изображение нужно повторять по горизонтали или вертикали, то спрайты тоже подойдут – изображения в них нужно располагать в этом случае так, чтобы при повторении не были видны соседи, т.е., соответственно, вертикально или горизонтально, но не «решёткой».</p>
+<p>Далее мы встретимся со спрайтами при создании интерфейсов, чтобы кнопка при наведении меняла своё изображение. Один спрайт будет содержать все состояния кнопки, а переключение внешнего вида – осуществляться при помощи сдвига <code>background-position</code>.</p>
+<p>Для автоматизированной сборки спрайтов используются специальные инструменты, например <a href="http://csssprites.org/">SmartSprites</a>.</p>
+</cut></div></meta></article></main></div></body></html>

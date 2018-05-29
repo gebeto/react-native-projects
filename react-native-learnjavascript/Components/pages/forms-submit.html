@@ -1,0 +1,57 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Формы: отправка, событие и метод submit" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>Событие <code>submit</code> возникает при отправке формы. Наиболее частое его применение – это <em>валидация</em> (проверка) формы перед отправкой.</p>
+<p>Метод <code>submit</code> позволяет инициировать отправку формы из JavaScript, без участия пользователя. Далее мы рассмотрим детали их использования.</p>
+<cut>
+<h2><a class="main__anchor" href="#событие-submit" name="событие-submit">Событие submit</a></h2><p>Чтобы отправить форму на сервер, у посетителя есть два способа:</p>
+<ol>
+<li><strong>Первый – это нажать кнопку <code>&lt;input type="submit"&gt;</code> или <code>&lt;input type="image"&gt;</code>.</strong></li>
+<li><strong>Второй – нажать Enter, находясь на каком-нибудь поле.</strong></li>
+</ol>
+<p>Какой бы способ ни выбрал посетитель – будет сгенерировано событие <code>submit</code>. Обработчик в нём может проверить данные и, если они неверны, то вывести ошибку и сделать <code>event.preventDefault()</code> – тогда форма не отправится на сервер.</p>
+<p>Например, в таком HTML оба способа выведут <code>alert</code>, форма не будет отправлена:</p>
+<div class="code-example" data-autorun="true" data-demo-height="80" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;form onsubmit="alert('submit!');return false"&gt;
+  Первый: Enter в текстовом поле &lt;input type="text" value="Текст"&gt;&lt;br&gt;
+  Второй: Нажать на "Отправить": &lt;input type="submit" value="Отправить"&gt;
+&lt;/form&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-e0kkew" src="about:blank" style="height:80px"></iframe>
+</div>
+</div><p>Ожидаемое поведение:</p>
+<ol>
+<li>Перейдите в текстовое поле и нажмите Enter, будет событие, но форма не отправится на сервер благодаря <code>return false</code> в обработчике.</li>
+<li>То же самое произойдет при клике на <code>&lt;input type="submit"&gt;</code>.</li>
+</ol>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">Взаимосвязь событий <code>submit</code> и <code>click</code></span></div>
+<div class="important__content"><p>При отправке формы путём нажатия Enter на текстовом поле, на элементе <code>&lt;input type="submit"&gt;</code> везде, кроме IE8-, генерируется событие <code>click</code>.</p>
+<p>Это довольно забавно, учитывая что клика-то и не было.</p>
+<div class="code-example" data-autorun="true" data-demo-height="80" data-highlight-inline="2:37-61" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-markup"><code class="language-markup">&lt;form onsubmit="alert('submit');return false"&gt;
+ &lt;input type="text" size="30" value="При нажатии Enter будет click"&gt;
+ &lt;input type="submit" value="Submit" onclick="alert('click')"&gt;
+&lt;/form&gt;</code></pre>
+</div>
+</div>
+<div class="code-result code-example__result">
+<iframe class="code-result__iframe" name="code-result-9q1klb" src="about:blank" style="height:80px"></iframe>
+</div>
+</div></div></div>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">В IE8- событие <code>submit</code> не всплывает</span></div>
+<div class="important__content"><p>В IE8- событие <code>submit</code> не всплывает. Нужно вешать обработчик <code>submit</code> на сам элемент формы, без использования делегирования.</p>
+</div></div>
+<h2><a class="main__anchor" href="#метод-submit" name="метод-submit">Метод submit</a></h2><p>Чтобы отправить форму на сервер из JavaScript – нужно вызвать на элементе формы метод <code>form.submit()</code>.</p>
+<p>При этом само событие <code>submit</code> не генерируется. Предполагается, что если программист вызывает метод <code>form.submit()</code>, то он выполнил все проверки.</p>
+<p>Это используют, в частности, для искусственной генерации и отправки формы.</p>
+</cut></div></meta></article></main></div></body></html>

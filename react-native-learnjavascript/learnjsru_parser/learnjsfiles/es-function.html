@@ -1,0 +1,563 @@
+
+		<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+		<link rel="stylesheet" type="text/css" href="./prism.css">
+		<script src="./prism.js"></script>
+		</head><body><div class="page__inner"><main class="main main_width-limit"><article itemscope="" itemtype="http://schema.org/TechArticle"><meta content="Функции" itemprop="name"><div itemprop="author" itemscope="" itemtype="http://schema.org/Person"><meta content="iliakan@gmail.com" itemprop="email"><meta content="Ilya Kantor" itemprop="name"/></meta></div><div itemprop="articleBody"><p>В функциях основные изменения касаются передачи параметров, плюс введена дополнительная короткая запись через стрелочку <code>=&gt;</code>.</p>
+<h2><a class="main__anchor" href="#параметры-по-умолчанию" name="параметры-по-умолчанию">Параметры по умолчанию</a></h2><p>Можно указывать параметры по умолчанию через равенство <code>=</code>, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showMenu(title = "Без заголовка", width = 100, height = 200) {
+  alert(title + ' ' + width + ' ' + height);
+}
+
+showMenu("Меню"); // Меню 100 200</code></pre>
+</div>
+</div>
+</div><p>Параметр по умолчанию используется при отсутствующем аргументе или равном <code>undefined</code>, например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showMenu(title = "Заголовок", width = 100, height = 200) {
+  alert('title=' + title + ' width=' + width + ' height=' + height);
+}
+
+// По умолчанию будут взяты 1 и 3 параметры
+// title=Заголовок width=null height=200
+showMenu(undefined, null);</code></pre>
+</div>
+</div>
+</div><p>При передаче любого значения, кроме <code>undefined</code>, включая пустую строку, ноль или <code>null</code>, параметр считается переданным, и значение по умолчанию не используется.</p>
+<p><strong>Параметры по умолчанию могут быть не только значениями, но и выражениями.</strong></p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function sayHi(who = getCurrentUser().toUpperCase()) {
+  alert('Привет, ' + who);
+}
+
+function getCurrentUser() {
+  return 'Вася';
+}
+
+sayHi(); // Привет, ВАСЯ</code></pre>
+</div>
+</div>
+</div><p>Заметим, что значение выражения <code>getCurrentUser().toUpperCase()</code> будет вычислено, и соответствующие функции вызваны – лишь в том случае, если это необходимо, то есть когда функция вызвана без параметра.</p>
+<p>В частности, выражение по умолчанию не вычисляется при объявлении функции. В примере выше функция <code>getCurrentUser()</code> будет вызвана именно в последней строке, так как не передан параметр.</p>
+<h2><a class="main__anchor" href="#оператор-spread-вместо-arguments" name="оператор-spread-вместо-arguments">Оператор spread вместо arguments</a></h2><p>Чтобы получить массив аргументов, можно использовать оператор <code>…</code>, например:</p>
+<div class="code-example" data-highlight-inline="0:39-46" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function showName(firstName, lastName, ...rest) {
+  alert(firstName + ' ' + lastName + ' - ' + rest);
+}
+
+// выведет: Юлий Цезарь - Император,Рима
+showName("Юлий", "Цезарь", "Император", "Рима");</code></pre>
+</div>
+</div>
+</div><p>В <code>rest</code> попадёт массив всех аргументов, начиная со второго.</p>
+<p>Заметим, что <code>rest</code> – настоящий массив, с методами <code>map</code>, <code>forEach</code> и другими, в отличие от <code>arguments</code>.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Оператор … должен быть в конце</span></div>
+<div class="important__content"><p>Оператор <code>…</code> собирает «все оставшиеся» аргументы, поэтому такое объявление не имеет смысла:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function f(arg1, ...rest, arg2) { // arg2 после ...rest ?!
+  // будет ошибка
+}</code></pre>
+</div>
+</div>
+</div><p>Параметр <code>...rest</code> должен быть в конце функции.</p>
+</div></div>
+<p>Выше мы увидели использование <code>...</code> для чтения параметров в объявлении функции. Но этот же оператор можно использовать и при вызове функции, для передачи массива параметров как списка, например:</p>
+<div class="code-example" data-highlight-inline="6:19-29" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let numbers = [2, 3, 15];
+
+// Оператор ... в вызове передаст массив как список аргументов
+// Этот вызов аналогичен Math.max(2, 3, 15)
+let max = Math.max(...numbers);
+
+alert( max ); // 15</code></pre>
+</div>
+</div>
+</div><p>Формально говоря, эти два вызова делают одно и то же:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">Math.max(...numbers);
+Math.max.apply(Math, numbers);</code></pre>
+</div>
+</div>
+</div><p>Похоже, что первый – короче и красивее.</p>
+<h2><a class="main__anchor" href="#деструктуризация-в-параметрах" name="деструктуризация-в-параметрах">Деструктуризация в параметрах</a></h2><p>Если функция получает объект, то она может его тут же разбить в переменные:</p>
+<div class="code-example" data-highlight-block="8-8" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let options = {
+  title: "Меню",
+  width: 100,
+  height: 200
+};
+
+function showMenu({title, width, height}) {
+  alert(title + ' ' + width + ' ' + height); // Меню 100 200
+}
+
+showMenu(options);</code></pre>
+</div>
+</div>
+</div><p>Можно использовать и более сложную деструктуризацию, с соответствиями и значениями по умолчанию:</p>
+<div class="code-example" data-highlight-block="6-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let options = {
+  title: "Меню"
+};
+
+function showMenu({title="Заголовок", width:w=100, height:h=200}) {
+  alert(title + ' ' + w + ' ' + h);
+}
+
+// объект options будет разбит на переменные
+showMenu(options); // Меню 100 200</code></pre>
+</div>
+</div>
+</div><p>Заметим, что в примере выше какой-то аргумент у <code>showMenu()</code> обязательно должен быть, чтобы разбить его на переменные.</p>
+<p>Если хочется, чтобы функция могла быть вызвана вообще без аргументов – нужно добавить ей параметр по умолчанию – уже не внутрь деструктуризации, а в самом списке аргументов:</p>
+<div class="code-example" data-highlight-inline="2:65-69" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+function showMenu({title="Заголовок", width:w=100, height:h=200} = {}) {
+  alert(title + ' ' + w + ' ' + h);
+}
+
+showMenu(); // Заголовок 100 200</code></pre>
+</div>
+</div>
+</div><p>В коде выше весь объект аргументов по умолчанию равен пустому объекту <code>{}</code>, поэтому всегда есть что деструктуризовать.</p>
+<h2><a class="main__anchor" href="#имя-name" name="имя-name">Имя «name»</a></h2><p>В свойстве <code>name</code> у функции находится её имя.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+function f() {} // f.name == "f"
+
+let g = function g() {}; // g.name == "g"
+
+alert(f.name + ' ' + g.name) // f g</code></pre>
+</div>
+</div>
+</div><p>В примере выше показаны Function Declaration и Named Function Expression. В синтаксисе выше довольно очевидно, что у этих функций есть имя <code>name</code>. В конце концов, оно указано в объявлении.</p>
+<p>Но современный JavaScript идёт дальше, он старается даже анонимным функциям дать разумные имена.</p>
+<p>Например, при создании анонимной функции с одновременной записью в переменную или свойство – её имя равно названию переменной (или свойства).</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+// свойство g.name = "g"
+let g = function() {};
+
+let user = {
+  // свойство user.sayHi.name == "sayHi"
+  sayHi: function() {}
+};</code></pre>
+</div>
+</div>
+</div><h2><a class="main__anchor" href="#функции-в-блоке" name="функции-в-блоке">Функции в блоке</a></h2><p>Объявление функции Function Declaration, сделанное в блоке, видно только в этом блоке.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+if (true) {
+
+  sayHi(); // работает
+
+  function sayHi() {
+    alert("Привет!");
+  }
+
+}
+sayHi(); // ошибка, функции не существует</code></pre>
+</div>
+</div>
+</div><p>То есть, иными словами, такое объявление – ведёт себя в точности как если бы <code>let sayHi = function() {…}</code> было сделано в начале блока.</p>
+<h2><a class="main__anchor" href="#функции-через" name="функции-через">Функции через =&gt;</a></h2><p>Появился новый синтаксис для задания функций через «стрелку» <code>=&gt;</code>.</p>
+<p>Его простейший вариант выглядит так:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let inc = x =&gt; x+1;
+
+alert( inc(1) ); // 2</code></pre>
+</div>
+</div>
+</div><p>Эти две записи – примерно аналогичны:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">let inc = x =&gt; x+1;
+
+let inc = function(x) { return x + 1; };</code></pre>
+</div>
+</div>
+</div><p>Как видно, <code>"x =&gt; x+1"</code> – это уже готовая функция. Слева от <code>=&gt;</code> находится аргумент, а справа – выражение, которое нужно вернуть.</p>
+<p>Если аргументов несколько, то нужно обернуть их в скобки, вот так:</p>
+<div class="code-example" data-highlight-block="2-2" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let sum = (a,b) =&gt; a + b;
+
+// аналог с function
+// let inc = function(a, b) { return a + b; };
+
+alert( sum(1, 2) ); // 3</code></pre>
+</div>
+</div>
+</div><p>Если нужно задать функцию без аргументов, то также используются скобки, в этом случае – пустые:</p>
+<div class="code-example" data-highlight-block="2-3" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+// вызов getTime() будет возвращать текущее время
+let getTime = () =&gt; new Date().getHours() + ':' + new Date().getMinutes();
+
+alert( getTime() ); // текущее время</code></pre>
+</div>
+</div>
+</div><p>Когда тело функции достаточно большое, то можно его обернуть в фигурные скобки <code>{…}</code>:</p>
+<div class="code-example" data-highlight-block="2-7" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let getTime = () =&gt; {
+  let date = new Date();
+  let hours = date.getHours();
+  let minutes = date.getMinutes();
+  return hourse + ':' + minutes;
+};
+
+alert( getTime() ); // текущее время</code></pre>
+</div>
+</div>
+</div><p>Заметим, что как только тело функции оборачивается в <code>{…}</code>, то её результат уже не возвращается автоматически. Такая функция должна делать явный <code>return</code>, как в примере выше, если конечно хочет что-либо возвратить.</p>
+<p>Функции-стрелки очень удобны в качестве коллбеков, например:</p>
+<div class="code-example" data-highlight-block="4-4" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">`use strict`;
+
+let arr = [5, 8, 3];
+
+let sorted = arr.sort( (a,b) =&gt; a - b );
+
+alert(sorted); // 3, 5, 8</code></pre>
+</div>
+</div>
+</div><p>Такая запись – коротка и понятна. Далее мы познакомимся с дополнительными преимуществами использования функций-стрелок для этой цели.</p>
+<h2><a class="main__anchor" href="#функции-стрелки-не-имеют-своего-this" name="функции-стрелки-не-имеют-своего-this">Функции-стрелки не имеют своего this</a></h2><p>Внутри функций-стрелок – тот же <code>this</code>, что и снаружи.</p>
+<p>Это очень удобно в обработчиках событий и коллбэках, например:</p>
+<div class="code-example" data-highlight-block="7-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let group = {
+  title: "Наш курс",
+  students: ["Вася", "Петя", "Даша"],
+
+  showList: function() {
+    this.students.forEach(
+      student =&gt; alert(this.title + ': ' + student)
+    )
+  }
+}
+
+group.showList();
+// Наш курс: Вася
+// Наш курс: Петя
+// Наш курс: Даша</code></pre>
+</div>
+</div>
+</div><p>Здесь в <code>forEach</code> была использована функция-стрелка, поэтому <code>this.title</code> в коллбэке – тот же, что и во внешней функции <code>showList</code>. То есть, в данном случае – <code>group.title</code>.</p>
+<p>Если бы в <code>forEach</code> вместо функции-стрелки была обычная функция, то была бы ошибка:</p>
+<div class="code-example" data-highlight-block="7-9" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+let group = {
+  title: "Наш курс",
+  students: ["Вася", "Петя", "Даша"],
+
+  showList: function() {
+    this.students.forEach(function(student) {
+      alert(this.title + ': ' + student); // будет ошибка
+    })
+  }
+}
+
+group.showList();</code></pre>
+</div>
+</div>
+</div><p>При запуске будет "попытка прочитать свойство <code>title</code> у <code>undefined</code>", так как <code>.forEach(f)</code> при запуске <code>f</code> не ставит <code>this</code>. То есть, <code>this</code> внутри <code>forEach</code> будет <code>undefined</code>.</p>
+<div class="important important_warn">
+<div class="important__header"><span class="important__type">Функции стрелки нельзя запускать с <code>new</code></span></div>
+<div class="important__content"><p>Отсутствие у функции-стрелки "своего <code>this</code>" влечёт за собой естественное ограничение: такие функции нельзя использовать в качестве конструктора, то есть нельзя вызывать через <code>new</code>.</p>
+</div></div>
+<div class="important important_smart">
+<div class="important__header"><span class="important__type">=&gt; это не то же самое, что <code>.bind(this)</code></span></div>
+<div class="important__content"><p>Есть тонкое различие между функцией стрелкой <code>=&gt;</code> и обычной функцией, у которой вызван <code>.bind(this)</code>:</p>
+<ul>
+<li>Вызовом <code>.bind(this)</code> мы передаём текущий <code>this</code>, привязывая его к функции.</li>
+<li>При <code>=&gt;</code> привязки не происходит, так как функция стрелка вообще не имеет контекста <code>this</code>. Поиск <code>this</code> в ней осуществляется так же, как и поиск обычной переменной, то есть, выше в замыкании. До появления стандарта ES-2015 такое было невозможно.</li>
+</ul>
+</div></div>
+<h2><a class="main__anchor" href="#функции-стрелки-не-имеют-своего-arguments" name="функции-стрелки-не-имеют-своего-arguments">Функции-стрелки не имеют своего arguments</a></h2><p>В качестве <code>arguments</code> используются аргументы внешней «обычной» функции.</p>
+<p>Например:</p>
+<div class="code-example" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+function f() {
+  let showArg = () =&gt; alert(arguments[0]);
+  showArg();
+}
+
+f(1); // 1</code></pre>
+</div>
+</div>
+</div><p>Вызов <code>showArg()</code> выведет <code>1</code>, получив его из аргументов функции <code>f</code>. Функция-стрелка здесь вызвана без параметров, но это не важно: <code>arguments</code> всегда берутся из внешней «обычной» функции.</p>
+<p>Сохранение внешнего <code>this</code> и <code>arguments</code> удобно использовать для форвардинга вызовов и создания декораторов.</p>
+<p>Например, декоратор <code>defer(f, ms)</code> ниже получает функцию <code>f</code> и возвращает обёртку вокруг неё, откладывающую вызов на <code>ms</code> миллисекунд:</p>
+<div class="code-example" data-highlight-block="2-6" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="toolbar codebox__toolbar">
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_run" data-action="run" href="#" title="выполнить"></a>
+</div>
+<div class="toolbar__tool">
+<a class="toolbar__button toolbar__button_edit" data-action="edit" href="#" target="_blank" title="открыть в песочнице"></a>
+</div>
+</div>
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">'use strict';
+
+function defer(f, ms) {
+  return function() {
+    setTimeout(() =&gt; f.apply(this, arguments), ms)
+  }
+}
+
+function sayHi(who) {
+  alert('Привет, ' + who);
+}
+
+let sayHiDeferred = defer(sayHi, 2000);
+sayHiDeferred("Вася"); // Привет, Вася через 2 секунды</code></pre>
+</div>
+</div>
+</div><p>Аналогичная реализация без функции-стрелки выглядела бы так:</p>
+<div class="code-example" data-highlight-block="2-3" data-trusted="1">
+<div class="codebox code-example__codebox">
+<div class="codebox__code" data-code="1">
+<pre class="line-numbers language-javascript"><code class="language-javascript">function defer(f, ms) {
+  return function() {
+    let args = arguments;
+    let ctx = this;
+    setTimeout(function() {
+      return f.apply(ctx, args);
+    }, ms);
+  }
+}</code></pre>
+</div>
+</div>
+</div><p>В этом коде пришлось создавать дополнительные переменные <code>args</code> и <code>ctx</code> для передачи внешних аргументов и контекста через замыкание.</p>
+<h2><a class="main__anchor" href="#итого" name="итого">Итого</a></h2><p>Основные улучшения в функциях:</p>
+<ul>
+<li>Можно задавать параметры по умолчанию, а также использовать деструктуризацию для чтения приходящего объекта.</li>
+<li>Оператор spread (троеточие) в объявлении позволяет функции получать оставшиеся аргументы в массив: <code>function f(arg1, arg2, ...rest)</code>.</li>
+<li>Тот же оператор spread в вызове функции позволяет передать её массив как список аргументов (вместо <code>apply</code>).</li>
+<li>У функции есть свойство <code>name</code>, оно содержит имя, указанное при объявлении функции, либо, если его нет, то имя свойства или переменную, в которую она записана. Есть и некоторые другие ситуации, в которых интерпретатор подставляет «самое подходящее» имя.</li>
+<li>Объявление Function Declaration в блоке <code>{...}</code> видно только в этом блоке.</li>
+<li>Появились функции-стрелки:
+<ul>
+<li>Без фигурных скобок возвращают выражение <code>expr</code>: <code>(args) =&gt; expr</code>.</li>
+<li>С фигурными скобками требуют явного <code>return</code>.</li>
+<li>Не имеют своих <code>this</code> и <code>arguments</code>, при обращении получают их из окружающего контекста.</li>
+<li>Не могут быть использованы как конструкторы, с <code>new</code>.</li>
+</ul>
+</li>
+</ul>
+</div></meta></article></main></div></body></html>

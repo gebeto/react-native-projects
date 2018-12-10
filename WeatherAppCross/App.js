@@ -6,6 +6,9 @@
  * @flow
  */
 
+// https://espanol.wunderground.com/weather/api/d/docs?d=layers/satellite
+// https://www.wunderground.com/weather/api/?MR=1
+
 import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, View} from 'react-native';
 

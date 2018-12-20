@@ -6,6 +6,8 @@
     "start:ios": "node node_modules/react-native/local-cli/cli.js start --reset-cache",
     "start:macos": "node node_modules/react-native-macos/local-cli/cli.js start --reset-cache",
     "ios": "react-native run-ios --simulator=\"iPhone 6\"",
+    "ios-device": "react-native run-ios --device \"🍑💨\"",
+    "ios-device-release": "react-native run-ios --configuration Release --device \"🍑💨\"",
     "macos": "react-native run-macos",
     "test": "jest"
   },

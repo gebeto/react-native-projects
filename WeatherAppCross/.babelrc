@@ -1,11 +1,11 @@
 {
-	// "presets": ["module:metro-react-native-babel-preset"]
-	"presets": ["react-native"],
+	"presets": ["module:metro-react-native-babel-preset"],
+	// "presets": ["react-native"],
 	"plugins": [
-		["module-resolver", {
-			"alias": {
-				"react-native": "react-native-macos",
-			}
-		}]
+		// ["module-resolver", {
+		// 	"alias": {
+		// 		"react-native": "react-native-macos",
+		// 	}
+		// }]
 	]
 }
